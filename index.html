@@ -270,6 +270,36 @@
   .btn-cam    { background: linear-gradient(180deg, #3b82f6, #2563eb); }
   .btn-sound  { background: linear-gradient(180deg, #475569, #334155); }
   .btn-owner  { background: linear-gradient(180deg, #facc15, #ea580c); border-color: #fef08a; }
+  .btn-diff   { background: linear-gradient(180deg, #ea580c, #9a3412); border-color: #fed7aa; }
+  .btn-diff.diff-nightmare  { background: linear-gradient(180deg, #dc2626, #7f1d1d); border-color: #fca5a5; }
+  .btn-diff.diff-impossible { background: linear-gradient(180deg, #9333ea, #4c1d95); border-color: #e9d5ff; }
+
+  .diff-selector {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+  }
+  .diff-choice {
+    flex: 1;
+    min-width: 155px;
+    background: rgba(255,255,255,0.06);
+    border: 3px solid rgba(255,255,255,0.18);
+    border-radius: 16px;
+    padding: 10px 12px;
+    color: #e2e8f0;
+    font-family: inherit;
+    cursor: pointer;
+    transition: transform 0.12s ease, border-color 0.15s ease, background 0.15s ease;
+    text-align: center;
+  }
+  .diff-choice:hover { transform: translateY(-2px); background: rgba(255,255,255,0.1); }
+  .diff-choice .diff-name { font-size: 16px; font-weight: 700; display: block; margin-bottom: 3px; }
+  .diff-choice .diff-desc { font-size: 11px; color: #cbd5e1; display: block; line-height: 1.3; }
+  .diff-choice.selected[data-diff="hard"]       { border-color: #fb923c; background: rgba(234, 88, 12, 0.25); box-shadow: 0 0 18px rgba(249, 115, 22, 0.35); }
+  .diff-choice.selected[data-diff="nightmare"]  { border-color: #f87171; background: rgba(220, 38, 38, 0.28); box-shadow: 0 0 18px rgba(239, 68, 68, 0.45); }
+  .diff-choice.selected[data-diff="impossible"] { border-color: #c084fc; background: rgba(147, 51, 234, 0.30); box-shadow: 0 0 22px rgba(168, 85, 247, 0.55); }
 
   .level-pill {
     flex-direction: column;
@@ -426,6 +456,9 @@
   }
   #stamina-fill {
     background: linear-gradient(90deg, #06b6d4, #38bdf8, #7dd3fc);
+  }
+  #stamina-fill.exhausted {
+    background: linear-gradient(90deg, #dc2626, #f97316);
   }
   #dash-fill {
     background: linear-gradient(90deg, #a855f7, #ec4899);
@@ -823,7 +856,8 @@
     </div>
 
     <div class="hud-actions">
-      <button class="btn btn-owner" id="owner-speed-btn" style="display:none;">👑 Max Speed: ON</button>
+      <button class="btn btn-diff" id="diff-btn" title="Switch Difficulty in Home Base">🔥 Hard</button>
+      <button class="btn btn-owner" id="owner-speed-btn" style="display:none;">👑 Max Speed: OFF</button>
       <button class="btn btn-shop" id="open-shop-btn">🛒 Shop (B)</button>
       <button class="btn btn-index" id="open-index-btn">📖 Index (I)</button>
       <button class="btn btn-base" id="return-base-btn">🏠 Base (R)</button>
@@ -902,6 +936,20 @@
         Place eggs on pedestals in your Base to hatch animals, earn 💰, and upgrade your speed!
       </div>
     </div>
+    <div class="diff-selector" id="start-diff-selector">
+      <button class="diff-choice selected" data-diff="hard">
+        <span class="diff-name">🔥 HARD</span>
+        <span class="diff-desc">Fast monsters, projectiles, laser traps &amp; Night Stalkers (1x 💰)</span>
+      </button>
+      <button class="diff-choice" data-diff="nightmare">
+        <span class="diff-name">💀 NIGHTMARE</span>
+        <span class="diff-desc">+24% speed, all bosses shoot bolts, aggressive hunt! (2x 💰)</span>
+      </button>
+      <button class="diff-choice" data-diff="impossible">
+        <span class="diff-name">☠️ IMPOSSIBLE</span>
+        <span class="diff-desc">+48% speed, rapid fireballs, deadly hits &amp; 40% cash drop! (3.5x 💰)</span>
+      </button>
+    </div>
     <button id="play-btn">▶ PLAY NOW!</button>
   </div>
 </div>
@@ -958,105 +1006,105 @@
       id: 'easy', num: 1, name: 'Easy Meadow', monsterName: 'Chicken', emoji: '🐔',
       groundColor: 0x57c84d, accentColor: 0x3da337, skyColor: 0x7dd3fc, fogColor: 0xa5e4ff,
       uiColor: '#4ade80', eggPrimary: 0xfff8dc, eggSecondary: 0xf59e0b,
-      chaseSpeed: 15.2, income: 10, scale: 1.0,
+      chaseSpeed: 18.0, income: 10, scale: 1.0,
       desc: 'A sunny green meadow guarded by a feisty Chicken.'
     },
     {
       id: 'river', num: 2, name: 'River', monsterName: 'Duck', emoji: '🦆',
       groundColor: 0x38bdf8, accentColor: 0x65a30d, skyColor: 0x60a5fa, fogColor: 0x93c5fd,
       uiColor: '#38bdf8', eggPrimary: 0xe0f2fe, eggSecondary: 0x0ea5e9,
-      chaseSpeed: 18.5, income: 25, scale: 1.05,
+      chaseSpeed: 23.5, income: 25, scale: 1.05,
       desc: 'Sparkling riverbanks where a speedy Duck guards its nest.'
     },
     {
       id: 'jungle', num: 3, name: 'Jungle', monsterName: 'Tiger', emoji: '🐯',
       groundColor: 0x1e6b34, accentColor: 0x14532d, skyColor: 0x34d399, fogColor: 0x6ee7b7,
       uiColor: '#16a34a', eggPrimary: 0xfb923c, eggSecondary: 0x1e1b18,
-      chaseSpeed: 22.5, income: 65, scale: 1.15,
+      chaseSpeed: 29.5, income: 65, scale: 1.15,
       desc: 'Dense leafy jungle prowled by a fierce striped Tiger.'
     },
     {
       id: 'snow', num: 4, name: 'Snow', monsterName: 'Yeti', emoji: '❄️',
       groundColor: 0xe2f1ff, accentColor: 0x93c5fd, skyColor: 0xcbe8ff, fogColor: 0xdbeafe,
       uiColor: '#bae6fd', eggPrimary: 0xe0f7ff, eggSecondary: 0x38bdf8,
-      chaseSpeed: 26.5, income: 160, scale: 1.35,
+      chaseSpeed: 36.0, income: 160, scale: 1.35,
       desc: 'Freezing peaks where a towering snowy Yeti stomps.'
     },
     {
       id: 'volcano', num: 5, name: 'Volcano', monsterName: 'Cerberus', emoji: '🔥',
       groundColor: 0x2c1b18, accentColor: 0xff4500, skyColor: 0x7c1d0f, fogColor: 0x9a3412,
       uiColor: '#f97316', eggPrimary: 0x3f120b, eggSecondary: 0xff5500,
-      chaseSpeed: 31.0, income: 420, scale: 1.35,
+      chaseSpeed: 43.0, income: 420, scale: 1.35,
       desc: 'Molten basalt fields guarded by the 3-headed Cerberus!'
     },
     {
       id: 'abyss_ocean', num: 6, name: 'Abyss Ocean', monsterName: 'Whale', emoji: '🐋',
       groundColor: 0x0b2545, accentColor: 0x00f5d4, skyColor: 0x061a33, fogColor: 0x0d3b66,
       uiColor: '#0284c7', eggPrimary: 0x0c4a6e, eggSecondary: 0x22d3ee,
-      chaseSpeed: 35.5, income: 1100, scale: 1.45,
+      chaseSpeed: 50.5, income: 1100, scale: 1.45,
       desc: 'Deep glowing seabed patrolled by a giant Abyssal Whale.'
     },
     {
       id: 'prehistoric', num: 7, name: 'Prehistoric', monsterName: 'T-Rex', emoji: '🦖',
       groundColor: 0x7c6f3d, accentColor: 0x4d5d2b, skyColor: 0xd97706, fogColor: 0xeab308,
       uiColor: '#ca8a04', eggPrimary: 0xd9f99d, eggSecondary: 0x4d7c0f,
-      chaseSpeed: 40.0, income: 2800, scale: 1.5,
+      chaseSpeed: 58.5, income: 2800, scale: 1.5,
       desc: 'Ancient dinosaur valley ruled by a roaring T-Rex!'
     },
     {
       id: 'storm_land', num: 8, name: 'Storm Land', monsterName: 'Purple Rhino', emoji: '🦏',
       groundColor: 0x2e1f47, accentColor: 0x9333ea, skyColor: 0x1e1333, fogColor: 0x3b1f66,
       uiColor: '#9333ea', eggPrimary: 0x7e22ce, eggSecondary: 0xfacc15,
-      chaseSpeed: 45.0, income: 7000, scale: 1.35,
+      chaseSpeed: 67.0, income: 7000, scale: 1.35,
       desc: 'Crackling lightning plains charged by a Purple Rhino.'
     },
     {
       id: 'cosmic', num: 9, name: 'Cosmic', monsterName: 'Cosmic Monster', emoji: '🌌',
       groundColor: 0x120a2e, accentColor: 0x38bdf8, skyColor: 0x050214, fogColor: 0x1a0b4a,
       uiColor: '#6366f1', eggPrimary: 0x1e1b4b, eggSecondary: 0xf472b6,
-      chaseSpeed: 50.0, income: 18000, scale: 1.4,
+      chaseSpeed: 76.0, income: 18000, scale: 1.4,
       desc: 'Starlit void haunted by a ringed Cosmic Monster.'
     },
     {
       id: 'cherry_blossom', num: 10, name: 'Cherry Blossom', monsterName: 'Oni Tiger', emoji: '👹',
       groundColor: 0xfbcfe8, accentColor: 0xf472b6, skyColor: 0xfda4af, fogColor: 0xfce7f3,
       uiColor: '#f472b6', eggPrimary: 0xffe4e6, eggSecondary: 0xdc2626,
-      chaseSpeed: 55.5, income: 45000, scale: 1.35,
+      chaseSpeed: 85.5, income: 45000, scale: 1.35,
       desc: 'Sakura sanctuary guarded by the horned Oni Tiger!'
     },
     {
       id: 'titan_temple', num: 11, name: 'Titan Temple', monsterName: 'Gorilla King', emoji: '🦍',
       groundColor: 0xd6c7a1, accentColor: 0xeab308, skyColor: 0xb45309, fogColor: 0xd97706,
       uiColor: '#eab308', eggPrimary: 0x292524, eggSecondary: 0xfacc15,
-      chaseSpeed: 61.0, income: 110000, scale: 1.55,
+      chaseSpeed: 95.5, income: 110000, scale: 1.55,
       desc: 'Colossal marble ruins ruled by the crowned Gorilla King!'
     },
     {
       id: 'demon', num: 12, name: 'Demon Realm', monsterName: 'Demon', emoji: '😈',
       groundColor: 0x3b0a0a, accentColor: 0xdc2626, skyColor: 0x220404, fogColor: 0x5c0c0c,
       uiColor: '#dc2626', eggPrimary: 0x450a0a, eggSecondary: 0xef4444,
-      chaseSpeed: 67.0, income: 260000, scale: 1.45,
+      chaseSpeed: 106.5, income: 260000, scale: 1.45,
       desc: 'Hellfire obsidian citadel guarded by a winged Demon!'
     },
     {
       id: 'angel', num: 13, name: 'Angel Kingdom', monsterName: 'Angel', emoji: '👼',
       groundColor: 0xf8fafc, accentColor: 0xfde047, skyColor: 0xfffbeb, fogColor: 0xfef3c7,
       uiColor: '#fde047', eggPrimary: 0xffffff, eggSecondary: 0xfacc15,
-      chaseSpeed: 73.5, income: 620000, scale: 1.45,
+      chaseSpeed: 118.0, income: 620000, scale: 1.45,
       desc: 'Cloudy golden heavens watched over by a radiant Angel.'
     },
     {
       id: 'enchanted_forest', num: 14, name: 'Enchanted Forest', monsterName: 'Galaxy Lion', emoji: '🦁',
       groundColor: 0x133b42, accentColor: 0x2dd4bf, skyColor: 0x17153b, fogColor: 0x2e236c,
       uiColor: '#2dd4bf', eggPrimary: 0x311068, eggSecondary: 0x38bdf8,
-      chaseSpeed: 80.0, income: 1500000, scale: 1.45,
+      chaseSpeed: 130.5, income: 1500000, scale: 1.45,
       desc: 'Glowing mystic woods ruled by a Lion with galaxy-colored fur!'
     },
     {
       id: 'alien_planet', num: 15, name: 'Alien Planet', monsterName: 'Alien Creature', emoji: '👽',
       groundColor: 0x3b185f, accentColor: 0x84cc16, skyColor: 0x160729, fogColor: 0x3a105c,
       uiColor: '#a855f7', eggPrimary: 0x7e22ce, eggSecondary: 0x84cc16,
-      chaseSpeed: 88.0, income: 4000000, scale: 1.5,
+      chaseSpeed: 144.0, income: 4000000, scale: 1.5,
       desc: 'Bizarre purple alien world of a creepy purple-skinned beast with razor-sharp teeth!'
     }
   ];
@@ -1142,6 +1190,13 @@
     sunrise() {
       const notes = [392, 494, 587, 784];
       notes.forEach((n, idx) => setTimeout(() => playTone(n, 0.22, 'triangle', 0.15), idx * 90));
+    },
+    fireball() {
+      playTone(520, 0.16, 'sawtooth', 0.13, 180);
+    },
+    laserHit() {
+      playTone(760, 0.12, 'sawtooth', 0.18, 120);
+      setTimeout(() => playTone(160, 0.22, 'square', 0.18, 70), 60);
     }
   };
 
@@ -1150,19 +1205,60 @@
   // =========================================================================
   const SAVE_KEY = 'steal_an_egg_15biomes_v1';
 
-  // 6 DIFFERENT EGG TYPES (found in every biome!)
+  // 6 DIFFERENT EGG TYPES (found in every biome! Rarer eggs are MUCH heavier & anger monsters!)
   const EGG_TYPES = [
-    { id: 'common',  name: 'Common',  emoji: '🥚', mult: 1,  chaseMult: 1.00, weightSlow: 0.92, color: '#f8fafc', hex: 0xfff8dc, desc: 'Classic Biome Egg (1x)' },
-    { id: 'golden',  name: 'Golden',  emoji: '✨', mult: 2,  chaseMult: 1.07, weightSlow: 0.89, color: '#facc15', hex: 0xfacc15, desc: 'Shiny Metallic Gold (2x)' },
-    { id: 'diamond', name: 'Diamond', emoji: '💎', mult: 4,  chaseMult: 1.14, weightSlow: 0.86, color: '#38bdf8', hex: 0x38bdf8, desc: 'Glowing Crystal Diamond (4x)' },
-    { id: 'lava',    name: 'Lava',    emoji: '🔥', mult: 7,  chaseMult: 1.21, weightSlow: 0.84, color: '#f97316', hex: 0xff4500, desc: 'Cracked Molten Magma (7x)' },
-    { id: 'rainbow', name: 'Rainbow', emoji: '🌈', mult: 12, chaseMult: 1.28, weightSlow: 0.81, color: '#ec4899', hex: 0xf472b6, desc: 'Prismatic Rainbow Aura (12x)' },
-    { id: 'galaxy',  name: 'Galaxy',  emoji: '🌌', mult: 25, chaseMult: 1.36, weightSlow: 0.78, color: '#a855f7', hex: 0xa855f7, desc: 'Cosmic Ringed Star Egg (25x)' }
+    { id: 'common',  name: 'Common',  emoji: '🥚', mult: 1,  chaseMult: 1.00, weightSlow: 0.88, color: '#f8fafc', hex: 0xfff8dc, desc: 'Classic Biome Egg (1x)' },
+    { id: 'golden',  name: 'Golden',  emoji: '✨', mult: 2,  chaseMult: 1.10, weightSlow: 0.84, color: '#facc15', hex: 0xfacc15, desc: 'Shiny Metallic Gold (2x)' },
+    { id: 'diamond', name: 'Diamond', emoji: '💎', mult: 4,  chaseMult: 1.20, weightSlow: 0.80, color: '#38bdf8', hex: 0x38bdf8, desc: 'Glowing Crystal Diamond (4x)' },
+    { id: 'lava',    name: 'Lava',    emoji: '🔥', mult: 7,  chaseMult: 1.30, weightSlow: 0.77, color: '#f97316', hex: 0xff4500, desc: 'Cracked Molten Magma (7x)' },
+    { id: 'rainbow', name: 'Rainbow', emoji: '🌈', mult: 12, chaseMult: 1.41, weightSlow: 0.74, color: '#ec4899', hex: 0xf472b6, desc: 'Prismatic Rainbow Aura (12x)' },
+    { id: 'galaxy',  name: 'Galaxy',  emoji: '🌌', mult: 25, chaseMult: 1.52, weightSlow: 0.70, color: '#a855f7', hex: 0xa855f7, desc: 'Cosmic Ringed Star Egg (25x)' }
   ];
 
+  const DIFFICULTIES = {
+    hard: {
+      id: 'hard', label: '🔥 Hard', btnClass: 'btn btn-diff',
+      monsterSpeedMult: 1.0,
+      projectileRate: 1.0,
+      hazardSpeedMult: 1.0,
+      eggAggroDist: 19.0,
+      guardAggroDist: 6.5,
+      nightHuntDist: 34.0,
+      nightSpeedMult: 1.18,
+      catchCashLoss: 0.15,
+      rewardMult: 1.0
+    },
+    nightmare: {
+      id: 'nightmare', label: '💀 Nightmare', btnClass: 'btn btn-diff diff-nightmare',
+      monsterSpeedMult: 1.24,
+      projectileRate: 1.6,
+      hazardSpeedMult: 1.32,
+      eggAggroDist: 26.0,
+      guardAggroDist: 9.5,
+      nightHuntDist: 46.0,
+      nightSpeedMult: 1.32,
+      catchCashLoss: 0.25,
+      rewardMult: 2.0
+    },
+    impossible: {
+      id: 'impossible', label: '☠️ IMPOSSIBLE', btnClass: 'btn btn-diff diff-impossible',
+      monsterSpeedMult: 1.48,
+      projectileRate: 2.35,
+      hazardSpeedMult: 1.65,
+      eggAggroDist: 35.0,
+      guardAggroDist: 13.5,
+      nightHuntDist: 60.0,
+      nightSpeedMult: 1.46,
+      catchCashLoss: 0.40,
+      rewardMult: 3.5
+    }
+  };
+  const DIFF_ORDER = ['hard', 'nightmare', 'impossible'];
+
   const MAX_LEVEL = 20;
+  const MAX_TRAINED_SPEED = 36;
   const DAY_DURATION = 45;   // seconds of Day Time
-  const NIGHT_DURATION = 30; // 30 seconds of Night Time (eggs locked!)
+  const NIGHT_DURATION = 30; // 30 seconds of Night Time (eggs locked + Night Stalkers!)
   const OWNER_KEY = 'steal_an_egg_owner_v1';
 
   function hashCodeStr(s) {
@@ -1181,43 +1277,43 @@
       name: '🏃 Speed Boots',
       desc: 'Run much faster to outrun deep-biome monsters!',
       maxLevel: 20,
-      baseCost: 30,
-      costMult: 2.1
+      baseCost: 55,
+      costMult: 2.35
     },
     treadmill: {
       name: '🏋️ Turbo Treadmill',
       desc: 'Train Speed & Level XP MUCH faster on your Base Treadmill!',
       maxLevel: 20,
-      baseCost: 40,
-      costMult: 2.05
+      baseCost: 70,
+      costMult: 2.3
     },
     stamina: {
       name: '⚡ Turbo Stamina & Dash',
       desc: 'Longer sprinting, faster recharge & stronger Q-Dash!',
       maxLevel: 10,
-      baseCost: 45,
-      costMult: 2.5
+      baseCost: 85,
+      costMult: 2.75
     },
     jump: {
       name: '🦘 Super Jump',
-      desc: 'Leap higher over obstacles and dodge monsters!',
+      desc: 'Leap higher over laser barriers, traps, and monsters!',
       maxLevel: 8,
-      baseCost: 60,
-      costMult: 2.4
+      baseCost: 110,
+      costMult: 2.65
     },
     shield: {
       name: '🛡️ Escape Shield',
       desc: 'Survive hits while carrying an egg + speed burst!',
       maxLevel: 5,
-      baseCost: 250,
-      costMult: 3.8
+      baseCost: 450,
+      costMult: 4.2
     },
     income: {
       name: '💎 Golden Pedestals',
       desc: 'Boost money earned by ALL animals in your Base (+50%/lvl)!',
       maxLevel: 10,
-      baseCost: 120,
-      costMult: 2.8
+      baseCost: 220,
+      costMult: 3.1
     }
   };
 
@@ -1228,6 +1324,7 @@
     trainedSpeed: 0,
     isOwner: false,
     ownerMaxSpeed: false,
+    difficulty: 'hard',
     upgrades: { speed: 1, treadmill: 1, stamina: 1, jump: 1, shield: 0, income: 1 },
     pedestals: new Array(16).fill(null), // stores { biomeIdx, eggTypeIdx } or null
     collected: {}, // biomeId -> true
@@ -1242,6 +1339,7 @@
     dashTimer: 0,
     dashCooldown: 0,
     stamina: 100,
+    staminaExhaustedTimer: 0,
     firstPerson: false,
     started: false,
     modalOpen: false,
@@ -1249,6 +1347,10 @@
     phaseTimer: DAY_DURATION,
     nightBlend: 0
   };
+
+  function getDiff() {
+    return DIFFICULTIES[state.difficulty] || DIFFICULTIES.hard;
+  }
 
   function detectOwnerMode() {
     let unlocked = false;
@@ -1272,7 +1374,7 @@
     }
     if (unlocked) {
       state.isOwner = true;
-      state.ownerMaxSpeed = true;
+      state.ownerMaxSpeed = false; // Click the HUD button anytime to toggle ON
     }
   }
 
@@ -1318,28 +1420,28 @@
   }
 
   function getTreadmillRate() {
-    return 0.42 + (state.upgrades.treadmill - 1) * 0.45;
+    return 0.28 + (state.upgrades.treadmill - 1) * 0.30;
   }
   function getPlayerWalkSpeed() {
-    if (state.isOwner && state.ownerMaxSpeed) return 96;
-    return 13.5 + (state.upgrades.speed - 1) * 2.5 + (state.level - 1) * 1.15 + state.trainedSpeed;
+    if (state.isOwner && state.ownerMaxSpeed) return 115;
+    return 12.5 + (state.upgrades.speed - 1) * 2.0 + (state.level - 1) * 0.85 + Math.min(MAX_TRAINED_SPEED, state.trainedSpeed);
   }
   function getPlayerSprintSpeed() {
-    if (state.isOwner && state.ownerMaxSpeed) return 138;
-    return getPlayerWalkSpeed() * 1.42;
+    if (state.isOwner && state.ownerMaxSpeed) return 165;
+    return getPlayerWalkSpeed() * 1.40;
   }
   function getMaxStamina() {
-    return 100 + (state.upgrades.stamina - 1) * 25;
+    return 100 + (state.upgrades.stamina - 1) * 22;
   }
   function getDashCooldownMax() {
     if (state.isOwner && state.ownerMaxSpeed) return 0.6;
-    return Math.max(1.5, 4.5 - (state.upgrades.stamina - 1) * 0.32);
+    return Math.max(1.8, 5.0 - (state.upgrades.stamina - 1) * 0.34);
   }
   function getJumpVelocity() {
     return 13.5 + (state.upgrades.jump - 1) * 1.5;
   }
   function getIncomeMultiplier() {
-    return 1 + (state.upgrades.income - 1) * 0.5 + (state.level - 1) * 0.1;
+    return (1 + (state.upgrades.income - 1) * 0.5 + (state.level - 1) * 0.1) * getDiff().rewardMult;
   }
   function getTotalIncomePerSec() {
     let total = 0;
@@ -1366,6 +1468,7 @@
         level: state.level,
         xp: Math.floor(state.xp),
         trainedSpeed: Math.round(state.trainedSpeed * 10) / 10,
+        difficulty: state.difficulty,
         upgrades: state.upgrades,
         pedestals: state.pedestals,
         collected: state.collected
@@ -1381,7 +1484,10 @@
       if (typeof data.money === 'number') state.money = data.money;
       if (typeof data.level === 'number') state.level = Math.min(MAX_LEVEL, Math.max(1, Math.floor(data.level)));
       if (typeof data.xp === 'number') state.xp = Math.max(0, data.xp);
-      if (typeof data.trainedSpeed === 'number') state.trainedSpeed = Math.min(55, Math.max(0, data.trainedSpeed));
+      if (typeof data.trainedSpeed === 'number') state.trainedSpeed = Math.min(MAX_TRAINED_SPEED, Math.max(0, data.trainedSpeed));
+      if (typeof data.difficulty === 'string' && DIFFICULTIES[data.difficulty]) {
+        state.difficulty = data.difficulty;
+      }
       if (data.upgrades) {
         for (const k of Object.keys(state.upgrades)) {
           if (typeof data.upgrades[k] === 'number') state.upgrades[k] = data.upgrades[k];
@@ -2891,40 +2997,38 @@
       });
     });
 
-    // Biome Hazards! Floor traps (Biome 2+) & Moving Sweeping Danger Orbs (Biome 4+)
+    // Biome Hazards! Floor traps (ALL biomes), Sweeping Orbs (Biome 2+) & Pulsing Laser Barriers (Biome 4+)!
     const biomeHazards = [];
-    if (idx >= 1) {
-      const trapCount = idx >= 9 ? 3 : (idx >= 4 ? 2 : 1);
-      for (let h = 0; h < trapCount; h++) {
-        const hx = ((idx * 7 + h * 11) % 3 - 1) * 9.5;
-        const hz = zStart - 12 - h * 11;
-        const radius = 3.2 + Math.min(1.4, idx * 0.08);
-        const pad = new THREE.Mesh(
-          new THREE.CylinderGeometry(radius, radius + 0.3, 0.22, 16),
-          new THREE.MeshBasicMaterial({ color: 0xef4444, transparent: true, opacity: 0.62 })
-        );
-        pad.position.set(hx, 0.12, hz);
-        const rim = new THREE.Mesh(
-          new THREE.TorusGeometry(radius, 0.16, 6, 20),
-          new THREE.MeshBasicMaterial({ color: 0xfef08a })
-        );
-        rim.rotation.x = Math.PI / 2;
-        rim.position.set(hx, 0.25, hz);
-        bGroup.add(pad, rim);
-        biomeHazards.push({ type: 'floor', x: hx, z: hz, radius, mesh: pad });
-      }
+    const trapCount = idx >= 10 ? 4 : (idx >= 5 ? 3 : (idx >= 2 ? 2 : 1));
+    for (let h = 0; h < trapCount; h++) {
+      const hx = ((idx * 7 + h * 11) % 3 - 1) * 9.5;
+      const hz = zStart - 10 - h * 10.5;
+      const radius = 3.2 + Math.min(1.6, idx * 0.09);
+      const pad = new THREE.Mesh(
+        new THREE.CylinderGeometry(radius, radius + 0.3, 0.22, 16),
+        new THREE.MeshBasicMaterial({ color: 0xef4444, transparent: true, opacity: 0.65 })
+      );
+      pad.position.set(hx, 0.12, hz);
+      const rim = new THREE.Mesh(
+        new THREE.TorusGeometry(radius, 0.16, 6, 20),
+        new THREE.MeshBasicMaterial({ color: 0xfef08a })
+      );
+      rim.rotation.x = Math.PI / 2;
+      rim.position.set(hx, 0.25, hz);
+      bGroup.add(pad, rim);
+      biomeHazards.push({ type: 'floor', x: hx, z: hz, radius, mesh: pad });
     }
-    if (idx >= 3) {
-      const orbCount = idx >= 10 ? 2 : 1;
+    if (idx >= 1) {
+      const orbCount = idx >= 10 ? 3 : (idx >= 5 ? 2 : 1);
       for (let m = 0; m < orbCount; m++) {
-        const oz = zStart - 17 - m * 18;
+        const oz = zStart - 15 - m * 14;
         const orb = new THREE.Mesh(
-          new THREE.OctahedronGeometry(1.45, 0),
-          new THREE.MeshBasicMaterial({ color: idx >= 11 ? 0xff1e56 : 0xf97316 })
+          new THREE.OctahedronGeometry(1.5, 0),
+          new THREE.MeshBasicMaterial({ color: idx >= 10 ? 0xff1e56 : 0xf97316 })
         );
         orb.position.set(0, 1.65, oz);
         const ring = new THREE.Mesh(
-          new THREE.TorusGeometry(1.85, 0.12, 6, 16),
+          new THREE.TorusGeometry(1.9, 0.13, 6, 16),
           new THREE.MeshBasicMaterial({ color: 0xfef08a })
         );
         orb.add(ring);
@@ -2932,13 +3036,37 @@
         biomeHazards.push({
           type: 'sweeper',
           z: oz,
-          amp: ROAD_HALF_WIDTH - 4.5,
-          speed: 1.45 + idx * 0.14 + m * 0.35,
+          amp: ROAD_HALF_WIDTH - 4.0,
+          speed: 1.65 + idx * 0.16 + m * 0.4,
           phase: idx * 1.3 + m * 2.4,
-          radius: 2.1,
+          radius: 2.25,
           mesh: orb
         });
       }
+    }
+    if (idx >= 3) {
+      // Pulsing Laser Jump Barrier across the corridor (JUMP over with Space!)
+      const lz = zStart - 28;
+      const postMat = matStd(0x334155, { metalness: 0.6, roughness: 0.3 });
+      const postL = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.8, 3.2, 8), postMat);
+      postL.position.set(-ROAD_HALF_WIDTH + 1.0, 1.6, lz);
+      const postR = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.8, 3.2, 8), postMat);
+      postR.position.set(ROAD_HALF_WIDTH - 1.0, 1.6, lz);
+      const beamMat = new THREE.MeshBasicMaterial({
+        color: idx >= 9 ? 0xe879f9 : 0xff2255,
+        transparent: true,
+        opacity: 0.88
+      });
+      const beam = new THREE.Mesh(new THREE.BoxGeometry((ROAD_HALF_WIDTH - 1.0) * 2, 0.52, 0.52), beamMat);
+      beam.position.set(0, 1.15, lz);
+      bGroup.add(postL, postR, beam);
+      biomeHazards.push({
+        type: 'laser',
+        z: lz,
+        period: Math.max(2.1, 3.5 - idx * 0.08),
+        phase: idx * 0.9,
+        mesh: beam
+      });
     }
 
     // Monster guarding this biome!
@@ -2963,9 +3091,11 @@
       patrolAngle: idx * 1.1,
       chasing: false,
       retreating: false,
+      aggroMode: 'none', // 'none' | 'egg' | 'guard' | 'night'
       rageTime: 0,
-      lungeCooldown: 3.5,
+      lungeCooldown: 3.0,
       lungeTimer: 0,
+      fireCooldown: 2.2,
       stunTimer: 0
     });
   });
@@ -3032,9 +3162,54 @@
   playerGroup.position.copy(player.pos);
 
   // =========================================================================
-  // 10. PARTICLE BURSTS (Hatch celebration / Shield pop)
+  // 10. PARTICLE BURSTS & MONSTER PROJECTILES
   // =========================================================================
   const particles = [];
+  const projectiles = [];
+
+  function spawnMonsterProjectile(br) {
+    const diff = getDiff();
+    const startPos = br.monsterMesh.position.clone();
+    startPos.y = 2.0;
+
+    // Aim at player (with slight lead on Nightmare / Impossible!)
+    const targetPos = player.pos.clone();
+    targetPos.y = 1.45;
+    if (state.difficulty !== 'hard') {
+      const leadDist = state.difficulty === 'impossible' ? 5.5 : 3.2;
+      targetPos.z += leadDist; // lead toward Base!
+    }
+    const dir = targetPos.sub(startPos).normalize();
+    const speed = Math.max(36, br.biome.chaseSpeed * 1.35 * diff.monsterSpeedMult);
+
+    const orb = new THREE.Group();
+    const coreColor = br.biome.eggSecondary || 0xff4500;
+    const core = new THREE.Mesh(
+      new THREE.SphereGeometry(0.75, 10, 8),
+      new THREE.MeshBasicMaterial({ color: coreColor })
+    );
+    const halo = new THREE.Mesh(
+      new THREE.TorusGeometry(1.05, 0.14, 6, 14),
+      new THREE.MeshBasicMaterial({ color: 0xfef08a })
+    );
+    orb.add(core, halo);
+    orb.position.copy(startPos);
+    scene.add(orb);
+
+    projectiles.push({
+      mesh: orb,
+      vel: dir.multiplyScalar(speed),
+      life: 3.2,
+      br,
+      color: coreColor
+    });
+    SFX.fireball();
+  }
+
+  function clearAllProjectiles() {
+    for (const pr of projectiles) scene.remove(pr.mesh);
+    projectiles.length = 0;
+  }
   function spawnBurst(pos, colorHex, count = 26) {
     const geo = new THREE.BoxGeometry(0.28, 0.28, 0.28);
     const mat = new THREE.MeshBasicMaterial({ color: colorHex });
@@ -3213,9 +3388,11 @@
     // Trigger angry chase! Rarer eggs make the monster chase even faster!
     br.chasing = true;
     br.retreating = false;
+    br.aggroMode = 'egg';
     br.rageTime = 0;
-    br.lungeCooldown = 3.2;
+    br.lungeCooldown = 2.6;
     br.lungeTimer = 0;
+    br.fireCooldown = 1.8 / getDiff().projectileRate;
     br.monsterMesh.userData.angrySprite.visible = true;
     state.activeChaserIdx = biomeIdx;
     state.activeChaserSpeedMult = et.chaseMult;
@@ -3292,15 +3469,22 @@
       return;
     }
 
-    // Caught! Drop egg, calm ALL chasing monsters, and send player back to Base
+    // Caught! Drop egg, lose cash penalty, calm ALL chasing monsters, and send player back to Base
+    const diff = getDiff();
+    const cashLost = Math.floor(state.money * diff.catchCashLoss);
+    if (cashLost > 0) state.money = Math.max(0, state.money - cashLost);
+
     SFX.caught();
     flashScreen('rgba(220, 38, 38, 0.65)');
-    showToast(`💥 Caught by ${br.biome.emoji} ${br.biome.monsterName}! Egg returned to nest!`, '#ef4444');
+    const lossMsg = cashLost > 0 ? ` Lost ${formatMoney(cashLost)}!` : '';
+    showToast(`💥 Caught by ${br.biome.emoji} ${br.biome.monsterName}!${lossMsg} Back to Base!`, '#ef4444');
 
+    clearAllProjectiles();
     for (const m of biomeRuntime) {
       if (m.chasing) {
         m.chasing = false;
         m.retreating = true;
+        m.aggroMode = 'none';
         m.rageTime = 0;
         m.lungeTimer = 0;
         m.monsterMesh.userData.angrySprite.visible = false;
@@ -3320,6 +3504,7 @@
     state.activeChaserIdx = null;
     state.activeChaserSpeedMult = 1;
     state.slowTimer = 0;
+    state.staminaExhaustedTimer = 0;
     setCarriedEgg(null);
 
     // Respawn safely inside Base
@@ -3329,6 +3514,7 @@
     state.onTreadmill = false;
     state.stamina = getMaxStamina();
     state.shieldsRemaining = state.upgrades.shield;
+    saveGame();
     updateHUD();
   }
 
@@ -3340,8 +3526,12 @@
     SFX.dash();
   }
 
+  function isBeingChased() {
+    return state.activeChaserIdx !== null || biomeRuntime.some(br => br.chasing);
+  }
+
   function tryReturnToBase() {
-    if (state.carryingEgg !== null || state.activeChaserIdx !== null) {
+    if (state.carryingEgg !== null || isBeingChased()) {
       showToast('❌ You cannot teleport while carrying an egg or being chased!', '#ef4444');
       return;
     }
@@ -3573,7 +3763,7 @@
         <span class="index-biome" style="background:${b.uiColor};">${b.name}</span>
         <div class="index-stats">
           💰 Base ${formatMoney(Math.round(b.income * getIncomeMultiplier()))}/s (up to 25x Galaxy!)<br>
-          🏃 Monster Speed: ${b.chaseSpeed}
+          🏃 Monster Speed: ${Math.round(b.chaseSpeed * getDiff().monsterSpeedMult)} (${getDiff().label})
         </div>
       `;
       grid.appendChild(card);
@@ -3601,7 +3791,7 @@
   }
 
   function updateHUDButtons() {
-    const locked = state.carryingEgg !== null || state.activeChaserIdx !== null;
+    const locked = state.carryingEgg !== null || isBeingChased();
     document.getElementById('return-base-btn').disabled = locked;
   }
 
@@ -3633,6 +3823,14 @@
       xpFill.style.width = Math.min(100, (state.xp / need) * 100).toFixed(1) + '%';
     }
 
+    // Difficulty HUD button
+    const diff = getDiff();
+    const diffBtn = document.getElementById('diff-btn');
+    if (diffBtn) {
+      diffBtn.textContent = `${diff.label} (${diff.rewardMult}x 💰)`;
+      diffBtn.className = diff.btnClass;
+    }
+
     // Owner-only Max Speed toggle button (hidden for other players)
     const ownerBtn = document.getElementById('owner-speed-btn');
     if (state.isOwner) {
@@ -3644,6 +3842,38 @@
 
     updateHUDButtons();
   }
+
+  function setDifficulty(diffId, silent = false) {
+    if (!DIFFICULTIES[diffId]) return;
+    state.difficulty = diffId;
+    document.querySelectorAll('#start-diff-selector .diff-choice').forEach(el => {
+      el.classList.toggle('selected', el.dataset.diff === diffId);
+    });
+    for (let i = 0; i < 16; i++) refreshPedestalVisual(i);
+    saveGame();
+    updateHUD();
+    if (!silent) {
+      const d = getDiff();
+      showToast(`${d.label} MODE ACTIVE! (${Math.round(d.monsterSpeedMult * 100)}% Monster Speed, ${d.rewardMult}x 💰)`, d.id === 'impossible' ? '#a855f7' : (d.id === 'nightmare' ? '#ef4444' : '#f97316'));
+    }
+  }
+
+  document.querySelectorAll('#start-diff-selector .diff-choice').forEach(btn => {
+    btn.addEventListener('click', () => setDifficulty(btn.dataset.diff, true));
+  });
+  // Sync initial loaded difficulty highlight on start screen
+  document.querySelectorAll('#start-diff-selector .diff-choice').forEach(el => {
+    el.classList.toggle('selected', el.dataset.diff === state.difficulty);
+  });
+
+  document.getElementById('diff-btn').addEventListener('click', () => {
+    if (player.pos.z < 0 || state.carryingEgg !== null || isBeingChased()) {
+      showToast('🏠 Return to Home Base to change Difficulty!', '#f59e0b');
+      return;
+    }
+    const nextIdx = (DIFF_ORDER.indexOf(state.difficulty) + 1) % DIFF_ORDER.length;
+    setDifficulty(DIFF_ORDER[nextIdx]);
+  });
 
   // Owner Max Speed button + secret Ctrl+Shift+K unlock
   document.getElementById('owner-speed-btn').addEventListener('click', () => {
@@ -3746,9 +3976,10 @@
     if (state.hazardHitCooldown > 0) state.hazardHitCooldown -= dt;
     if (state.dashTimer > 0) state.dashTimer -= dt;
     if (state.dashCooldown > 0) state.dashCooldown = Math.max(0, state.dashCooldown - dt);
+    if (state.staminaExhaustedTimer > 0) state.staminaExhaustedTimer = Math.max(0, state.staminaExhaustedTimer - dt);
 
     // -----------------------------------------------------------------------
-    // Day / Night Cycle (30-second Night Time where Eggs CANNOT be stolen!)
+    // Day / Night Cycle (30-second Night Time: Eggs Locked + NIGHT STALKERS!)
     // -----------------------------------------------------------------------
     if (state.started) {
       state.phaseTimer -= dt;
@@ -3757,12 +3988,12 @@
         state.phaseTimer = state.isNight ? NIGHT_DURATION : DAY_DURATION;
         if (state.isNight) {
           SFX.nightfall();
-          flashScreen('rgba(30, 27, 75, 0.45)');
-          showToast(`🌙 NIGHT TIME (${NIGHT_DURATION}s)! Eggs are LOCKED — you cannot steal until Sunrise!`, '#818cf8');
+          flashScreen('rgba(30, 27, 75, 0.48)');
+          showToast(`🌙 NIGHT TIME (${NIGHT_DURATION}s)! Eggs LOCKED & Monsters HUNT outside Base!`, '#818cf8');
         } else {
           SFX.sunrise();
           flashScreen('rgba(253, 224, 71, 0.28)');
-          showToast('☀️ SUNRISE! Day Time is back — Eggs are UNLOCKED! Go steal!', '#facc15');
+          showToast('☀️ SUNRISE! Night Stalkers calm down — Eggs UNLOCKED!', '#facc15');
         }
       }
     }
@@ -3828,10 +4059,10 @@
 
           // Gain Trained Speed & Level XP!
           const rate = getTreadmillRate();
-          if (state.trainedSpeed < 55) {
-            state.trainedSpeed = Math.min(55, state.trainedSpeed + rate * dt);
+          if (state.trainedSpeed < MAX_TRAINED_SPEED) {
+            state.trainedSpeed = Math.min(MAX_TRAINED_SPEED, state.trainedSpeed + rate * dt);
           }
-          addXp(14 * (1 + (state.upgrades.treadmill - 1) * 0.4) * dt);
+          addXp(11 * (1 + (state.upgrades.treadmill - 1) * 0.35) * dt);
           state.stamina = Math.min(getMaxStamina(), state.stamina + 35 * dt);
 
           // Speed sparks & rhythmic treadmill step sound
@@ -3846,9 +4077,9 @@
             playTone(300 + state.trainedSpeed * 6, 0.06, 'triangle', 0.06, 420 + state.trainedSpeed * 6);
           }
 
-          tmBanner.textContent = state.trainedSpeed >= 55
-            ? `🏋️ MAX TREADMILL SPEED! (+55.0 Trained) • Earning Level XP! (S/Space to exit)`
-            : `🏃 TRAINING ON TREADMILL! +${rate.toFixed(2)} Speed/s • Trained: +${state.trainedSpeed.toFixed(1)} (S/Space to exit)`;
+          tmBanner.textContent = state.trainedSpeed >= MAX_TRAINED_SPEED
+            ? `🏋️ MAX TREADMILL SPEED! (+${MAX_TRAINED_SPEED}.0 Trained) • Earning Level XP! (S/Space to exit)`
+            : `🏃 TRAINING ON TREADMILL! +${rate.toFixed(2)} Speed/s • Trained: +${state.trainedSpeed.toFixed(1)} / ${MAX_TRAINED_SPEED} (S/Space to exit)`;
           tmBanner.style.display = 'block';
           updateHUD();
         }
@@ -3865,18 +4096,18 @@
         if (keys['KeyD']) moveDir.add(right);
         if (keys['KeyA']) moveDir.sub(right);
 
-        const wantsSprint = (keys['ShiftLeft'] || keys['ShiftRight']) && state.stamina > 2;
+        const wantsSprint = (keys['ShiftLeft'] || keys['ShiftRight']) && state.stamina > 1 && state.staminaExhaustedTimer <= 0;
         let speed = wantsSprint ? getPlayerSprintSpeed() : getPlayerWalkSpeed();
-        // Heavy egg penalty for normal players (rarer eggs are heavier!)
+        // Heavy egg penalty for normal players (rarer eggs are MUCH heavier!)
         if (state.carryingEgg && !(state.isOwner && state.ownerMaxSpeed)) {
           const et = EGG_TYPES[state.carryingEgg.eggTypeIdx] || EGG_TYPES[0];
-          speed *= (et.weightSlow || 0.9);
+          speed *= (et.weightSlow || 0.88);
         }
-        // Slowed by a biome hazard trap!
+        // Slowed by a biome hazard trap, laser, or monster projectile!
         if (state.slowTimer > 0) {
-          speed *= (state.isOwner && state.ownerMaxSpeed) ? 0.72 : 0.48;
+          speed *= (state.isOwner && state.ownerMaxSpeed) ? 0.65 : 0.44;
         }
-        if (state.dashTimer > 0) speed *= 1.8;
+        if (state.dashTimer > 0) speed *= 1.75;
 
         if (moveDir.lengthSq() > 0.001) {
           moving = true;
@@ -3885,21 +4116,26 @@
 
           // Rotate player avatar smoothly toward travel direction
           const targetAngle = Math.atan2(moveDir.x, moveDir.z);
-          let diff = targetAngle - playerBody.rotation.y;
-          while (diff > Math.PI) diff -= Math.PI * 2;
-          while (diff < -Math.PI) diff += Math.PI * 2;
-          playerBody.rotation.y += diff * Math.min(1, dt * 14);
+          let diffAngle = targetAngle - playerBody.rotation.y;
+          while (diffAngle > Math.PI) diffAngle -= Math.PI * 2;
+          while (diffAngle < -Math.PI) diffAngle += Math.PI * 2;
+          playerBody.rotation.y += diffAngle * Math.min(1, dt * 14);
 
-          // Stamina drain (harder drain; infinite stamina in Owner Max Speed mode)
+          // Tight stamina drain (+35% heavier when carrying an egg; exhaustion cooldown at 0!)
           if (wantsSprint && state.dashTimer <= 0 && !(state.isOwner && state.ownerMaxSpeed)) {
-            state.stamina = Math.max(0, state.stamina - 32 * dt);
+            const eggDrainMult = state.carryingEgg ? 1.35 : 1.0;
+            state.stamina = Math.max(0, state.stamina - 42 * eggDrainMult * dt);
+            if (state.stamina <= 0) {
+              state.staminaExhaustedTimer = 1.4;
+              showToast('🥵 OUT OF STAMINA! Brief recovery...', '#f97316');
+            }
           }
         }
 
-        // Stamina recharge
+        // Stamina recharge (paused while exhausted!)
         const maxStam = getMaxStamina();
-        if (!wantsSprint || !moving) {
-          state.stamina = Math.min(maxStam, state.stamina + (20 + state.upgrades.stamina * 3.5) * dt);
+        if ((!wantsSprint || !moving) && state.staminaExhaustedTimer <= 0) {
+          state.stamina = Math.min(maxStam, state.stamina + (17 + state.upgrades.stamina * 3.0) * dt);
         }
 
         // Gravity & Jumping
@@ -4032,7 +4268,9 @@
       }
     }
 
-    // Update all 15 biomes, 6 eggs, hazards & monsters (HARD MODE!)
+    // Update all 15 biomes, 6 eggs, hazards, projectiles & monsters!
+    const diff = getDiff();
+    const hazardTimeMult = diff.hazardSpeedMult * (state.isNight ? 1.25 : 1.0);
     let closestChaser = null;
     let closestChaserDist = Infinity;
     let totalChasers = 0;
@@ -4065,38 +4303,60 @@
           }
         }
 
-        // Animate & check Biome Hazards (Floor Traps + Moving Sweeping Danger Orbs!)
+        // Animate & check Biome Hazards (Floor Traps + Sweeping Danger Orbs + Pulsing Laser Barriers!)
         if (br.hazards && state.started && !state.modalOpen) {
           for (const hz of br.hazards) {
             if (hz.type === 'floor') {
-              hz.mesh.material.opacity = 0.45 + Math.sin(elapsed * 5 + hz.x) * 0.2;
-              if (player.pos.y < 0.95 && state.hazardHitCooldown <= 0) {
+              hz.mesh.material.opacity = 0.48 + Math.sin(elapsed * 5.5 + hz.x) * 0.22;
+              if (player.pos.y < 1.0 && state.hazardHitCooldown <= 0) {
                 const hd = Math.hypot(player.pos.x - hz.x, player.pos.z - hz.z);
                 if (hd < hz.radius) {
-                  state.slowTimer = 1.35;
-                  state.hazardHitCooldown = 1.5;
+                  state.slowTimer = 1.55;
+                  state.hazardHitCooldown = 1.3;
+                  state.stamina = Math.max(0, state.stamina - 22);
                   SFX.caught();
-                  flashScreen('rgba(249, 115, 22, 0.35)');
-                  showToast('⚠️ TRAP HIT! Slowed down — JUMP over glowing traps!', '#f97316');
+                  flashScreen('rgba(249, 115, 22, 0.38)');
+                  showToast('⚠️ SHOCK TRAP! Slowed & stamina drained — JUMP over traps!', '#f97316');
                 }
               }
             } else if (hz.type === 'sweeper') {
-              const ox = Math.sin(elapsed * hz.speed + hz.phase) * hz.amp;
+              const ox = Math.sin(elapsed * hz.speed * hazardTimeMult + hz.phase) * hz.amp;
               hz.mesh.position.x = ox;
-              hz.mesh.rotation.y = elapsed * 4.5;
-              hz.mesh.rotation.z = elapsed * 3.2;
-              if (player.pos.y < 2.8 && state.hazardHitCooldown <= 0 && state.invulnTimer <= 0) {
+              hz.mesh.rotation.y = elapsed * 5.0 * hazardTimeMult;
+              hz.mesh.rotation.z = elapsed * 3.6 * hazardTimeMult;
+              if (player.pos.y < 2.85 && state.hazardHitCooldown <= 0 && state.invulnTimer <= 0) {
                 const od = Math.hypot(player.pos.x - ox, player.pos.z - hz.z);
                 if (od < hz.radius) {
-                  state.hazardHitCooldown = 1.4;
-                  state.slowTimer = 1.4;
-                  player.velY = 8.5;
+                  state.hazardHitCooldown = 1.25;
+                  state.slowTimer = 1.6;
+                  state.stamina = Math.max(0, state.stamina - 30);
+                  player.velY = 9.0;
                   player.onGround = false;
-                  player.pos.z -= 3.2; // knock player back away from base!
-                  spawnBurst(player.pos, 0xff4500, 14);
+                  player.pos.z -= 4.2; // knock player back away from base!
+                  spawnBurst(player.pos, 0xff4500, 16);
                   SFX.caught();
-                  flashScreen('rgba(239, 68, 68, 0.42)');
-                  showToast('💥 HIT BY DANGER ORB! Knocked back & slowed!', '#ef4444');
+                  flashScreen('rgba(239, 68, 68, 0.45)');
+                  showToast('💥 HIT BY DANGER ORB! Blasted backward & slowed!', '#ef4444');
+                }
+              }
+            } else if (hz.type === 'laser') {
+              const cycle = ((elapsed * hazardTimeMult + hz.phase) % hz.period) / hz.period;
+              const active = cycle < 0.65;
+              const warning = !active && cycle > 0.84;
+              hz.mesh.visible = active || (warning && Math.floor(elapsed * 20) % 2 === 0);
+              hz.mesh.material.opacity = active ? 0.9 : 0.32;
+              if (active && player.pos.y < 1.85 && state.hazardHitCooldown <= 0 && state.invulnTimer <= 0) {
+                if (Math.abs(player.pos.z - hz.z) < 1.15) {
+                  state.hazardHitCooldown = 1.2;
+                  state.slowTimer = 1.65;
+                  state.stamina = Math.max(0, state.stamina - 35);
+                  player.velY = 8.0;
+                  player.onGround = false;
+                  player.pos.z -= 4.8;
+                  spawnBurst(player.pos, 0xff2255, 18);
+                  SFX.laserHit();
+                  flashScreen('rgba(236, 72, 153, 0.48)');
+                  showToast('⚡ ZAPPED BY LASER BARRIER! JUMP [Space] over lasers!', '#ec4899');
                 }
               }
             }
@@ -4118,43 +4378,57 @@
       }
 
       if (br.chasing) {
-        // Did player reach the Safe Zone (Base)?
-        if (player.pos.z >= 0.4) {
+        const lostNightAggro = br.aggroMode === 'night' && !state.isNight && state.carryingEgg === null;
+        const lostGuardAggro = br.aggroMode === 'guard' && state.carryingEgg === null && !state.isNight && distToPlayer > 34;
+
+        // Did player reach the Safe Zone (Base), or lose non-egg aggro?
+        if (player.pos.z >= 0.4 || lostNightAggro || lostGuardAggro) {
           br.chasing = false;
           br.retreating = true;
+          br.aggroMode = 'none';
           br.rageTime = 0;
           br.lungeTimer = 0;
           br.monsterMesh.userData.angrySprite.visible = false;
-          escapedSafeNow = true;
+          if (player.pos.z >= 0.4) escapedSafeNow = true;
         } else {
-          // Rage ramps up over time + periodic fierce Lunge bursts!
+          // Rage ramps up sharply + frequent fierce Lunge bursts!
           br.rageTime += dt;
-          const rageMult = 1 + Math.min(0.32, br.rageTime * 0.025);
+          const rageMult = 1 + Math.min(0.48, br.rageTime * 0.036);
 
           br.lungeCooldown -= dt;
           if (br.lungeCooldown <= 0) {
-            br.lungeTimer = 0.55;
-            br.lungeCooldown = 4.2;
+            br.lungeTimer = 0.62;
+            br.lungeCooldown = Math.max(2.2, 3.6 / Math.sqrt(diff.monsterSpeedMult));
             playTone(125, 0.2, 'sawtooth', 0.14, 65);
           }
           let lungeMult = 1;
           if (br.lungeTimer > 0) {
             br.lungeTimer -= dt;
-            lungeMult = 1.38;
+            lungeMult = 1.45;
+          }
+
+          // Ranged Projectiles! (Biome 3+ on Hard; ALL biomes on Nightmare / Impossible!)
+          if (br.idx >= 2 || state.difficulty !== 'hard') {
+            br.fireCooldown -= dt;
+            if (br.fireCooldown <= 0 && distToPlayer > 7 && distToPlayer < 95 && state.started && !state.modalOpen) {
+              spawnMonsterProjectile(br);
+              br.fireCooldown = Math.max(0.85, (2.7 - Math.min(1.25, br.idx * 0.08)) / diff.projectileRate);
+            }
           }
 
           const dirX = player.pos.x - mPos.x;
           const dirZ = player.pos.z - mPos.z;
           const len = Math.hypot(dirX, dirZ) || 1;
           const eggChaseMult = (br.idx === state.activeChaserIdx) ? state.activeChaserSpeedMult : 1.0;
-          const step = br.biome.chaseSpeed * eggChaseMult * rageMult * lungeMult * dt;
+          const nightMult = state.isNight ? diff.nightSpeedMult : 1.0;
+          const step = br.biome.chaseSpeed * diff.monsterSpeedMult * eggChaseMult * nightMult * rageMult * lungeMult * dt;
 
           mPos.x += (dirX / len) * step;
           mPos.z += (dirZ / len) * step;
           if (mPos.z > -1.2) mPos.z = -1.2;
 
           br.monsterMesh.lookAt(player.pos.x, 0, player.pos.z);
-          animateMonster(br.monsterMesh, elapsed, 1.65 * lungeMult);
+          animateMonster(br.monsterMesh, elapsed, 1.75 * lungeMult);
 
           totalChasers++;
           if (len < closestChaserDist) {
@@ -4163,8 +4437,8 @@
           }
 
           // Catch radius check!
-          const catchRadius = 2.0 + br.biome.scale * 0.65;
-          if (len < catchRadius && player.pos.y < 3.6) {
+          const catchRadius = 2.15 + br.biome.scale * 0.68;
+          if (len < catchRadius && player.pos.y < 3.8) {
             onPlayerCaught(br);
             break;
           }
@@ -4176,42 +4450,108 @@
         if (len < 1.2) {
           br.retreating = false;
         } else {
-          const spd = Math.max(26, br.biome.chaseSpeed * 1.15);
+          const spd = Math.max(30, br.biome.chaseSpeed * 1.2);
           mPos.x += (dx / len) * spd * dt;
           mPos.z += (dz / len) * spd * dt;
           br.monsterMesh.lookAt(br.homePos.x, 0, br.homePos.z);
           animateMonster(br.monsterMesh, elapsed, 1.1);
         }
       } else {
-        // Faster aggressive patrol circling around the 6 eggs!
-        br.patrolAngle += dt * (1.12 + br.idx * 0.04);
-        const tx = br.nestPos.x + Math.cos(br.patrolAngle) * 8.2;
-        const tz = br.nestPos.z + Math.sin(br.patrolAngle) * 5.6;
-        mPos.x += (tx - mPos.x) * Math.min(1, dt * 4);
-        mPos.z += (tz - mPos.z) * Math.min(1, dt * 4);
+        // Fast aggressive patrol circling around the 6 eggs!
+        const patrolSpd = (1.28 + br.idx * 0.045) * diff.hazardSpeedMult * (state.isNight ? 1.25 : 1.0);
+        br.patrolAngle += dt * patrolSpd;
+        const tx = br.nestPos.x + Math.cos(br.patrolAngle) * 8.4;
+        const tz = br.nestPos.z + Math.sin(br.patrolAngle) * 5.8;
+        mPos.x += (tx - mPos.x) * Math.min(1, dt * 4.5);
+        mPos.z += (tz - mPos.z) * Math.min(1, dt * 4.5);
         br.monsterMesh.lookAt(tx, 0, tz);
-        animateMonster(br.monsterMesh, elapsed, 1.05);
+        animateMonster(br.monsterMesh, elapsed, 1.15);
 
-        // HARD MODE: Nearby biome monsters JOIN THE CHASE if you run past carrying an egg!
-        if (state.carryingEgg !== null && player.pos.z < -2 && distToPlayer < 14.5) {
-          br.chasing = true;
-          br.retreating = false;
-          br.rageTime = 0;
-          br.lungeCooldown = 2.6;
-          br.monsterMesh.userData.angrySprite.visible = true;
-          SFX.steal();
-          showToast(`🔥 ${br.biome.emoji} ${br.biome.monsterName.toUpperCase()} JOINED THE CHASE!!`, '#ef4444');
-        } else if (state.carryingEgg === null && state.hazardHitCooldown <= 0 && distToPlayer < 2.75 && player.pos.y < 3.0) {
-          // Bumping right into a guarding monster knocks you back!
-          state.hazardHitCooldown = 1.2;
-          state.slowTimer = 0.85;
-          const pushX = (player.pos.x - mPos.x) / (distToPlayer || 1);
-          const pushZ = (player.pos.z - mPos.z) / (distToPlayer || 1);
-          player.pos.x += pushX * 4.5;
-          player.pos.z += pushZ * 4.5;
-          SFX.caught();
-          flashScreen('rgba(239, 68, 68, 0.3)');
-          showToast(`💢 ${br.biome.emoji} ${br.biome.monsterName} shoved you away! Sneak past it!`, '#f97316');
+        if (state.started && !state.modalOpen && player.pos.z < -2) {
+          if (state.carryingEgg !== null && distToPlayer < diff.eggAggroDist) {
+            // Nearby biome monsters JOIN THE CHASE when you run past carrying an egg!
+            br.chasing = true;
+            br.retreating = false;
+            br.aggroMode = 'egg';
+            br.rageTime = 0;
+            br.lungeCooldown = 2.0;
+            br.fireCooldown = 1.6 / diff.projectileRate;
+            br.monsterMesh.userData.angrySprite.visible = true;
+            SFX.steal();
+            showToast(`🔥 ${br.biome.emoji} ${br.biome.monsterName.toUpperCase()} JOINED THE CHASE!!`, '#ef4444');
+          } else if (state.isNight && distToPlayer < diff.nightHuntDist) {
+            // NIGHT STALKER: Monsters hunt ANY player caught outside the Safe Zone at Night!
+            br.chasing = true;
+            br.retreating = false;
+            br.aggroMode = 'night';
+            br.rageTime = 0;
+            br.lungeCooldown = 2.2;
+            br.fireCooldown = 1.8 / diff.projectileRate;
+            br.monsterMesh.userData.angrySprite.visible = true;
+            SFX.steal();
+            showToast(`🌙 NIGHT STALKER! ${br.biome.emoji} ${br.biome.monsterName.toUpperCase()} SPOTTED YOU! RUN TO BASE!!`, '#a855f7');
+          } else if (state.carryingEgg === null && distToPlayer < diff.guardAggroDist && player.pos.y < 3.4) {
+            // TERRITORIAL GUARD AGGRO: Getting too close to a monster provokes it!
+            br.chasing = true;
+            br.retreating = false;
+            br.aggroMode = 'guard';
+            br.rageTime = 0;
+            br.lungeCooldown = 2.4;
+            br.fireCooldown = 1.9 / diff.projectileRate;
+            br.monsterMesh.userData.angrySprite.visible = true;
+            SFX.steal();
+            showToast(`💢 ${br.biome.emoji} ${br.biome.monsterName.toUpperCase()} SPOTTED YOU! SNEAK AROUND ITS PATROL!!`, '#f97316');
+          }
+        }
+      }
+    }
+
+    // Update Monster Projectiles!
+    for (let i = projectiles.length - 1; i >= 0; i--) {
+      const pr = projectiles[i];
+      pr.life -= dt;
+      pr.mesh.position.addScaledVector(pr.vel, dt);
+      pr.mesh.rotation.x += 7 * dt;
+      pr.mesh.rotation.y += 9 * dt;
+
+      // Safe Zone shields players from projectiles
+      if (pr.life <= 0 || pr.mesh.position.z > 0.4) {
+        scene.remove(pr.mesh);
+        projectiles.splice(i, 1);
+        continue;
+      }
+
+      if (state.started && !state.modalOpen) {
+        const pd = Math.hypot(player.pos.x - pr.mesh.position.x, player.pos.z - pr.mesh.position.z);
+        const py = Math.abs((player.pos.y + 1.35) - pr.mesh.position.y);
+        if (pd < 1.9 && py < 1.85) {
+          spawnBurst(pr.mesh.position, pr.color, 18);
+          scene.remove(pr.mesh);
+          projectiles.splice(i, 1);
+
+          if (state.invulnTimer <= 0) {
+            if (state.difficulty === 'impossible' && state.carryingEgg !== null && state.shieldsRemaining <= 0) {
+              onPlayerCaught(pr.br);
+              break;
+            }
+            if (state.difficulty !== 'hard' && state.shieldsRemaining > 0) {
+              state.shieldsRemaining--;
+              state.invulnTimer = 1.0;
+              SFX.shieldBlock();
+              flashScreen('rgba(56, 189, 248, 0.45)');
+              showToast('🛡️ SHIELD BLOCKED MONSTER BLAST! Keep dodging!', '#38bdf8');
+              updateHUD();
+            } else {
+              state.slowTimer = 1.75;
+              state.stamina = Math.max(0, state.stamina - 40);
+              player.velY = 7.5;
+              player.onGround = false;
+              player.pos.z -= 5.0;
+              SFX.laserHit();
+              flashScreen('rgba(239, 68, 68, 0.52)');
+              showToast(`🔥 HIT BY ${pr.br.biome.monsterName.toUpperCase()} BLAST! Strafe & Jump to dodge!`, '#ef4444');
+            }
+          }
         }
       }
     }
@@ -4240,6 +4580,7 @@
       chaseBanner.style.display = 'none';
       vignette.classList.remove('active');
     }
+    document.getElementById('return-base-btn').disabled = state.carryingEgg !== null || totalChasers > 0;
 
     // Update Particles
     for (let i = particles.length - 1; i >= 0; i--) {
@@ -4260,8 +4601,12 @@
     // Update HUD bars & road progress dot
     const maxStam = getMaxStamina();
     const stamPct = Math.round((state.stamina / maxStam) * 100);
-    document.getElementById('stamina-fill').style.width = stamPct + '%';
-    document.getElementById('stamina-label').textContent = `⚡ Stamina ${stamPct}%`;
+    const stamFill = document.getElementById('stamina-fill');
+    stamFill.style.width = stamPct + '%';
+    stamFill.classList.toggle('exhausted', state.staminaExhaustedTimer > 0);
+    document.getElementById('stamina-label').textContent = state.staminaExhaustedTimer > 0
+      ? `🥵 Exhausted (${state.staminaExhaustedTimer.toFixed(1)}s)`
+      : `⚡ Stamina ${stamPct}%`;
 
     const dashMax = getDashCooldownMax();
     const dashPct = Math.round(((dashMax - state.dashCooldown) / dashMax) * 100);
