@@ -1,0 +1,3897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Steal An Egg! - 15 Biomes 3D Adventure</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #0b1020;
+    font-family: 'Fredoka', 'Nunito', 'Comic Sans MS', sans-serif;
+  }
+  canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Red chase vignette */
+  #chase-vignette {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 5;
+    box-shadow: inset 0 0 120px rgba(255, 20, 40, 0);
+    transition: box-shadow 0.2s ease;
+  }
+  #chase-vignette.active {
+    animation: pulseDanger 0.65s infinite alternate;
+  }
+  @keyframes pulseDanger {
+    from { box-shadow: inset 0 0 70px rgba(255, 20, 40, 0.35); }
+    to   { box-shadow: inset 0 0 150px rgba(255, 10, 30, 0.78); }
+  }
+
+  /* Flash overlay for hits/hatches */
+  #screen-flash {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 6;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+  }
+
+  /* Main HUD Layer */
+  #hud {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 14px 18px;
+  }
+
+  .hud-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .hud-col {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .pill {
+    pointer-events: auto;
+    background: rgba(15, 23, 42, 0.84);
+    backdrop-filter: blur(8px);
+    border: 3px solid rgba(255, 255, 255, 0.24);
+    border-radius: 18px;
+    padding: 8px 16px;
+    color: #fff;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.6);
+  }
+
+  .money-val {
+    font-size: 24px;
+    font-weight: 700;
+    color: #ffe047;
+  }
+  .income-val {
+    font-size: 14px;
+    font-weight: 700;
+    color: #4ade80;
+    background: rgba(74, 222, 128, 0.16);
+    padding: 3px 9px;
+    border-radius: 10px;
+  }
+
+  .biome-badge {
+    font-size: 16px;
+    font-weight: 700;
+    border-color: #38bdf8;
+  }
+  .biome-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #4ade80;
+    box-shadow: 0 0 10px currentColor;
+  }
+
+  /* Center alerts */
+  .hud-center-top {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    max-width: 520px;
+  }
+
+  #carrying-banner {
+    display: none;
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.95), rgba(217, 119, 6, 0.95));
+    border: 3px solid #fef08a;
+    border-radius: 20px;
+    padding: 8px 20px;
+    color: #fff;
+    font-size: 18px;
+    font-weight: 700;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    box-shadow: 0 8px 24px rgba(245, 158, 11, 0.45);
+    text-align: center;
+  }
+
+  #treadmill-banner {
+    display: none;
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.95), rgba(16, 185, 129, 0.95));
+    border: 3px solid #a7f3d0;
+    border-radius: 20px;
+    padding: 8px 22px;
+    color: #fff;
+    font-size: 17px;
+    font-weight: 700;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    box-shadow: 0 8px 24px rgba(6, 182, 212, 0.5);
+    text-align: center;
+  }
+
+  .egg-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px 24px 0 24px;
+    justify-content: center;
+  }
+  .egg-chip {
+    background: rgba(255,255,255,0.08);
+    border: 2px solid rgba(255,255,255,0.22);
+    border-radius: 12px;
+    padding: 5px 11px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  #chase-banner {
+    display: none;
+    background: linear-gradient(135deg, rgba(220, 38, 38, 0.95), rgba(153, 27, 27, 0.95));
+    border: 3px solid #fca5a5;
+    border-radius: 20px;
+    padding: 9px 22px;
+    color: #fff;
+    font-size: 18px;
+    font-weight: 700;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.6);
+    box-shadow: 0 8px 28px rgba(239, 68, 68, 0.65);
+    text-align: center;
+    animation: shakeBanner 0.35s infinite alternate;
+  }
+  @keyframes shakeBanner {
+    from { transform: scale(1) rotate(-0.6deg); }
+    to   { transform: scale(1.03) rotate(0.6deg); }
+  }
+
+  /* Action buttons top-right */
+  .hud-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+    pointer-events: auto;
+  }
+  .btn {
+    border: 3px solid rgba(255,255,255,0.35);
+    border-radius: 16px;
+    padding: 9px 14px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+    cursor: pointer;
+    text-shadow: 0 2px 3px rgba(0,0,0,0.5);
+    box-shadow: 0 5px 0 rgba(0,0,0,0.35), 0 8px 16px rgba(0,0,0,0.35);
+    transition: transform 0.1s ease, filter 0.15s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn:hover { filter: brightness(1.12); transform: translateY(-1px); }
+  .btn:active { transform: translateY(3px); box-shadow: 0 2px 0 rgba(0,0,0,0.35); }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; filter: grayscale(0.5); }
+
+  .btn-shop   { background: linear-gradient(180deg, #f59e0b, #d97706); }
+  .btn-index  { background: linear-gradient(180deg, #8b5cf6, #6d28d9); }
+  .btn-base   { background: linear-gradient(180deg, #10b981, #059669); }
+  .btn-cam    { background: linear-gradient(180deg, #3b82f6, #2563eb); }
+  .btn-sound  { background: linear-gradient(180deg, #475569, #334155); }
+  .btn-owner  { background: linear-gradient(180deg, #facc15, #ea580c); border-color: #fef08a; }
+
+  .level-pill {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 5px;
+    min-width: 225px;
+    border-color: #facc15;
+  }
+  .level-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 15px;
+    font-weight: 700;
+  }
+  .xp-bar {
+    width: 100%;
+    height: 11px;
+    background: rgba(255,255,255,0.14);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .xp-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #facc15, #fb923c, #f472b6);
+    transition: width 0.15s ease;
+  }
+
+  /* Toast notification */
+  #toast {
+    position: fixed;
+    top: 120px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-15px);
+    background: rgba(15, 23, 42, 0.94);
+    border: 3px solid #38bdf8;
+    border-radius: 20px;
+    padding: 12px 24px;
+    color: #fff;
+    font-size: 20px;
+    font-weight: 700;
+    z-index: 60;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    text-align: center;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.55);
+  }
+  #toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* Bottom HUD */
+  .hud-bottom {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+  }
+
+  /* Context Action Prompt */
+  #interact-prompt {
+    display: none;
+    pointer-events: auto;
+    cursor: pointer;
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    border: 3px solid #bbf7d0;
+    border-radius: 22px;
+    padding: 11px 26px;
+    color: #fff;
+    font-size: 20px;
+    font-weight: 700;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    box-shadow: 0 8px 25px rgba(34, 197, 94, 0.5);
+    animation: bouncePrompt 0.9s infinite alternate ease-in-out;
+  }
+  #interact-prompt.danger-prompt {
+    background: linear-gradient(135deg, #f97316, #ea580c);
+    border-color: #fed7aa;
+    box-shadow: 0 8px 25px rgba(249, 115, 22, 0.55);
+  }
+  @keyframes bouncePrompt {
+    from { transform: translateY(0); }
+    to   { transform: translateY(-5px); }
+  }
+
+  .bottom-row {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 14px;
+  }
+
+  .controls-hint {
+    background: rgba(15, 23, 42, 0.78);
+    border: 2px solid rgba(255,255,255,0.18);
+    border-radius: 14px;
+    padding: 8px 13px;
+    color: #e2e8f0;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+  .controls-hint kbd {
+    background: rgba(255,255,255,0.18);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 5px;
+    padding: 1px 6px;
+    color: #fef08a;
+    font-family: inherit;
+    font-weight: 700;
+  }
+
+  /* Stamina, Dash, Biome Progress */
+  .meters-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 7px;
+    min-width: 340px;
+    max-width: 480px;
+    flex: 1;
+  }
+
+  .status-bars {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    align-items: center;
+  }
+  .bar-wrap {
+    flex: 1;
+    background: rgba(15, 23, 42, 0.85);
+    border: 2px solid rgba(255,255,255,0.28);
+    border-radius: 12px;
+    height: 22px;
+    overflow: hidden;
+    position: relative;
+  }
+  .bar-fill {
+    height: 100%;
+    width: 100%;
+    transition: width 0.08s linear;
+  }
+  #stamina-fill {
+    background: linear-gradient(90deg, #06b6d4, #38bdf8, #7dd3fc);
+  }
+  #dash-fill {
+    background: linear-gradient(90deg, #a855f7, #ec4899);
+  }
+  .bar-label {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    text-shadow: 0 1px 3px #000;
+  }
+  .shield-pill {
+    background: rgba(15, 23, 42, 0.85);
+    border: 2px solid #60a5fa;
+    border-radius: 12px;
+    padding: 3px 10px;
+    color: #bfdbfe;
+    font-size: 14px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  /* Biome Road Progress Map */
+  .road-map {
+    width: 100%;
+    background: rgba(15, 23, 42, 0.84);
+    border: 2px solid rgba(255,255,255,0.22);
+    border-radius: 12px;
+    padding: 6px 10px;
+  }
+  .road-segments {
+    display: flex;
+    gap: 2px;
+    height: 10px;
+    position: relative;
+    border-radius: 6px;
+    overflow: visible;
+  }
+  .road-seg {
+    flex: 1;
+    border-radius: 3px;
+    opacity: 0.85;
+  }
+  #player-dot {
+    position: absolute;
+    top: -4px;
+    width: 14px;
+    height: 18px;
+    background: #fff;
+    border: 2px solid #000;
+    border-radius: 6px;
+    transform: translateX(-50%);
+    box-shadow: 0 0 8px #fff;
+    transition: left 0.08s linear;
+  }
+  .road-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: #cbd5e1;
+    margin-top: 3px;
+  }
+
+  .speed-box {
+    background: rgba(15, 23, 42, 0.78);
+    border: 2px solid rgba(255,255,255,0.18);
+    border-radius: 14px;
+    padding: 8px 14px;
+    color: #fff;
+    font-size: 14px;
+    text-align: right;
+    min-width: 145px;
+  }
+
+  /* Crosshair for 1st person / mouse lock */
+  #crosshair {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.85);
+    box-shadow: 0 0 6px rgba(0,0,0,0.8);
+    pointer-events: none;
+    z-index: 15;
+    display: none;
+  }
+
+  /* Start / Welcome Overlay */
+  #start-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: radial-gradient(circle at center, rgba(15, 23, 42, 0.78), rgba(7, 10, 22, 0.94));
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .start-card {
+    background: linear-gradient(160deg, #1e293b, #0f172a);
+    border: 4px solid #38bdf8;
+    border-radius: 28px;
+    padding: 30px 36px;
+    max-width: 640px;
+    width: 100%;
+    text-align: center;
+    color: #fff;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7), 0 0 40px rgba(56, 189, 248, 0.25);
+  }
+  .start-title {
+    font-size: 42px;
+    font-weight: 700;
+    background: linear-gradient(90deg, #fde047, #fb923c, #f472b6, #38bdf8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 10px;
+    letter-spacing: 0.5px;
+  }
+  .start-sub {
+    font-size: 17px;
+    color: #cbd5e1;
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+  .start-steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .step-box {
+    background: rgba(255,255,255,0.06);
+    border: 2px solid rgba(255,255,255,0.14);
+    border-radius: 16px;
+    padding: 12px;
+    font-size: 14px;
+    color: #e2e8f0;
+  }
+  .step-box .emoji {
+    font-size: 28px;
+    display: block;
+    margin-bottom: 6px;
+  }
+  #play-btn {
+    background: linear-gradient(180deg, #22c55e, #15803d);
+    border: 4px solid #bbf7d0;
+    border-radius: 22px;
+    padding: 15px 46px;
+    font-family: inherit;
+    font-size: 26px;
+    font-weight: 700;
+    color: #fff;
+    cursor: pointer;
+    text-shadow: 0 2px 5px rgba(0,0,0,0.5);
+    box-shadow: 0 8px 0 #14532d, 0 14px 30px rgba(34, 197, 94, 0.45);
+    transition: transform 0.1s;
+  }
+  #play-btn:hover { filter: brightness(1.1); transform: translateY(-2px); }
+  #play-btn:active { transform: translateY(4px); box-shadow: 0 3px 0 #14532d; }
+
+  /* Modals (Shop & Index) */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(2, 6, 23, 0.76);
+    backdrop-filter: blur(5px);
+    z-index: 80;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal-backdrop.open { display: flex; }
+
+  .modal-box {
+    background: linear-gradient(165deg, #1e293b, #0f172a);
+    border: 4px solid #fbbf24;
+    border-radius: 26px;
+    width: 100%;
+    max-width: 760px;
+    max-height: 86vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.75);
+    color: #fff;
+  }
+  .modal-box.index-box {
+    border-color: #a78bfa;
+    max-width: 880px;
+  }
+  .modal-header {
+    padding: 16px 24px;
+    background: rgba(255,255,255,0.06);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid rgba(255,255,255,0.12);
+  }
+  .modal-header h2 {
+    font-size: 26px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .close-btn {
+    background: #ef4444;
+    border: 2px solid #fca5a5;
+    border-radius: 12px;
+    color: #fff;
+    font-family: inherit;
+    font-size: 18px;
+    font-weight: 700;
+    padding: 6px 14px;
+    cursor: pointer;
+  }
+  .modal-body {
+    padding: 20px 24px;
+    overflow-y: auto;
+    display: grid;
+    gap: 14px;
+  }
+
+  /* Shop cards */
+  .shop-grid {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+  .shop-item {
+    background: rgba(255,255,255,0.06);
+    border: 2px solid rgba(255,255,255,0.16);
+    border-radius: 18px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .shop-item-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .shop-item h3 { font-size: 19px; color: #fef08a; }
+  .shop-item p { font-size: 13px; color: #cbd5e1; margin-top: 4px; }
+  .lvl-badge {
+    background: rgba(56, 189, 248, 0.2);
+    border: 1px solid #38bdf8;
+    color: #7dd3fc;
+    border-radius: 10px;
+    padding: 3px 9px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+  .buy-btn {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #bbf7d0;
+    border-radius: 14px;
+    background: linear-gradient(180deg, #22c55e, #16a34a);
+    color: #fff;
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .buy-btn:disabled {
+    background: #334155;
+    border-color: #64748b;
+    color: #94a3b8;
+    cursor: not-allowed;
+  }
+
+  /* Index cards */
+  .index-grid {
+    grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));
+  }
+  .index-card {
+    background: rgba(255,255,255,0.05);
+    border: 2px solid rgba(255,255,255,0.14);
+    border-radius: 16px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .index-card.unlocked {
+    border-color: #4ade80;
+    background: rgba(34, 197, 94, 0.12);
+  }
+  .index-num {
+    font-size: 12px;
+    color: #94a3b8;
+    font-weight: 700;
+  }
+  .index-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+  }
+  .index-biome {
+    font-size: 12px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 8px;
+    align-self: flex-start;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+  }
+  .index-stats {
+    font-size: 12px;
+    color: #cbd5e1;
+    margin-top: 3px;
+  }
+
+  .modal-footer {
+    padding: 12px 24px;
+    background: rgba(0,0,0,0.25);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    color: #94a3b8;
+  }
+  .reset-btn {
+    background: rgba(239, 68, 68, 0.25);
+    border: 1px solid #ef4444;
+    color: #fca5a5;
+    border-radius: 10px;
+    padding: 5px 12px;
+    font-family: inherit;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  @media (max-width: 760px) {
+    .controls-hint, .speed-box { display: none; }
+    .start-steps { grid-template-columns: 1fr; }
+    .start-title { font-size: 30px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="chase-vignette"></div>
+<div id="screen-flash"></div>
+<div id="crosshair"></div>
+<div id="toast"></div>
+
+<!-- HUD -->
+<div id="hud">
+  <div class="hud-top">
+    <div class="hud-col">
+      <div class="pill">
+        <span>💰</span>
+        <span class="money-val" id="money-display">$0</span>
+        <span class="income-val" id="income-display">+$0/s</span>
+      </div>
+      <div class="pill level-pill">
+        <div class="level-top">
+          <span id="level-display">⭐ Level 1 / 20</span>
+          <span style="color:#fde047; font-size:12px;" id="xp-text">0 / 50 XP</span>
+        </div>
+        <div class="xp-bar"><div class="xp-fill" id="xp-fill"></div></div>
+      </div>
+      <div class="pill biome-badge" id="biome-pill">
+        <span class="biome-dot" id="biome-dot"></span>
+        <span id="biome-display">🏠 Home Base (Safe Zone)</span>
+      </div>
+      <div class="pill" style="font-size:15px;">
+        <span>🥚</span>
+        <span id="collection-display">Collection: 0 / 15</span>
+        <span style="color:#94a3b8;">|</span>
+        <span id="base-slots-display">Base: 0 / 16</span>
+      </div>
+    </div>
+
+    <div class="hud-center-top">
+      <div id="carrying-banner">🥚 Carrying Egg! Run back to Base!</div>
+      <div id="treadmill-banner">🏃 Training on Treadmill!</div>
+      <div id="chase-banner">⚠️ MONSTER IS CHASING YOU!</div>
+    </div>
+
+    <div class="hud-actions">
+      <button class="btn btn-owner" id="owner-speed-btn" style="display:none;">👑 Max Speed: ON</button>
+      <button class="btn btn-shop" id="open-shop-btn">🛒 Shop (B)</button>
+      <button class="btn btn-index" id="open-index-btn">📖 Index (I)</button>
+      <button class="btn btn-base" id="return-base-btn">🏠 Base (R)</button>
+      <button class="btn btn-cam" id="toggle-cam-btn">👁️ 3rd Person (V)</button>
+      <button class="btn btn-sound" id="toggle-sound-btn">🔊</button>
+    </div>
+  </div>
+
+  <div class="hud-bottom">
+    <button id="interact-prompt">[E] Interact</button>
+
+    <div class="bottom-row">
+      <div class="controls-hint">
+        <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> Move &nbsp;|&nbsp;
+        <kbd>Shift</kbd> Sprint &nbsp;|&nbsp;
+        <kbd>Space</kbd> Jump &nbsp;|&nbsp;
+        <kbd>Q</kbd> Dash<br>
+        <kbd>E</kbd> Steal / Place Egg &nbsp;|&nbsp;
+        <b>Click or Drag</b> Mouse to Look &nbsp;|&nbsp;
+        <kbd>Esc</kbd> Unlock Mouse
+      </div>
+
+      <div class="meters-panel">
+        <div class="status-bars">
+          <div class="bar-wrap">
+            <div class="bar-fill" id="stamina-fill"></div>
+            <div class="bar-label" id="stamina-label">⚡ Stamina 100%</div>
+          </div>
+          <div class="bar-wrap" style="max-width:140px;">
+            <div class="bar-fill" id="dash-fill"></div>
+            <div class="bar-label" id="dash-label">💨 Dash Ready (Q)</div>
+          </div>
+          <div class="shield-pill" id="shield-display">🛡️ 0</div>
+        </div>
+        <div class="road-map">
+          <div class="road-segments" id="road-segments">
+            <div id="player-dot" style="left: 3%;"></div>
+          </div>
+          <div class="road-labels">
+            <span>🏠 Base</span>
+            <span>🐔 Easy → 🌋 Volcano → 🌌 Cosmic → 🦁 Enchanted</span>
+            <span>👽 Alien</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="speed-box">
+        <div>🏃 Speed: <b id="speed-stat">14</b> <span style="color:#38bdf8; font-size:12px;" id="trained-stat">(+0)</span></div>
+        <div style="color:#94a3b8; font-size:12px;" id="distance-stat">Distance: 0m</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Start Overlay -->
+<div id="start-overlay">
+  <div class="start-card">
+    <div class="start-title">🥚 STEAL AN EGG!</div>
+    <p class="start-sub">
+      Build your animal sanctuary, venture straight ahead through <b>15 wild biomes</b>, steal eggs from legendary monsters, and <b>OUTRUN THEM</b> back to your Safe Zone!
+    </p>
+    <div class="start-steps">
+      <div class="step-box">
+        <span class="emoji">🏃</span>
+        <b>1. Explore 15 Biomes</b><br>
+        Easy, River, Jungle, Snow, Volcano, Abyss Ocean... all the way to Alien Planet!
+      </div>
+      <div class="step-box">
+        <span class="emoji">🥚</span>
+        <b>2. Steal & Escape!</b><br>
+        Grab a monster's egg with <b>[E]</b> — it will get furious and chase you down the road!
+      </div>
+      <div class="step-box">
+        <span class="emoji">🐾</span>
+        <b>3. Hatch & Upgrade</b><br>
+        Place eggs on pedestals in your Base to hatch animals, earn 💰, and upgrade your speed!
+      </div>
+    </div>
+    <button id="play-btn">▶ PLAY NOW!</button>
+  </div>
+</div>
+
+<!-- Upgrade Shop Modal -->
+<div class="modal-backdrop" id="shop-modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2>🛒 Upgrade Shop</h2>
+      <div style="display:flex; align-items:center; gap:14px;">
+        <span class="money-val" id="shop-money">$0</span>
+        <button class="close-btn" id="close-shop-btn">✕</button>
+      </div>
+    </div>
+    <div class="modal-body shop-grid" id="shop-grid"></div>
+    <div class="modal-footer">
+      <span>Tip: Deeper biome animals earn WAY more money per second!</span>
+      <button class="reset-btn" id="reset-save-btn">Reset Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Animal Index Modal -->
+<div class="modal-backdrop" id="index-modal">
+  <div class="modal-box index-box">
+    <div class="modal-header">
+      <h2>📖 15 Biomes & 6 Egg Types Index</h2>
+      <button class="close-btn" id="close-index-btn">✕</button>
+    </div>
+    <div class="egg-legend" id="egg-legend"></div>
+    <div class="modal-body index-grid" id="index-grid"></div>
+    <div class="modal-footer">
+      <span id="index-summary">Collected 0 / 15 Monsters</span>
+      <span>Place any stolen egg on a pedestal in your Base!</span>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(() => {
+  'use strict';
+
+  // =========================================================================
+  // 1. BIOME & MONSTER DEFINITIONS (ALL 15 BIOMES IN EXACT ORDER)
+  // =========================================================================
+  const BIOME_LENGTH = 62;
+  const ROAD_HALF_WIDTH = 23;
+  const BASE_DEPTH = 52;
+  const BASE_HALF_WIDTH = 28;
+
+  const BIOMES = [
+    {
+      id: 'easy', num: 1, name: 'Easy Meadow', monsterName: 'Chicken', emoji: '🐔',
+      groundColor: 0x57c84d, accentColor: 0x3da337, skyColor: 0x7dd3fc, fogColor: 0xa5e4ff,
+      uiColor: '#4ade80', eggPrimary: 0xfff8dc, eggSecondary: 0xf59e0b,
+      chaseSpeed: 12.2, income: 10, scale: 1.0,
+      desc: 'A sunny green meadow guarded by a feisty Chicken.'
+    },
+    {
+      id: 'river', num: 2, name: 'River', monsterName: 'Duck', emoji: '🦆',
+      groundColor: 0x38bdf8, accentColor: 0x65a30d, skyColor: 0x60a5fa, fogColor: 0x93c5fd,
+      uiColor: '#38bdf8', eggPrimary: 0xe0f2fe, eggSecondary: 0x0ea5e9,
+      chaseSpeed: 14.5, income: 25, scale: 1.05,
+      desc: 'Sparkling riverbanks where a speedy Duck guards its nest.'
+    },
+    {
+      id: 'jungle', num: 3, name: 'Jungle', monsterName: 'Tiger', emoji: '🐯',
+      groundColor: 0x1e6b34, accentColor: 0x14532d, skyColor: 0x34d399, fogColor: 0x6ee7b7,
+      uiColor: '#16a34a', eggPrimary: 0xfb923c, eggSecondary: 0x1e1b18,
+      chaseSpeed: 17.0, income: 65, scale: 1.15,
+      desc: 'Dense leafy jungle prowled by a fierce striped Tiger.'
+    },
+    {
+      id: 'snow', num: 4, name: 'Snow', monsterName: 'Yeti', emoji: '❄️',
+      groundColor: 0xe2f1ff, accentColor: 0x93c5fd, skyColor: 0xcbe8ff, fogColor: 0xdbeafe,
+      uiColor: '#bae6fd', eggPrimary: 0xe0f7ff, eggSecondary: 0x38bdf8,
+      chaseSpeed: 19.5, income: 160, scale: 1.35,
+      desc: 'Freezing peaks where a towering snowy Yeti stomps.'
+    },
+    {
+      id: 'volcano', num: 5, name: 'Volcano', monsterName: 'Cerberus', emoji: '🔥',
+      groundColor: 0x2c1b18, accentColor: 0xff4500, skyColor: 0x7c1d0f, fogColor: 0x9a3412,
+      uiColor: '#f97316', eggPrimary: 0x3f120b, eggSecondary: 0xff5500,
+      chaseSpeed: 22.0, income: 420, scale: 1.35,
+      desc: 'Molten basalt fields guarded by the 3-headed Cerberus!'
+    },
+    {
+      id: 'abyss_ocean', num: 6, name: 'Abyss Ocean', monsterName: 'Whale', emoji: '🐋',
+      groundColor: 0x0b2545, accentColor: 0x00f5d4, skyColor: 0x061a33, fogColor: 0x0d3b66,
+      uiColor: '#0284c7', eggPrimary: 0x0c4a6e, eggSecondary: 0x22d3ee,
+      chaseSpeed: 24.5, income: 1100, scale: 1.45,
+      desc: 'Deep glowing seabed patrolled by a giant Abyssal Whale.'
+    },
+    {
+      id: 'prehistoric', num: 7, name: 'Prehistoric', monsterName: 'T-Rex', emoji: '🦖',
+      groundColor: 0x7c6f3d, accentColor: 0x4d5d2b, skyColor: 0xd97706, fogColor: 0xeab308,
+      uiColor: '#ca8a04', eggPrimary: 0xd9f99d, eggSecondary: 0x4d7c0f,
+      chaseSpeed: 27.0, income: 2800, scale: 1.5,
+      desc: 'Ancient dinosaur valley ruled by a roaring T-Rex!'
+    },
+    {
+      id: 'storm_land', num: 8, name: 'Storm Land', monsterName: 'Purple Rhino', emoji: '🦏',
+      groundColor: 0x2e1f47, accentColor: 0x9333ea, skyColor: 0x1e1333, fogColor: 0x3b1f66,
+      uiColor: '#9333ea', eggPrimary: 0x7e22ce, eggSecondary: 0xfacc15,
+      chaseSpeed: 29.5, income: 7000, scale: 1.35,
+      desc: 'Crackling lightning plains charged by a Purple Rhino.'
+    },
+    {
+      id: 'cosmic', num: 9, name: 'Cosmic', monsterName: 'Cosmic Monster', emoji: '🌌',
+      groundColor: 0x120a2e, accentColor: 0x38bdf8, skyColor: 0x050214, fogColor: 0x1a0b4a,
+      uiColor: '#6366f1', eggPrimary: 0x1e1b4b, eggSecondary: 0xf472b6,
+      chaseSpeed: 32.0, income: 18000, scale: 1.4,
+      desc: 'Starlit void haunted by a ringed Cosmic Monster.'
+    },
+    {
+      id: 'cherry_blossom', num: 10, name: 'Cherry Blossom', monsterName: 'Oni Tiger', emoji: '👹',
+      groundColor: 0xfbcfe8, accentColor: 0xf472b6, skyColor: 0xfda4af, fogColor: 0xfce7f3,
+      uiColor: '#f472b6', eggPrimary: 0xffe4e6, eggSecondary: 0xdc2626,
+      chaseSpeed: 34.5, income: 45000, scale: 1.35,
+      desc: 'Sakura sanctuary guarded by the horned Oni Tiger!'
+    },
+    {
+      id: 'titan_temple', num: 11, name: 'Titan Temple', monsterName: 'Gorilla King', emoji: '🦍',
+      groundColor: 0xd6c7a1, accentColor: 0xeab308, skyColor: 0xb45309, fogColor: 0xd97706,
+      uiColor: '#eab308', eggPrimary: 0x292524, eggSecondary: 0xfacc15,
+      chaseSpeed: 37.0, income: 110000, scale: 1.55,
+      desc: 'Colossal marble ruins ruled by the crowned Gorilla King!'
+    },
+    {
+      id: 'demon', num: 12, name: 'Demon Realm', monsterName: 'Demon', emoji: '😈',
+      groundColor: 0x3b0a0a, accentColor: 0xdc2626, skyColor: 0x220404, fogColor: 0x5c0c0c,
+      uiColor: '#dc2626', eggPrimary: 0x450a0a, eggSecondary: 0xef4444,
+      chaseSpeed: 39.5, income: 260000, scale: 1.45,
+      desc: 'Hellfire obsidian citadel guarded by a winged Demon!'
+    },
+    {
+      id: 'angel', num: 13, name: 'Angel Kingdom', monsterName: 'Angel', emoji: '👼',
+      groundColor: 0xf8fafc, accentColor: 0xfde047, skyColor: 0xfffbeb, fogColor: 0xfef3c7,
+      uiColor: '#fde047', eggPrimary: 0xffffff, eggSecondary: 0xfacc15,
+      chaseSpeed: 42.0, income: 620000, scale: 1.45,
+      desc: 'Cloudy golden heavens watched over by a radiant Angel.'
+    },
+    {
+      id: 'enchanted_forest', num: 14, name: 'Enchanted Forest', monsterName: 'Galaxy Lion', emoji: '🦁',
+      groundColor: 0x133b42, accentColor: 0x2dd4bf, skyColor: 0x17153b, fogColor: 0x2e236c,
+      uiColor: '#2dd4bf', eggPrimary: 0x311068, eggSecondary: 0x38bdf8,
+      chaseSpeed: 44.5, income: 1500000, scale: 1.45,
+      desc: 'Glowing mystic woods ruled by a Lion with galaxy-colored fur!'
+    },
+    {
+      id: 'alien_planet', num: 15, name: 'Alien Planet', monsterName: 'Alien Creature', emoji: '👽',
+      groundColor: 0x3b185f, accentColor: 0x84cc16, skyColor: 0x160729, fogColor: 0x3a105c,
+      uiColor: '#a855f7', eggPrimary: 0x7e22ce, eggSecondary: 0x84cc16,
+      chaseSpeed: 47.0, income: 4000000, scale: 1.5,
+      desc: 'Bizarre purple alien world of a creepy purple-skinned beast with razor-sharp teeth!'
+    }
+  ];
+
+  // =========================================================================
+  // 2. SOUND ENGINE (Web Audio API - No external assets required)
+  // =========================================================================
+  let soundEnabled = true;
+  let audioCtx = null;
+
+  function ensureAudio() {
+    if (!soundEnabled) return null;
+    if (!audioCtx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (AC) audioCtx = new AC();
+    }
+    if (audioCtx && audioCtx.state === 'suspended') {
+      audioCtx.resume().catch(() => {});
+    }
+    return audioCtx;
+  }
+
+  function playTone(freq, duration, type = 'sine', gainVal = 0.16, slideTo = null) {
+    const ctx = ensureAudio();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, now);
+    if (slideTo !== null) {
+      osc.frequency.exponentialRampToValueAtTime(Math.max(20, slideTo), now + duration);
+    }
+    gain.gain.setValueAtTime(gainVal, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + duration);
+  }
+
+  const SFX = {
+    steal() {
+      playTone(320, 0.14, 'triangle', 0.22, 680);
+      setTimeout(() => playTone(140, 0.45, 'sawtooth', 0.24, 65), 90);
+      setTimeout(() => playTone(110, 0.35, 'square', 0.16, 55), 140);
+    },
+    hatch() {
+      const notes = [523, 659, 784, 1046];
+      notes.forEach((n, idx) => setTimeout(() => playTone(n, 0.22, 'triangle', 0.2), idx * 80));
+    },
+    safeEscape() {
+      playTone(440, 0.15, 'sine', 0.18, 660);
+      setTimeout(() => playTone(660, 0.25, 'sine', 0.18, 880), 100);
+    },
+    caught() {
+      playTone(220, 0.25, 'sawtooth', 0.25, 70);
+      setTimeout(() => playTone(130, 0.4, 'square', 0.22, 45), 130);
+    },
+    shieldBlock() {
+      playTone(620, 0.18, 'triangle', 0.24, 980);
+      setTimeout(() => playTone(480, 0.2, 'sine', 0.2, 760), 60);
+    },
+    buy() {
+      playTone(587, 0.1, 'triangle', 0.18, 880);
+      setTimeout(() => playTone(880, 0.16, 'triangle', 0.18, 1174), 75);
+    },
+    jump() {
+      playTone(220, 0.14, 'sine', 0.12, 440);
+    },
+    dash() {
+      playTone(420, 0.16, 'sawtooth', 0.12, 160);
+    }
+  };
+
+  // =========================================================================
+  // 3. GAME STATE & UPGRADES
+  // =========================================================================
+  const SAVE_KEY = 'steal_an_egg_15biomes_v1';
+
+  // 6 DIFFERENT EGG TYPES (found in every biome!)
+  const EGG_TYPES = [
+    { id: 'common',  name: 'Common',  emoji: '🥚', mult: 1,  chaseMult: 1.00, color: '#f8fafc', hex: 0xfff8dc, desc: 'Classic Biome Egg (1x)' },
+    { id: 'golden',  name: 'Golden',  emoji: '✨', mult: 2,  chaseMult: 1.05, color: '#facc15', hex: 0xfacc15, desc: 'Shiny Metallic Gold (2x)' },
+    { id: 'diamond', name: 'Diamond', emoji: '💎', mult: 4,  chaseMult: 1.10, color: '#38bdf8', hex: 0x38bdf8, desc: 'Glowing Crystal Diamond (4x)' },
+    { id: 'lava',    name: 'Lava',    emoji: '🔥', mult: 7,  chaseMult: 1.16, color: '#f97316', hex: 0xff4500, desc: 'Cracked Molten Magma (7x)' },
+    { id: 'rainbow', name: 'Rainbow', emoji: '🌈', mult: 12, chaseMult: 1.22, color: '#ec4899', hex: 0xf472b6, desc: 'Prismatic Rainbow Aura (12x)' },
+    { id: 'galaxy',  name: 'Galaxy',  emoji: '🌌', mult: 25, chaseMult: 1.28, color: '#a855f7', hex: 0xa855f7, desc: 'Cosmic Ringed Star Egg (25x)' }
+  ];
+
+  const MAX_LEVEL = 20;
+  const OWNER_KEY = 'steal_an_egg_owner_v1';
+
+  function hashCodeStr(s) {
+    let h = 2166136261;
+    for (let i = 0; i < s.length; i++) {
+      h ^= s.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return (h >>> 0);
+  }
+  // Hash of the secret owner key (not stored in plain text)
+  const OWNER_HASH = 2361126997;
+
+  const UPGRADES = {
+    speed: {
+      name: '🏃 Speed Boots',
+      desc: 'Run much faster to outrun deep-biome monsters!',
+      maxLevel: 20,
+      baseCost: 30,
+      costMult: 2.1
+    },
+    treadmill: {
+      name: '🏋️ Turbo Treadmill',
+      desc: 'Train Speed & Level XP MUCH faster on your Base Treadmill!',
+      maxLevel: 20,
+      baseCost: 40,
+      costMult: 2.05
+    },
+    stamina: {
+      name: '⚡ Turbo Stamina & Dash',
+      desc: 'Longer sprinting, faster recharge & stronger Q-Dash!',
+      maxLevel: 10,
+      baseCost: 45,
+      costMult: 2.5
+    },
+    jump: {
+      name: '🦘 Super Jump',
+      desc: 'Leap higher over obstacles and dodge monsters!',
+      maxLevel: 8,
+      baseCost: 60,
+      costMult: 2.4
+    },
+    shield: {
+      name: '🛡️ Escape Shield',
+      desc: 'Survive hits while carrying an egg + speed burst!',
+      maxLevel: 5,
+      baseCost: 250,
+      costMult: 3.8
+    },
+    income: {
+      name: '💎 Golden Pedestals',
+      desc: 'Boost money earned by ALL animals in your Base (+50%/lvl)!',
+      maxLevel: 10,
+      baseCost: 120,
+      costMult: 2.8
+    }
+  };
+
+  const state = {
+    money: 0,
+    level: 1,
+    xp: 0,
+    trainedSpeed: 0,
+    isOwner: false,
+    ownerMaxSpeed: false,
+    upgrades: { speed: 1, treadmill: 1, stamina: 1, jump: 1, shield: 0, income: 1 },
+    pedestals: new Array(16).fill(null), // stores { biomeIdx, eggTypeIdx } or null
+    collected: {}, // biomeId -> true
+    carryingEgg: null, // { biomeIdx, eggTypeIdx } or null
+    activeChaserIdx: null,
+    activeChaserSpeedMult: 1,
+    onTreadmill: false,
+    shieldsRemaining: 0,
+    invulnTimer: 0,
+    dashTimer: 0,
+    dashCooldown: 0,
+    stamina: 100,
+    firstPerson: false,
+    started: false,
+    modalOpen: false
+  };
+
+  function detectOwnerMode() {
+    let unlocked = false;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const q = (params.get('owner') || '').trim().toLowerCase();
+      if (q && hashCodeStr(q) === OWNER_HASH) {
+        unlocked = true;
+        localStorage.setItem(OWNER_KEY, '1');
+        // Remove ?owner=... from address bar so the secret stays hidden
+        params.delete('owner');
+        const cleanUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '') + window.location.hash;
+        window.history.replaceState({}, '', cleanUrl);
+      }
+      if (localStorage.getItem(OWNER_KEY) === '1') {
+        unlocked = true;
+      }
+    } catch (e) {}
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      unlocked = true;
+    }
+    if (unlocked) {
+      state.isOwner = true;
+      state.ownerMaxSpeed = true;
+    }
+  }
+
+  function getXpNeeded(lvl) {
+    return Math.round(50 * Math.pow(1.38, lvl - 1));
+  }
+
+  function addXp(amount) {
+    if (state.level >= MAX_LEVEL || amount <= 0) return;
+    state.xp += amount;
+    let leveledUp = false;
+    while (state.level < MAX_LEVEL && state.xp >= getXpNeeded(state.level)) {
+      state.xp -= getXpNeeded(state.level);
+      state.level++;
+      leveledUp = true;
+    }
+    if (state.level >= MAX_LEVEL) state.xp = 0;
+    if (leveledUp) {
+      SFX.hatch();
+      if (typeof spawnBurst === 'function' && typeof player !== 'undefined') {
+        spawnBurst(player.pos, 0xfacc15, 36);
+      }
+      if (typeof showToast === 'function') {
+        showToast(
+          state.level >= MAX_LEVEL
+            ? '👑 MAX LEVEL 20 REACHED!! (+Speed & +Income Bonus!)'
+            : `⭐ LEVEL UP! Level ${state.level} / ${MAX_LEVEL}! (+Speed & +10% Income!)`,
+          '#facc15'
+        );
+      }
+      if (typeof pedestalObjects !== 'undefined') {
+        for (let i = 0; i < 16; i++) refreshPedestalVisual(i);
+      }
+      saveGame();
+    }
+  }
+
+  function getUpgradeCost(key) {
+    const u = UPGRADES[key];
+    const lvl = state.upgrades[key];
+    const exp = key === 'shield' ? lvl : (lvl - 1);
+    return Math.round(u.baseCost * Math.pow(u.costMult, exp));
+  }
+
+  function getTreadmillRate() {
+    return 0.65 + (state.upgrades.treadmill - 1) * 0.55;
+  }
+  function getPlayerWalkSpeed() {
+    if (state.isOwner && state.ownerMaxSpeed) return 78;
+    return 14 + (state.upgrades.speed - 1) * 2.4 + (state.level - 1) * 1.1 + state.trainedSpeed;
+  }
+  function getPlayerSprintSpeed() {
+    if (state.isOwner && state.ownerMaxSpeed) return 120;
+    return getPlayerWalkSpeed() * 1.44;
+  }
+  function getMaxStamina() {
+    return 100 + (state.upgrades.stamina - 1) * 25;
+  }
+  function getDashCooldownMax() {
+    if (state.isOwner && state.ownerMaxSpeed) return 0.6;
+    return Math.max(1.5, 4.5 - (state.upgrades.stamina - 1) * 0.32);
+  }
+  function getJumpVelocity() {
+    return 13.5 + (state.upgrades.jump - 1) * 1.5;
+  }
+  function getIncomeMultiplier() {
+    return 1 + (state.upgrades.income - 1) * 0.5 + (state.level - 1) * 0.1;
+  }
+  function getTotalIncomePerSec() {
+    let total = 0;
+    for (const entry of state.pedestals) {
+      if (entry && BIOMES[entry.biomeIdx]) {
+        const eggType = EGG_TYPES[entry.eggTypeIdx] || EGG_TYPES[0];
+        total += BIOMES[entry.biomeIdx].income * eggType.mult;
+      }
+    }
+    return Math.round(total * getIncomeMultiplier());
+  }
+
+  function formatMoney(n) {
+    if (n >= 1e9) return '$' + (n / 1e9).toFixed(2) + 'B';
+    if (n >= 1e6) return '$' + (n / 1e6).toFixed(2) + 'M';
+    if (n >= 1e3) return '$' + (n / 1e3).toFixed(1) + 'K';
+    return '$' + Math.floor(n).toLocaleString();
+  }
+
+  function saveGame() {
+    try {
+      localStorage.setItem(SAVE_KEY, JSON.stringify({
+        money: Math.floor(state.money),
+        level: state.level,
+        xp: Math.floor(state.xp),
+        trainedSpeed: Math.round(state.trainedSpeed * 10) / 10,
+        upgrades: state.upgrades,
+        pedestals: state.pedestals,
+        collected: state.collected
+      }));
+    } catch (e) {}
+  }
+
+  function loadGame() {
+    try {
+      const raw = localStorage.getItem(SAVE_KEY);
+      if (!raw) return;
+      const data = JSON.parse(raw);
+      if (typeof data.money === 'number') state.money = data.money;
+      if (typeof data.level === 'number') state.level = Math.min(MAX_LEVEL, Math.max(1, Math.floor(data.level)));
+      if (typeof data.xp === 'number') state.xp = Math.max(0, data.xp);
+      if (typeof data.trainedSpeed === 'number') state.trainedSpeed = Math.min(55, Math.max(0, data.trainedSpeed));
+      if (data.upgrades) {
+        for (const k of Object.keys(state.upgrades)) {
+          if (typeof data.upgrades[k] === 'number') state.upgrades[k] = data.upgrades[k];
+        }
+      }
+      if (Array.isArray(data.pedestals) && data.pedestals.length === 16) {
+        state.pedestals = data.pedestals.map(v => {
+          if (typeof v === 'number' && v >= 0 && v < BIOMES.length) {
+            return { biomeIdx: v, eggTypeIdx: 0 };
+          }
+          if (v && typeof v.biomeIdx === 'number' && v.biomeIdx >= 0 && v.biomeIdx < BIOMES.length) {
+            const eIdx = (typeof v.eggTypeIdx === 'number' && v.eggTypeIdx >= 0 && v.eggTypeIdx < EGG_TYPES.length) ? v.eggTypeIdx : 0;
+            return { biomeIdx: v.biomeIdx, eggTypeIdx: eIdx };
+          }
+          return null;
+        });
+      }
+      if (data.collected && typeof data.collected === 'object') {
+        state.collected = data.collected;
+      }
+      state.shieldsRemaining = state.upgrades.shield;
+      state.stamina = getMaxStamina();
+    } catch (e) {}
+  }
+  loadGame();
+  detectOwnerMode();
+
+  // =========================================================================
+  // 4. PROCEDURAL TEXTURES (Galaxy Fur, Tiger Stripes, Signs, Eggs)
+  // =========================================================================
+  function createGalaxyTexture() {
+    const c = document.createElement('canvas');
+    c.width = 256; c.height = 256;
+    const ctx = c.getContext('2d');
+    const grad = ctx.createLinearGradient(0, 0, 256, 256);
+    grad.addColorStop(0, '#0f052d');
+    grad.addColorStop(0.28, '#3b0764');
+    grad.addColorStop(0.55, '#1d4ed8');
+    grad.addColorStop(0.78, '#db2777');
+    grad.addColorStop(1, '#06b6d4');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 256, 256);
+
+    // Nebula clouds
+    for (let i = 0; i < 18; i++) {
+      const x = Math.random() * 256, y = Math.random() * 256;
+      const r = 25 + Math.random() * 55;
+      const g = ctx.createRadialGradient(x, y, 2, x, y, r);
+      const colors = ['rgba(236,72,153,0.45)', 'rgba(56,189,248,0.45)', 'rgba(168,85,247,0.5)', 'rgba(52,211,153,0.35)'];
+      g.addColorStop(0, colors[i % colors.length]);
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+    }
+    // Twinkling stars
+    for (let i = 0; i < 180; i++) {
+      const x = Math.random() * 256, y = Math.random() * 256;
+      const s = Math.random() < 0.15 ? 2.4 : 1.1;
+      ctx.fillStyle = Math.random() < 0.25 ? '#fef08a' : '#ffffff';
+      ctx.beginPath(); ctx.arc(x, y, s, 0, Math.PI * 2); ctx.fill();
+    }
+    const tex = new THREE.CanvasTexture(c);
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    return tex;
+  }
+
+  function createTigerTexture(baseHex, stripeHex) {
+    const c = document.createElement('canvas');
+    c.width = 256; c.height = 256;
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = baseHex;
+    ctx.fillRect(0, 0, 256, 256);
+    ctx.fillStyle = stripeHex;
+    for (let i = 0; i < 14; i++) {
+      const x = i * 20;
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x + 9, 0);
+      ctx.lineTo(x + 4 + Math.sin(i) * 8, 128);
+      ctx.lineTo(x + 11, 256);
+      ctx.lineTo(x + 2, 256);
+      ctx.lineTo(x - 3 + Math.sin(i) * 8, 128);
+      ctx.closePath();
+      ctx.fill();
+    }
+    const tex = new THREE.CanvasTexture(c);
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    return tex;
+  }
+
+  function createSignTexture(title, subtitle, bgHex, borderHex) {
+    const c = document.createElement('canvas');
+    c.width = 640; c.height = 180;
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = bgHex;
+    ctx.fillRect(0, 0, 640, 180);
+    ctx.strokeStyle = borderHex;
+    ctx.lineWidth = 12;
+    ctx.strokeRect(8, 8, 624, 164);
+
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 52px "Fredoka", "Nunito", sans-serif';
+    ctx.fillText(title, 320, 82);
+
+    ctx.fillStyle = '#fef08a';
+    ctx.font = 'bold 34px "Fredoka", "Nunito", sans-serif';
+    ctx.fillText(subtitle, 320, 140);
+
+    return new THREE.CanvasTexture(c);
+  }
+
+  function createFloatingLabelSprite(line1, line2, colorHex = '#ffffff') {
+    const c = document.createElement('canvas');
+    c.width = 420; c.height = 140;
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    ctx.beginPath();
+    if (ctx.roundRect) {
+      ctx.roundRect(10, 10, 400, 120, 22);
+    } else {
+      ctx.rect(10, 10, 400, 120);
+    }
+    ctx.fill();
+    ctx.strokeStyle = colorHex;
+    ctx.lineWidth = 6;
+    ctx.stroke();
+
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 38px "Fredoka", "Nunito", sans-serif';
+    ctx.fillText(line1, 210, 62);
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 32px "Fredoka", "Nunito", sans-serif';
+    ctx.fillText(line2, 210, 108);
+
+    const tex = new THREE.CanvasTexture(c);
+    const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false });
+    const spr = new THREE.Sprite(mat);
+    spr.scale.set(4.5, 1.5, 1);
+    return spr;
+  }
+
+  function createEggTexture(primaryHex, secondaryHex) {
+    const c = document.createElement('canvas');
+    c.width = 128; c.height = 128;
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = '#' + primaryHex.toString(16).padStart(6, '0');
+    ctx.fillRect(0, 0, 128, 128);
+    ctx.fillStyle = '#' + secondaryHex.toString(16).padStart(6, '0');
+    for (let i = 0; i < 16; i++) {
+      const x = (i * 37) % 128;
+      const y = (i * 53) % 128;
+      ctx.beginPath();
+      ctx.arc(x, y, 8 + (i % 4) * 3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // Zigzag band
+    ctx.strokeStyle = '#' + secondaryHex.toString(16).padStart(6, '0');
+    ctx.lineWidth = 8;
+    ctx.beginPath();
+    for (let x = 0; x <= 128; x += 16) {
+      ctx.lineTo(x, 64 + (x % 32 === 0 ? -12 : 12));
+    }
+    ctx.stroke();
+    return new THREE.CanvasTexture(c);
+  }
+
+  function createRainbowTexture() {
+    const c = document.createElement('canvas');
+    c.width = 128; c.height = 128;
+    const ctx = c.getContext('2d');
+    const grad = ctx.createLinearGradient(0, 0, 128, 128);
+    grad.addColorStop(0.0, '#ff3b30');
+    grad.addColorStop(0.2, '#ff9500');
+    grad.addColorStop(0.4, '#ffcc00');
+    grad.addColorStop(0.6, '#34c759');
+    grad.addColorStop(0.8, '#00c7be');
+    grad.addColorStop(1.0, '#af52de');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 128, 128);
+    ctx.fillStyle = 'rgba(255,255,255,0.45)';
+    for (let i = 0; i < 18; i++) {
+      ctx.beginPath();
+      ctx.arc((i * 29) % 128, (i * 47) % 128, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    return new THREE.CanvasTexture(c);
+  }
+
+  function createLavaTexture() {
+    const c = document.createElement('canvas');
+    c.width = 128; c.height = 128;
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = '#1f1210';
+    ctx.fillRect(0, 0, 128, 128);
+    ctx.strokeStyle = '#ff4500';
+    ctx.lineWidth = 6;
+    for (let i = 0; i < 7; i++) {
+      ctx.beginPath();
+      ctx.moveTo(0, i * 20);
+      ctx.lineTo(42, i * 20 + 12);
+      ctx.lineTo(86, i * 20 - 8);
+      ctx.lineTo(128, i * 20 + 10);
+      ctx.stroke();
+    }
+    ctx.strokeStyle = '#fde047';
+    ctx.lineWidth = 2;
+    for (let i = 0; i < 7; i++) {
+      ctx.beginPath();
+      ctx.moveTo(0, i * 20);
+      ctx.lineTo(42, i * 20 + 12);
+      ctx.lineTo(86, i * 20 - 8);
+      ctx.lineTo(128, i * 20 + 10);
+      ctx.stroke();
+    }
+    return new THREE.CanvasTexture(c);
+  }
+
+  function createTreadmillBeltTexture() {
+    const c = document.createElement('canvas');
+    c.width = 128; c.height = 256;
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(0, 0, 128, 256);
+    for (let y = 0; y < 256; y += 32) {
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(0, y, 128, 10);
+      // Forward chevrons
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(24, y + 24);
+      ctx.lineTo(64, y + 12);
+      ctx.lineTo(104, y + 24);
+      ctx.stroke();
+    }
+    // Side warning stripes
+    ctx.fillStyle = '#facc15';
+    ctx.fillRect(0, 0, 10, 256);
+    ctx.fillRect(118, 0, 10, 256);
+    const tex = new THREE.CanvasTexture(c);
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    tex.repeat.set(1, 2);
+    return tex;
+  }
+
+  const GALAXY_TEX = createGalaxyTexture();
+  const TIGER_TEX = createTigerTexture('#f97316', '#18181b');
+  const ONI_TIGER_TEX = createTigerTexture('#fff1f2', '#dc2626');
+  const RAINBOW_TEX = createRainbowTexture();
+  const LAVA_TEX = createLavaTexture();
+  const TREADMILL_BELT_TEX = createTreadmillBeltTexture();
+
+  // =========================================================================
+  // 5. THREE.JS SCENE SETUP
+  // =========================================================================
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x7dd3fc);
+  scene.fog = new THREE.Fog(0x7dd3fc, 55, 225);
+
+  const camera = new THREE.PerspectiveCamera(68, window.innerWidth / window.innerHeight, 0.1, 350);
+  const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  document.body.appendChild(renderer.domElement);
+
+  const hemiLight = new THREE.HemisphereLight(0xffffff, 0x334155, 0.95);
+  scene.add(hemiLight);
+
+  const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
+  dirLight.position.set(35, 65, 30);
+  dirLight.castShadow = true;
+  dirLight.shadow.mapSize.width = 1024;
+  dirLight.shadow.mapSize.height = 1024;
+  dirLight.shadow.camera.near = 5;
+  dirLight.shadow.camera.far = 160;
+  const d = 55;
+  dirLight.shadow.camera.left = -d;
+  dirLight.shadow.camera.right = d;
+  dirLight.shadow.camera.top = d;
+  dirLight.shadow.camera.bottom = -d;
+  scene.add(dirLight);
+  scene.add(dirLight.target);
+
+  // =========================================================================
+  // 6. DETAILED 3D MONSTER / ANIMAL BUILDERS (ALL 15 UNIQUE CREATURES!)
+  // =========================================================================
+  function matLambert(color, extra = {}) {
+    return new THREE.MeshLambertMaterial(Object.assign({ color }, extra));
+  }
+  function matStd(color, extra = {}) {
+    return new THREE.MeshStandardMaterial(Object.assign({ color, roughness: 0.55, metalness: 0.15 }, extra));
+  }
+
+  function addEyes(parent, y, z, xSpacing, radius, color = 0x111111, glow = false) {
+    const geo = new THREE.SphereGeometry(radius, 8, 8);
+    const mat = glow
+      ? new THREE.MeshBasicMaterial({ color })
+      : new THREE.MeshLambertMaterial({ color });
+    const left = new THREE.Mesh(geo, mat);
+    left.position.set(-xSpacing, y, z);
+    const right = new THREE.Mesh(geo, mat);
+    right.position.set(xSpacing, y, z);
+    parent.add(left, right);
+    return [left, right];
+  }
+
+  function createEggMesh(biome, eggTypeIdx = 0, showTag = false) {
+    const eggType = EGG_TYPES[eggTypeIdx] || EGG_TYPES[0];
+    const group = new THREE.Group();
+    let geo, mat;
+
+    if (eggTypeIdx === 0) {
+      // 1. Common Biome Egg
+      geo = new THREE.SphereGeometry(0.68, 16, 16);
+      geo.scale(0.86, 1.22, 0.86);
+      mat = new THREE.MeshStandardMaterial({
+        map: createEggTexture(biome.eggPrimary, biome.eggSecondary),
+        roughness: 0.35, metalness: 0.1,
+        emissive: new THREE.Color(biome.eggSecondary), emissiveIntensity: 0.16
+      });
+    } else if (eggTypeIdx === 1) {
+      // 2. Golden Egg (gleaming metallic gold!)
+      geo = new THREE.SphereGeometry(0.72, 16, 16);
+      geo.scale(0.86, 1.24, 0.86);
+      mat = new THREE.MeshStandardMaterial({
+        color: 0xffd700, roughness: 0.18, metalness: 0.85,
+        emissive: 0xb45309, emissiveIntensity: 0.35
+      });
+    } else if (eggTypeIdx === 2) {
+      // 3. Diamond Egg (faceted crystal!)
+      geo = new THREE.OctahedronGeometry(0.76, 1);
+      geo.scale(0.84, 1.28, 0.84);
+      mat = new THREE.MeshStandardMaterial({
+        color: 0x38bdf8, roughness: 0.12, metalness: 0.55, flatShading: true,
+        emissive: 0x0284c7, emissiveIntensity: 0.45
+      });
+    } else if (eggTypeIdx === 3) {
+      // 4. Lava Egg (molten cracked magma!)
+      geo = new THREE.SphereGeometry(0.74, 16, 16);
+      geo.scale(0.88, 1.24, 0.88);
+      mat = new THREE.MeshStandardMaterial({
+        map: LAVA_TEX, roughness: 0.35, metalness: 0.2,
+        emissive: 0xff4500, emissiveIntensity: 0.45
+      });
+    } else if (eggTypeIdx === 4) {
+      // 5. Rainbow Egg (prismatic shifting aura!)
+      geo = new THREE.SphereGeometry(0.76, 16, 16);
+      geo.scale(0.88, 1.26, 0.88);
+      mat = new THREE.MeshStandardMaterial({
+        map: RAINBOW_TEX, roughness: 0.2, metalness: 0.3,
+        emissive: 0xec4899, emissiveIntensity: 0.35
+      });
+    } else {
+      // 6. Galaxy Egg (cosmic swirling starlight + twin rings!)
+      geo = new THREE.SphereGeometry(0.8, 16, 16);
+      geo.scale(0.88, 1.28, 0.88);
+      mat = new THREE.MeshStandardMaterial({
+        map: GALAXY_TEX, roughness: 0.25, metalness: 0.4,
+        emissive: 0x6d28d9, emissiveIntensity: 0.55
+      });
+    }
+
+    const egg = new THREE.Mesh(geo, mat);
+    egg.castShadow = true;
+    group.add(egg);
+
+    const ringColor = eggTypeIdx === 0 ? biome.eggSecondary : eggType.hex;
+    const ring = new THREE.Mesh(
+      new THREE.TorusGeometry(0.95, 0.06, 8, 24),
+      new THREE.MeshBasicMaterial({ color: ringColor, transparent: true, opacity: 0.78 })
+    );
+    ring.rotation.x = Math.PI / 2;
+    ring.position.y = -0.35;
+    group.add(ring);
+
+    // Extra 3D flair per special egg type!
+    const spinGroup = new THREE.Group();
+    if (eggTypeIdx === 1) {
+      // Golden crown ring on top
+      const crown = new THREE.Mesh(new THREE.TorusGeometry(0.45, 0.08, 6, 16), new THREE.MeshBasicMaterial({ color: 0xfef08a }));
+      crown.rotation.x = Math.PI / 2;
+      crown.position.y = 0.92;
+      spinGroup.add(crown);
+    } else if (eggTypeIdx === 2) {
+      // Orbiting diamond shards
+      for (let s = 0; s < 4; s++) {
+        const a = (s / 4) * Math.PI * 2;
+        const shard = new THREE.Mesh(new THREE.OctahedronGeometry(0.18, 0), new THREE.MeshBasicMaterial({ color: 0xe0f2fe }));
+        shard.position.set(Math.cos(a) * 1.05, 0.15, Math.sin(a) * 1.05);
+        spinGroup.add(shard);
+      }
+    } else if (eggTypeIdx === 3) {
+      // Floating molten embers
+      for (let s = 0; s < 4; s++) {
+        const a = (s / 4) * Math.PI * 2;
+        const ember = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.18, 0.18), new THREE.MeshBasicMaterial({ color: 0xfde047 }));
+        ember.position.set(Math.cos(a) * 1.0, 0.25 + (s % 2) * 0.3, Math.sin(a) * 1.0);
+        spinGroup.add(ember);
+      }
+    } else if (eggTypeIdx === 4) {
+      // Tilted rainbow prism ring
+      const pr = new THREE.Mesh(new THREE.TorusGeometry(1.08, 0.07, 8, 24), new THREE.MeshBasicMaterial({ color: 0x38bdf8 }));
+      pr.rotation.x = 1.1;
+      spinGroup.add(pr);
+      group.userData.rainbowMat = mat;
+    } else if (eggTypeIdx === 5) {
+      // Twin planetary galaxy rings!
+      const gr1 = new THREE.Mesh(new THREE.TorusGeometry(1.18, 0.07, 8, 28), new THREE.MeshBasicMaterial({ color: 0x38bdf8 }));
+      gr1.rotation.x = 1.18;
+      const gr2 = new THREE.Mesh(new THREE.TorusGeometry(1.32, 0.055, 8, 28), new THREE.MeshBasicMaterial({ color: 0xf472b6 }));
+      gr2.rotation.y = 0.9;
+      spinGroup.add(gr1, gr2);
+    }
+    group.add(spinGroup);
+    group.userData.ring = ring;
+    group.userData.spinGroup = spinGroup;
+    group.userData.eggTypeIdx = eggTypeIdx;
+
+    if (showTag) {
+      const tag = createFloatingLabelSprite(`${eggType.emoji} ${eggType.name}`, `${eggType.mult}x Income`, eggType.color);
+      tag.scale.set(2.8, 0.95, 1);
+      tag.position.set(0, 1.85, 0);
+      group.add(tag);
+    }
+    return group;
+  }
+
+  function addPedestalEggAura(group, eggTypeIdx) {
+    if (eggTypeIdx <= 0) return null;
+    const eggType = EGG_TYPES[eggTypeIdx];
+    const aura = new THREE.Group();
+    const r = new THREE.Mesh(
+      new THREE.TorusGeometry(2.3, 0.11, 8, 28),
+      new THREE.MeshBasicMaterial({ color: eggType.hex, transparent: true, opacity: 0.8 })
+    );
+    r.rotation.x = Math.PI / 2;
+    r.position.y = 1.3;
+    aura.add(r);
+    if (eggTypeIdx >= 4) {
+      const r2 = new THREE.Mesh(
+        new THREE.TorusGeometry(2.6, 0.09, 8, 28),
+        new THREE.MeshBasicMaterial({ color: eggTypeIdx === 5 ? 0x38bdf8 : 0xfde047, transparent: true, opacity: 0.75 })
+      );
+      r2.rotation.x = 1.2;
+      r2.position.y = 2.0;
+      aura.add(r2);
+    }
+    group.add(aura);
+    return aura;
+  }
+
+  function createMonsterMesh(biomeId) {
+    const root = new THREE.Group();
+    const limbs = []; // animated legs/wings
+    const extras = []; // spinning rings/halos/tails
+
+    const box = (w, h, d, mat, x = 0, y = 0, z = 0) => {
+      const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+      m.position.set(x, y, z);
+      m.castShadow = true;
+      return m;
+    };
+    const sph = (r, mat, x = 0, y = 0, z = 0) => {
+      const m = new THREE.Mesh(new THREE.SphereGeometry(r, 12, 10), mat);
+      m.position.set(x, y, z);
+      m.castShadow = true;
+      return m;
+    };
+    const cyl = (rt, rb, h, mat, x = 0, y = 0, z = 0) => {
+      const m = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, 10), mat);
+      m.position.set(x, y, z);
+      m.castShadow = true;
+      return m;
+    };
+    const cone = (r, h, mat, x = 0, y = 0, z = 0) => {
+      const m = new THREE.Mesh(new THREE.ConeGeometry(r, h, 8), mat);
+      m.position.set(x, y, z);
+      m.castShadow = true;
+      return m;
+    };
+
+    // Note: Monsters face +Z locally so lookAt(player) faces player directly!
+
+    if (biomeId === 'easy') {
+      // 1. CHICKEN
+      const white = matLambert(0xffffff);
+      const red = matLambert(0xe11d48);
+      const orange = matLambert(0xf97316);
+      root.add(box(1.1, 1.0, 1.35, white, 0, 1.15, 0)); // body
+      root.add(box(0.75, 0.75, 0.75, white, 0, 1.9, 0.6)); // head
+      root.add(box(0.18, 0.35, 0.55, red, 0, 2.38, 0.65)); // comb
+      root.add(box(0.28, 0.2, 0.42, orange, 0, 1.78, 1.08)); // beak
+      root.add(box(0.18, 0.25, 0.16, red, 0, 1.56, 0.96)); // wattle
+      root.add(box(0.45, 0.55, 0.4, white, 0, 1.55, -0.8)); // tail
+      addEyes(root, 2.0, 0.98, 0.25, 0.08, 0x111111);
+      const lw = box(0.18, 0.65, 0.9, white, -0.64, 1.2, 0);
+      const rw = box(0.18, 0.65, 0.9, white, 0.64, 1.2, 0);
+      const ll = box(0.16, 0.7, 0.16, orange, -0.28, 0.35, 0);
+      const rl = box(0.16, 0.7, 0.16, orange, 0.28, 0.35, 0);
+      root.add(lw, rw, ll, rl);
+      limbs.push(ll, rl);
+      extras.push({ obj: lw, type: 'wingL' }, { obj: rw, type: 'wingR' });
+    }
+    else if (biomeId === 'river') {
+      // 2. DUCK
+      const bodyMat = matLambert(0xfef08a);
+      const headMat = matLambert(0x15803d); // mallard emerald head
+      const billMat = matLambert(0xf97316);
+      const wingMat = matLambert(0xfacc15);
+      root.add(box(1.15, 0.95, 1.55, bodyMat, 0, 1.05, 0));
+      root.add(box(0.45, 0.55, 0.45, bodyMat, 0, 1.65, 0.55)); // neck
+      root.add(box(0.78, 0.72, 0.8, headMat, 0, 2.1, 0.65)); // head
+      root.add(box(0.55, 0.18, 0.62, billMat, 0, 1.96, 1.25)); // wide duck bill
+      root.add(box(0.5, 0.35, 0.5, wingMat, 0, 1.35, -0.9)); // tail
+      addEyes(root, 2.2, 1.06, 0.25, 0.08, 0x111111);
+      const lw = box(0.18, 0.6, 1.0, wingMat, -0.66, 1.15, -0.05);
+      const rw = box(0.18, 0.6, 1.0, wingMat, 0.66, 1.15, -0.05);
+      const ll = box(0.28, 0.6, 0.38, billMat, -0.32, 0.3, 0.05);
+      const rl = box(0.28, 0.6, 0.38, billMat, 0.32, 0.3, 0.05);
+      root.add(lw, rw, ll, rl);
+      limbs.push(ll, rl);
+      extras.push({ obj: lw, type: 'wingL' }, { obj: rw, type: 'wingR' });
+    }
+    else if (biomeId === 'jungle') {
+      // 3. TIGER
+      const tigerMat = new THREE.MeshLambertMaterial({ map: TIGER_TEX });
+      const white = matLambert(0xfff7ed);
+      const dark = matLambert(0x18181b);
+      root.add(box(1.3, 1.05, 2.4, tigerMat, 0, 1.35, 0));
+      root.add(box(1.05, 0.95, 1.05, tigerMat, 0, 1.75, 1.45)); // head
+      root.add(box(0.65, 0.42, 0.45, white, 0, 1.52, 2.02)); // muzzle
+      root.add(box(0.25, 0.16, 0.15, dark, 0, 1.66, 2.25)); // nose
+      root.add(box(0.24, 0.28, 0.18, tigerMat, -0.4, 2.3, 1.35)); // ears
+      root.add(box(0.24, 0.28, 0.18, tigerMat, 0.4, 2.3, 1.35));
+      addEyes(root, 1.88, 1.98, 0.28, 0.1, 0xfacc15, true);
+      const tail = box(0.22, 0.22, 1.4, tigerMat, 0, 1.55, -1.75);
+      tail.rotation.x = 0.35;
+      root.add(tail);
+      const l1 = box(0.36, 1.1, 0.36, tigerMat, -0.46, 0.55, 0.8);
+      const l2 = box(0.36, 1.1, 0.36, tigerMat, 0.46, 0.55, 0.8);
+      const l3 = box(0.36, 1.1, 0.36, tigerMat, -0.46, 0.55, -0.8);
+      const l4 = box(0.36, 1.1, 0.36, tigerMat, 0.46, 0.55, -0.8);
+      root.add(l1, l2, l3, l4);
+      limbs.push(l1, l2, l3, l4);
+      extras.push({ obj: tail, type: 'tail' });
+    }
+    else if (biomeId === 'snow') {
+      // 4. YETI
+      const fur = matLambert(0xf1f5f9);
+      const iceFace = matLambert(0x7dd3fc);
+      const hornMat = matLambert(0x38bdf8);
+      root.add(box(2.1, 2.0, 1.4, fur, 0, 2.3, 0)); // huge torso
+      root.add(box(1.3, 1.15, 1.15, fur, 0, 3.65, 0.25)); // head
+      root.add(box(0.95, 0.72, 0.25, iceFace, 0, 3.6, 0.82)); // icy face
+      root.add(cone(0.18, 0.7, hornMat, -0.62, 4.3, 0.2)); // ice horns
+      root.add(cone(0.18, 0.7, hornMat, 0.62, 4.3, 0.2));
+      addEyes(root, 3.76, 0.95, 0.26, 0.11, 0x00ffff, true);
+      const la = box(0.65, 2.0, 0.65, fur, -1.42, 2.1, 0.2);
+      const ra = box(0.65, 2.0, 0.65, fur, 1.42, 2.1, 0.2);
+      const ll = box(0.68, 1.4, 0.7, fur, -0.55, 0.7, 0);
+      const rl = box(0.68, 1.4, 0.7, fur, 0.55, 0.7, 0);
+      root.add(la, ra, ll, rl);
+      limbs.push(ll, rl, la, ra);
+    }
+    else if (biomeId === 'volcano') {
+      // 5. CERBERUS (3-HEADED FIERY HOUND!)
+      const dark = matLambert(0x1f1414);
+      const fire = new THREE.MeshBasicMaterial({ color: 0xff5500 });
+      const glow = new THREE.MeshBasicMaterial({ color: 0xffd000 });
+      root.add(box(1.7, 1.3, 2.7, dark, 0, 1.55, 0));
+      root.add(box(1.9, 0.8, 0.9, fire, 0, 2.1, 1.05)); // fiery ruff mane
+      // 3 Heads!
+      [-0.78, 0, 0.78].forEach((hx, idx) => {
+        const hg = new THREE.Group();
+        hg.position.set(hx, idx === 1 ? 2.45 : 2.15, 1.65);
+        hg.add(box(0.68, 0.66, 0.85, dark, 0, 0, 0));
+        hg.add(box(0.45, 0.34, 0.55, dark, 0, -0.1, 0.55)); // snout
+        hg.add(cone(0.11, 0.32, dark, -0.24, 0.45, -0.1)); // ears
+        hg.add(cone(0.11, 0.32, dark, 0.24, 0.45, -0.1));
+        addEyes(hg, 0.12, 0.44, 0.18, 0.08, 0xffdd00, true);
+        root.add(hg);
+      });
+      const tail = cone(0.24, 1.2, fire, 0, 2.0, -1.7);
+      tail.rotation.x = -0.9;
+      root.add(tail);
+      const l1 = box(0.42, 1.25, 0.42, dark, -0.62, 0.62, 0.9);
+      const l2 = box(0.42, 1.25, 0.42, dark, 0.62, 0.62, 0.9);
+      const l3 = box(0.42, 1.25, 0.42, dark, -0.62, 0.62, -0.9);
+      const l4 = box(0.42, 1.25, 0.42, dark, 0.62, 0.62, -0.9);
+      // Lava paws
+      [l1, l2, l3, l4].forEach(l => {
+        const p = box(0.46, 0.22, 0.46, glow, 0, -0.52, 0);
+        l.add(p);
+      });
+      root.add(l1, l2, l3, l4);
+      limbs.push(l1, l2, l3, l4);
+      extras.push({ obj: tail, type: 'tail' });
+    }
+    else if (biomeId === 'abyss_ocean') {
+      // 6. ABYSSAL WHALE (Floating giant glowing whale!)
+      const whaleMat = matStd(0x0f2c59, { roughness: 0.35 });
+      const bellyMat = matLambert(0x1e40af);
+      const bioMat = new THREE.MeshBasicMaterial({ color: 0x00f5d4 });
+      const bodyG = new THREE.Group();
+      bodyG.position.y = 2.4;
+      bodyG.add(box(2.2, 1.85, 3.8, whaleMat, 0, 0, 0.3)); // main whale body
+      bodyG.add(box(2.0, 0.55, 3.4, bellyMat, 0, -0.82, 0.3)); // belly
+      bodyG.add(box(1.5, 1.15, 1.5, whaleMat, 0, -0.1, -2.0)); // tail stalk
+      // Glowing bioluminescent spots
+      for (let i = -1; i <= 1; i++) {
+        bodyG.add(sph(0.18, bioMat, -1.12, 0.25, i * 1.0));
+        bodyG.add(sph(0.18, bioMat, 1.12, 0.25, i * 1.0));
+      }
+      addEyes(bodyG, 0.15, 1.8, 1.12, 0.22, 0x00f5d4, true);
+      // Tail fluke
+      const fluke = box(2.8, 0.24, 1.1, whaleMat, 0, 0, -3.0);
+      bodyG.add(fluke);
+      // Pectoral fins
+      const lf = box(1.5, 0.22, 0.9, whaleMat, -1.6, -0.45, 0.7);
+      const rf = box(1.5, 0.22, 0.9, whaleMat, 1.6, -0.45, 0.7);
+      bodyG.add(lf, rf);
+      root.add(bodyG);
+      extras.push({ obj: bodyG, type: 'float' }, { obj: lf, type: 'wingL' }, { obj: rf, type: 'wingR' }, { obj: fluke, type: 'tail' });
+    }
+    else if (biomeId === 'prehistoric') {
+      // 7. T-REX
+      const dino = matLambert(0x3f7d20);
+      const belly = matLambert(0xa3e635);
+      const tooth = matLambert(0xffffff);
+      root.add(box(1.6, 1.65, 2.3, dino, 0, 2.3, 0)); // torso
+      root.add(box(1.2, 1.1, 1.9, belly, 0, 1.85, 0.25));
+      // Huge head & jaw
+      root.add(box(1.35, 1.1, 1.85, dino, 0, 3.55, 1.55));
+      root.add(box(1.15, 0.42, 1.5, dino, 0, 2.82, 1.65)); // lower jaw
+      // Teeth
+      for (let i = -2; i <= 2; i++) {
+        root.add(cone(0.08, 0.24, tooth, i * 0.2, 3.02, 2.38));
+      }
+      addEyes(root, 3.72, 1.8, 0.68, 0.15, 0xfbbf24, true);
+      // Tiny cute T-Rex arms
+      root.add(box(0.22, 0.55, 0.22, dino, -0.82, 2.05, 1.15));
+      root.add(box(0.22, 0.55, 0.22, dino, 0.82, 2.05, 1.15));
+      // Heavy tail
+      const tail = box(0.85, 0.85, 2.8, dino, 0, 2.15, -2.2);
+      root.add(tail);
+      // Massive legs
+      const ll = box(0.65, 1.8, 0.75, dino, -0.68, 0.9, -0.1);
+      const rl = box(0.65, 1.8, 0.75, dino, 0.68, 0.9, -0.1);
+      root.add(ll, rl);
+      limbs.push(ll, rl);
+      extras.push({ obj: tail, type: 'tail' });
+    }
+    else if (biomeId === 'storm_land') {
+      // 8. PURPLE RHINO
+      const purple = matStd(0x7e22ce, { roughness: 0.45 });
+      const armor = matStd(0x4c1d95, { metalness: 0.4 });
+      const hornMat = new THREE.MeshBasicMaterial({ color: 0xfef08a });
+      root.add(box(1.85, 1.5, 2.75, purple, 0, 1.65, 0));
+      root.add(box(1.98, 0.9, 1.1, armor, 0, 1.9, 0.2)); // shoulder armor
+      root.add(box(1.3, 1.15, 1.35, purple, 0, 1.8, 1.75)); // head
+      // Big glowing electric horn + second horn
+      const bigHorn = cone(0.28, 1.25, hornMat, 0, 2.25, 2.65);
+      bigHorn.rotation.x = 0.65;
+      const smallHorn = cone(0.18, 0.65, hornMat, 0, 2.48, 2.15);
+      smallHorn.rotation.x = 0.35;
+      root.add(bigHorn, smallHorn);
+      addEyes(root, 2.0, 2.2, 0.56, 0.13, 0x38bdf8, true);
+      const l1 = box(0.52, 1.15, 0.52, armor, -0.68, 0.58, 0.95);
+      const l2 = box(0.52, 1.15, 0.52, armor, 0.68, 0.58, 0.95);
+      const l3 = box(0.52, 1.15, 0.52, armor, -0.68, 0.58, -0.95);
+      const l4 = box(0.52, 1.15, 0.52, armor, 0.68, 0.58, -0.95);
+      root.add(l1, l2, l3, l4);
+      limbs.push(l1, l2, l3, l4);
+    }
+    else if (biomeId === 'cosmic') {
+      // 9. COSMIC MONSTER
+      const coreMat = new THREE.MeshStandardMaterial({ map: GALAXY_TEX, emissive: 0x4c1d95, emissiveIntensity: 0.4 });
+      const ringMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
+      const ringMat2 = new THREE.MeshBasicMaterial({ color: 0xf472b6 });
+      const bodyG = new THREE.Group();
+      bodyG.position.y = 2.6;
+      bodyG.add(sph(1.3, coreMat, 0, 0, 0));
+      // Glowing 3 cosmic eyes
+      addEyes(bodyG, 0.25, 1.18, 0.45, 0.19, 0x00ffff, true);
+      bodyG.add(sph(0.22, new THREE.MeshBasicMaterial({ color: 0xf472b6 }), 0, 0.68, 1.12));
+      // Orbiting planetary rings
+      const r1 = new THREE.Mesh(new THREE.TorusGeometry(2.05, 0.12, 8, 30), ringMat);
+      r1.rotation.x = 1.25;
+      const r2 = new THREE.Mesh(new THREE.TorusGeometry(2.45, 0.09, 8, 30), ringMat2);
+      r2.rotation.y = 0.8;
+      bodyG.add(r1, r2);
+      // Floating cosmic claws
+      bodyG.add(box(0.45, 1.1, 0.45, coreMat, -1.7, -0.5, 0.5));
+      bodyG.add(box(0.45, 1.1, 0.45, coreMat, 1.7, -0.5, 0.5));
+      root.add(bodyG);
+      extras.push({ obj: bodyG, type: 'float' }, { obj: r1, type: 'spin' }, { obj: r2, type: 'spinRev' });
+    }
+    else if (biomeId === 'cherry_blossom') {
+      // 10. ONI TIGER
+      const oniMat = new THREE.MeshLambertMaterial({ map: ONI_TIGER_TEX });
+      const crimson = matStd(0xb91c1c);
+      const gold = matStd(0xfacc15, { metalness: 0.6, roughness: 0.25 });
+      root.add(box(1.45, 1.15, 2.5, oniMat, 0, 1.45, 0));
+      root.add(box(1.6, 0.55, 0.9, crimson, 0, 1.85, 0.65)); // samurai shoulder armor
+      root.add(box(1.18, 1.05, 1.15, oniMat, 0, 1.9, 1.5)); // head
+      // Curved Oni Horns!
+      const lh = cone(0.18, 0.95, gold, -0.45, 2.75, 1.65); lh.rotation.z = 0.28; lh.rotation.x = 0.2;
+      const rh = cone(0.18, 0.95, gold, 0.45, 2.75, 1.65); rh.rotation.z = -0.28; rh.rotation.x = 0.2;
+      root.add(lh, rh);
+      // Oni fangs
+      root.add(cone(0.09, 0.28, matLambert(0xffffff), -0.28, 1.4, 2.1));
+      root.add(cone(0.09, 0.28, matLambert(0xffffff), 0.28, 1.4, 2.1));
+      addEyes(root, 2.02, 2.08, 0.3, 0.12, 0xfef08a, true);
+      const tail = box(0.24, 0.24, 1.5, crimson, 0, 1.65, -1.85);
+      root.add(tail);
+      const l1 = box(0.4, 1.2, 0.4, oniMat, -0.5, 0.6, 0.85);
+      const l2 = box(0.4, 1.2, 0.4, oniMat, 0.5, 0.6, 0.85);
+      const l3 = box(0.4, 1.2, 0.4, oniMat, -0.5, 0.6, -0.85);
+      const l4 = box(0.4, 1.2, 0.4, oniMat, 0.5, 0.6, -0.85);
+      root.add(l1, l2, l3, l4);
+      limbs.push(l1, l2, l3, l4);
+      extras.push({ obj: tail, type: 'tail' });
+    }
+    else if (biomeId === 'titan_temple') {
+      // 11. GORILLA KING
+      const darkFur = matLambert(0x1f2937);
+      const silverBack = matLambert(0x9ca3af);
+      const faceMat = matLambert(0x374151);
+      const gold = matStd(0xfacc15, { metalness: 0.7, roughness: 0.2 });
+      const gem = new THREE.MeshBasicMaterial({ color: 0xef4444 });
+      root.add(box(2.3, 2.0, 1.55, darkFur, 0, 2.2, 0)); // massive chest
+      root.add(box(1.9, 1.4, 0.4, silverBack, 0, 2.35, -0.7)); // silverback
+      root.add(box(1.25, 1.15, 1.2, darkFur, 0, 3.55, 0.35)); // head
+      root.add(box(0.88, 0.62, 0.45, faceMat, 0, 3.38, 0.92)); // snout
+      addEyes(root, 3.68, 1.0, 0.26, 0.11, 0xfef08a, true);
+      // Golden King Crown!
+      root.add(cyl(0.58, 0.52, 0.42, gold, 0, 4.3, 0.35));
+      for (let i = 0; i < 5; i++) {
+        const a = (i / 5) * Math.PI * 2;
+        root.add(cone(0.14, 0.38, gold, Math.cos(a) * 0.45, 4.65, 0.35 + Math.sin(a) * 0.45));
+      }
+      root.add(sph(0.14, gem, 0, 4.32, 0.9));
+      // Huge pounding arms
+      const la = box(0.75, 2.25, 0.75, darkFur, -1.55, 1.75, 0.35);
+      const ra = box(0.75, 2.25, 0.75, darkFur, 1.55, 1.75, 0.35);
+      const ll = box(0.72, 1.35, 0.75, darkFur, -0.62, 0.68, -0.1);
+      const rl = box(0.72, 1.35, 0.75, darkFur, 0.62, 0.68, -0.1);
+      root.add(la, ra, ll, rl);
+      limbs.push(ll, rl, la, ra);
+    }
+    else if (biomeId === 'demon') {
+      // 12. DEMON
+      const skin = matStd(0xb91c1c, { roughness: 0.4 });
+      const dark = matStd(0x18181b, { metalness: 0.4 });
+      const fire = new THREE.MeshBasicMaterial({ color: 0xff6b00 });
+      root.add(box(1.45, 1.85, 0.95, skin, 0, 2.25, 0));
+      root.add(box(1.5, 0.75, 1.02, dark, 0, 1.7, 0)); // obsidian armor waist
+      root.add(box(0.95, 0.95, 0.95, skin, 0, 3.65, 0.05));
+      // Big demon horns
+      const lh = cone(0.18, 0.95, dark, -0.42, 4.45, 0.1); lh.rotation.z = 0.35;
+      const rh = cone(0.18, 0.95, dark, 0.42, 4.45, 0.1); rh.rotation.z = -0.35;
+      root.add(lh, rh);
+      addEyes(root, 3.72, 0.54, 0.23, 0.11, 0xfef08a, true);
+      // Large bat wings
+      const lw = box(1.9, 1.3, 0.15, dark, -1.65, 2.8, -0.55);
+      const rw = box(1.9, 1.3, 0.15, dark, 1.65, 2.8, -0.55);
+      root.add(lw, rw);
+      // Trident in right hand
+      const la = box(0.42, 1.5, 0.42, skin, -1.0, 2.2, 0.15);
+      const ra = box(0.42, 1.5, 0.42, skin, 1.0, 2.2, 0.25);
+      const staff = cyl(0.08, 0.08, 2.8, dark, 0, 0.1, 0.45);
+      staff.rotation.x = 0.4;
+      const tip = cone(0.24, 0.55, fire, 0, 1.6, 0.45);
+      ra.add(staff, tip);
+      const ll = box(0.46, 1.35, 0.48, skin, -0.38, 0.68, 0);
+      const rl = box(0.46, 1.35, 0.48, skin, 0.38, 0.68, 0);
+      root.add(la, ra, ll, rl);
+      limbs.push(ll, rl, la, ra);
+      extras.push({ obj: lw, type: 'wingL' }, { obj: rw, type: 'wingR' });
+    }
+    else if (biomeId === 'angel') {
+      // 13. ANGEL
+      const robe = matStd(0xffffff, { emissive: 0xfef9c3, emissiveIntensity: 0.2 });
+      const gold = matStd(0xfacc15, { metalness: 0.7, roughness: 0.2, emissive: 0xf59e0b, emissiveIntensity: 0.35 });
+      const wingMat = new THREE.MeshBasicMaterial({ color: 0xfffbeb });
+      const bodyG = new THREE.Group();
+      bodyG.position.y = 0.5;
+      bodyG.add(cone(1.0, 2.4, robe, 0, 1.7, 0)); // flowing robe
+      bodyG.add(box(1.1, 0.35, 0.9, gold, 0, 2.2, 0)); // golden sash
+      bodyG.add(sph(0.55, matLambert(0xffedd5), 0, 3.35, 0)); // head
+      addEyes(bodyG, 3.42, 0.48, 0.18, 0.08, 0x38bdf8, true);
+      // Floating Golden Halo!
+      const halo = new THREE.Mesh(new THREE.TorusGeometry(0.62, 0.09, 10, 24), gold);
+      halo.rotation.x = Math.PI / 2;
+      halo.position.set(0, 4.25, 0);
+      bodyG.add(halo);
+      // Giant radiant feathered wings
+      const lw = box(2.2, 1.45, 0.16, wingMat, -1.65, 2.65, -0.5);
+      const rw = box(2.2, 1.45, 0.16, wingMat, 1.65, 2.65, -0.5);
+      bodyG.add(lw, rw);
+      root.add(bodyG);
+      extras.push({ obj: bodyG, type: 'float' }, { obj: halo, type: 'spin' }, { obj: lw, type: 'wingL' }, { obj: rw, type: 'wingR' });
+    }
+    else if (biomeId === 'enchanted_forest') {
+      // 14. GALAXY LION (Lion with galaxy-colored fur!)
+      const galaxyFur = new THREE.MeshStandardMaterial({
+        map: GALAXY_TEX,
+        emissive: 0x3b0764,
+        emissiveIntensity: 0.45,
+        roughness: 0.45
+      });
+      const maneGlow = new THREE.MeshStandardMaterial({
+        map: GALAXY_TEX,
+        emissive: 0x7c3aed,
+        emissiveIntensity: 0.7
+      });
+      const starMat = new THREE.MeshBasicMaterial({ color: 0xfef08a });
+      root.add(box(1.5, 1.25, 2.6, galaxyFur, 0, 1.5, 0)); // galaxy fur body
+      // Huge majestic galaxy mane!
+      const mane = sph(1.15, maneGlow, 0, 2.05, 1.35);
+      mane.scale.set(1.12, 1.15, 0.85);
+      root.add(mane);
+      root.add(box(1.02, 0.95, 1.1, galaxyFur, 0, 2.0, 1.75)); // lion head
+      root.add(box(0.62, 0.42, 0.45, galaxyFur, 0, 1.76, 2.35)); // muzzle
+      root.add(sph(0.18, galaxyFur, -0.48, 2.65, 1.65)); // lion ears
+      root.add(sph(0.18, galaxyFur, 0.48, 2.65, 1.65));
+      addEyes(root, 2.12, 2.32, 0.28, 0.12, 0x38bdf8, true);
+      // Star-tipped tail
+      const tail = new THREE.Group();
+      tail.position.set(0, 1.75, -1.3);
+      tail.add(box(0.22, 0.22, 1.5, galaxyFur, 0, 0, -0.75));
+      tail.add(sph(0.32, starMat, 0, 0.05, -1.55));
+      root.add(tail);
+      const l1 = box(0.42, 1.25, 0.42, galaxyFur, -0.54, 0.62, 0.9);
+      const l2 = box(0.42, 1.25, 0.42, galaxyFur, 0.54, 0.62, 0.9);
+      const l3 = box(0.42, 1.25, 0.42, galaxyFur, -0.54, 0.62, -0.9);
+      const l4 = box(0.42, 1.25, 0.42, galaxyFur, 0.54, 0.62, -0.9);
+      root.add(l1, l2, l3, l4);
+      limbs.push(l1, l2, l3, l4);
+      extras.push({ obj: tail, type: 'tail' });
+    }
+    else if (biomeId === 'alien_planet') {
+      // 15. CREEPY ALIEN CREATURE (Purple skin & razor-sharp teeth!)
+      const purpleSkin = matStd(0x8b2fc9, { roughness: 0.35, emissive: 0x3b0764, emissiveIntensity: 0.25 });
+      const darkPurple = matStd(0x4c1d95, { roughness: 0.4 });
+      const sharpTooth = new THREE.MeshBasicMaterial({ color: 0xffffff });
+      const mouthDark = matLambert(0x14021c);
+      const eyeGlow = new THREE.MeshBasicMaterial({ color: 0xa3e635 }); // eerie toxic lime eyes
+
+      // Hunched creepy torso
+      const torso = box(1.35, 1.9, 1.0, purpleSkin, 0, 2.25, 0);
+      torso.rotation.x = 0.22;
+      root.add(torso);
+      // Creepy spine spikes on back
+      for (let i = 0; i < 4; i++) {
+        const sp = cone(0.16, 0.55, darkPurple, 0, 1.6 + i * 0.45, -0.62);
+        sp.rotation.x = -1.2;
+        root.add(sp);
+      }
+      // Large bulbous creepy alien head
+      const head = new THREE.Group();
+      head.position.set(0, 3.65, 0.45);
+      const skull = sph(0.88, purpleSkin, 0, 0.2, -0.05);
+      skull.scale.set(1.05, 1.15, 1.25);
+      head.add(skull);
+      // Wide creepy mouth cavity
+      head.add(box(1.18, 0.54, 0.42, mouthDark, 0, -0.22, 0.72));
+      // LOTS of jagged razor-sharp white teeth (upper + lower rows!)
+      for (let i = -3; i <= 3; i++) {
+        const upperT = cone(0.08, 0.28, sharpTooth, i * 0.16, -0.06, 0.92);
+        upperT.rotation.x = Math.PI;
+        const lowerT = cone(0.075, 0.25, sharpTooth, i * 0.16 + 0.05, -0.38, 0.91);
+        head.add(upperT, lowerT);
+      }
+      // 4 glowing alien eyes!
+      addEyes(head, 0.32, 0.85, 0.36, 0.16, 0xa3e635, true);
+      addEyes(head, 0.62, 0.76, 0.22, 0.10, 0xec4899, true);
+      // Twitching alien antennae
+      const antL = cyl(0.05, 0.08, 0.9, darkPurple, -0.45, 1.25, -0.1); antL.rotation.z = 0.35;
+      const antR = cyl(0.05, 0.08, 0.9, darkPurple, 0.45, 1.25, -0.1); antR.rotation.z = -0.35;
+      antL.add(sph(0.14, eyeGlow, 0, 0.48, 0));
+      antR.add(sph(0.14, eyeGlow, 0, 0.48, 0));
+      head.add(antL, antR);
+      root.add(head);
+
+      // Long lanky creepy clawed arms
+      const la = box(0.34, 2.15, 0.34, purpleSkin, -0.98, 2.0, 0.35);
+      const ra = box(0.34, 2.15, 0.34, purpleSkin, 0.98, 2.0, 0.35);
+      [la, ra].forEach(arm => {
+        for (let c = -1; c <= 1; c++) {
+          const claw = cone(0.06, 0.38, sharpTooth, c * 0.12, -1.18, 0.15);
+          claw.rotation.x = Math.PI - 0.35;
+          arm.add(claw);
+        }
+      });
+      const ll = box(0.42, 1.55, 0.42, purpleSkin, -0.44, 0.78, 0);
+      const rl = box(0.42, 1.55, 0.42, purpleSkin, 0.44, 0.78, 0);
+      root.add(la, ra, ll, rl);
+      limbs.push(ll, rl, la, ra);
+    }
+
+    // Angry indicator sprite (hidden until chasing!)
+    const angrySprite = createFloatingLabelSprite('💢 ANGRY!', 'CHASING YOU!', '#ef4444');
+    angrySprite.position.set(0, 5.4, 0);
+    angrySprite.scale.set(3.8, 1.25, 1);
+    angrySprite.visible = false;
+    root.add(angrySprite);
+
+    root.userData = { limbs, extras, angrySprite };
+    return root;
+  }
+
+  function animateMonster(mesh, t, speedFactor = 1) {
+    const { limbs, extras } = mesh.userData;
+    if (limbs) {
+      limbs.forEach((limb, idx) => {
+        const phase = idx % 2 === 0 ? 0 : Math.PI;
+        limb.rotation.x = Math.sin(t * 7 * speedFactor + phase) * 0.55;
+      });
+    }
+    if (extras) {
+      extras.forEach(item => {
+        if (item.type === 'wingL') item.obj.rotation.z = Math.sin(t * 9 * speedFactor) * 0.45;
+        if (item.type === 'wingR') item.obj.rotation.z = -Math.sin(t * 9 * speedFactor) * 0.45;
+        if (item.type === 'tail') item.obj.rotation.y = Math.sin(t * 6 * speedFactor) * 0.4;
+        if (item.type === 'float') item.obj.position.y = (item.obj.userData.baseY ?? item.obj.position.y) + Math.sin(t * 3.5) * 0.32;
+        if (item.type === 'spin') item.obj.rotation.z = t * 1.8;
+        if (item.type === 'spinRev') item.obj.rotation.x = -t * 1.4;
+      });
+    }
+  }
+
+  // Record baseY for floating parts
+  function initMonsterBaseY(mesh) {
+    if (mesh.userData && mesh.userData.extras) {
+      mesh.userData.extras.forEach(e => {
+        if (e.type === 'float') e.obj.userData.baseY = e.obj.position.y;
+      });
+    }
+  }
+
+  // =========================================================================
+  // 7. BUILD HOME BASE (ANIMAL PLACE) + 16 PEDESTALS + SHOP
+  // =========================================================================
+  const baseGroup = new THREE.Group();
+  scene.add(baseGroup);
+
+  // Base Floor (Z: 0 to +52, X: -28 to +28)
+  const baseFloor = new THREE.Mesh(
+    new THREE.BoxGeometry(BASE_HALF_WIDTH * 2, 1, BASE_DEPTH),
+    matLambert(0x4ade80)
+  );
+  baseFloor.position.set(0, -0.5, BASE_DEPTH / 2);
+  baseFloor.receiveShadow = true;
+  baseGroup.add(baseFloor);
+
+  // Central Stone Walkway leading straight to the biome road!
+  const walkway = new THREE.Mesh(
+    new THREE.BoxGeometry(10, 0.08, BASE_DEPTH - 2),
+    matLambert(0xe2e8f0)
+  );
+  walkway.position.set(0, 0.04, BASE_DEPTH / 2);
+  walkway.receiveShadow = true;
+  baseGroup.add(walkway);
+
+  // Base Perimeter Fences
+  const fenceMat = matLambert(0x92400e);
+  const postMat = matLambert(0x78350f);
+  function addWall(x, z, w, h, d, mat) {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+    m.position.set(x, h / 2, z);
+    m.castShadow = true;
+    m.receiveShadow = true;
+    baseGroup.add(m);
+  }
+  addWall(-BASE_HALF_WIDTH, BASE_DEPTH / 2, 1.2, 2.4, BASE_DEPTH, fenceMat);
+  addWall(BASE_HALF_WIDTH, BASE_DEPTH / 2, 1.2, 2.4, BASE_DEPTH, fenceMat);
+  addWall(0, BASE_DEPTH, BASE_HALF_WIDTH * 2 + 1.2, 2.4, 1.2, fenceMat);
+
+  // Safe Zone Archway Gate at Z = 0
+  const gatePillarMat = matStd(0x10b981, { emissive: 0x059669, emissiveIntensity: 0.25 });
+  addWall(-11, 0, 2.2, 10, 2.2, gatePillarMat);
+  addWall(11, 0, 2.2, 10, 2.2, gatePillarMat);
+  // Side connecting walls from gate to base edge
+  addWall(-20, 0, 16, 2.4, 1.2, fenceMat);
+  addWall(20, 0, 16, 2.4, 1.2, fenceMat);
+
+  const safeSignTex = createSignTexture('SAFE ZONE — MY ANIMAL BASE', '15 BIOMES STRAIGHT AHEAD ⬆', '#064e3b', '#34d399');
+  const safeBanner = new THREE.Mesh(
+    new THREE.BoxGeometry(24, 4.2, 0.7),
+    new THREE.MeshBasicMaterial({ map: safeSignTex })
+  );
+  safeBanner.position.set(0, 10.6, 0);
+  baseGroup.add(safeBanner);
+
+  // Glowing translucent green Safe Zone barrier curtain
+  const safeCurtain = new THREE.Mesh(
+    new THREE.PlaneGeometry(20, 8.6),
+    new THREE.MeshBasicMaterial({ color: 0x34d399, transparent: true, opacity: 0.22, side: THREE.DoubleSide })
+  );
+  safeCurtain.position.set(0, 4.3, 0);
+  baseGroup.add(safeCurtain);
+
+  // Upgrade Shop Booth in Base (X = -21, Z = 7)
+  const shopPos = new THREE.Vector3(-21, 0, 7);
+  const shopGroup = new THREE.Group();
+  shopGroup.position.copy(shopPos);
+  const shopCounter = new THREE.Mesh(new THREE.BoxGeometry(6, 2.0, 3.6), matStd(0xd97706));
+  shopCounter.position.y = 1.0;
+  shopGroup.add(shopCounter);
+  const shopRoof = new THREE.Mesh(new THREE.BoxGeometry(7, 0.7, 4.6), matStd(0xf59e0b));
+  shopRoof.position.y = 5.2;
+  shopGroup.add(shopRoof);
+  [-2.8, 2.8].forEach(px => {
+    const p = new THREE.Mesh(new THREE.BoxGeometry(0.4, 5, 0.4), postMat);
+    p.position.set(px, 2.5, 1.6);
+    shopGroup.add(p);
+  });
+  const shopSign = new THREE.Mesh(
+    new THREE.BoxGeometry(6.4, 1.8, 0.3),
+    new THREE.MeshBasicMaterial({ map: createSignTexture('UPGRADE SHOP', 'Press [E] or [B]!', '#78350f', '#fde047') })
+  );
+  shopSign.position.set(0, 6.4, 0);
+  shopGroup.add(shopSign);
+  baseGroup.add(shopGroup);
+
+  // =========================================================================
+  // SPEED TREADMILL IN HOME BASE (X = +18, Z = +7)
+  // =========================================================================
+  const treadmillPos = new THREE.Vector3(18, 0, 7);
+  const treadmillGroup = new THREE.Group();
+  treadmillGroup.position.copy(treadmillPos);
+
+  const tmMetal = matStd(0x334155, { metalness: 0.65, roughness: 0.3 });
+  const tmAccent = matStd(0x0ea5e9, { emissive: 0x0284c7, emissiveIntensity: 0.35 });
+  const tmBase = new THREE.Mesh(new THREE.BoxGeometry(3.8, 0.55, 6.4), tmMetal);
+  tmBase.position.set(0, 0.275, 0);
+  tmBase.castShadow = true;
+  tmBase.receiveShadow = true;
+  treadmillGroup.add(tmBase);
+
+  // Glowing side rails
+  [-1.78, 1.78].forEach(rx => {
+    const rail = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.65, 6.5), tmAccent);
+    rail.position.set(rx, 0.35, 0);
+    treadmillGroup.add(rail);
+  });
+
+  // Animated conveyor belt surface!
+  const treadmillBelt = new THREE.Mesh(
+    new THREE.PlaneGeometry(3.15, 5.7),
+    new THREE.MeshStandardMaterial({ map: TREADMILL_BELT_TEX, roughness: 0.6 })
+  );
+  treadmillBelt.rotation.x = -Math.PI / 2;
+  treadmillBelt.position.set(0, 0.57, 0.15);
+  treadmillGroup.add(treadmillBelt);
+
+  // Front upright posts, handlebars & digital console screen (facing +Z, player runs toward -Z!)
+  [-1.55, 1.55].forEach(px => {
+    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.16, 3.2, 8), tmMetal);
+    post.position.set(px, 1.9, -2.55);
+    post.rotation.x = 0.18;
+    treadmillGroup.add(post);
+
+    const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 2.2, 8), tmAccent);
+    handle.rotation.x = Math.PI / 2;
+    handle.position.set(px, 2.65, -1.55);
+    treadmillGroup.add(handle);
+  });
+
+  const consoleBox = new THREE.Mesh(new THREE.BoxGeometry(3.5, 1.25, 0.7), tmMetal);
+  consoleBox.position.set(0, 3.45, -2.25);
+  consoleBox.rotation.x = -0.35;
+  treadmillGroup.add(consoleBox);
+
+  const consoleScreen = new THREE.Mesh(
+    new THREE.PlaneGeometry(2.9, 0.85),
+    new THREE.MeshBasicMaterial({ map: createSignTexture('SPEED TRAINER', 'RUN TO GAIN SPEED!', '#082f49', '#38bdf8') })
+  );
+  consoleScreen.position.set(0, 3.55, -1.86);
+  consoleScreen.rotation.x = -0.35;
+  treadmillGroup.add(consoleScreen);
+
+  const tmSign = new THREE.Mesh(
+    new THREE.BoxGeometry(6.8, 1.8, 0.3),
+    new THREE.MeshBasicMaterial({ map: createSignTexture('SPEED TREADMILL', 'Step On or Press [E]!', '#0c4a6e', '#38bdf8') })
+  );
+  tmSign.position.set(0, 6.2, -2.2);
+  treadmillGroup.add(tmSign);
+  baseGroup.add(treadmillGroup);
+
+  // Cozy trees around Base corners
+  function addBaseTree(x, z) {
+    const tg = new THREE.Group();
+    tg.position.set(x, 0, z);
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.6, 3.4, 8), postMat);
+    trunk.position.y = 1.7;
+    const crown = new THREE.Mesh(new THREE.ConeGeometry(2.3, 4.2, 8), matLambert(0x16a34a));
+    crown.position.y = 4.6;
+    tg.add(trunk, crown);
+    baseGroup.add(tg);
+  }
+  [[-25, 48], [25, 48], [-25, 2], [25, 2], [25, 11]].forEach(([x, z]) => addBaseTree(x, z));
+
+  // 16 Animal Pedestals (where you put your stolen animals!)
+  const pedestalObjects = [];
+  const pedestalCoords = [];
+  const pRows = [14, 24, 34, 44];
+  const pCols = [-21, -11, 11, 21];
+  for (const rz of pRows) {
+    for (const cx of pCols) {
+      pedestalCoords.push({ x: cx, z: rz });
+    }
+  }
+
+  pedestalCoords.forEach((pos, idx) => {
+    const pg = new THREE.Group();
+    pg.position.set(pos.x, 0, pos.z);
+
+    // Stone pedestal base + glowing rim
+    const pad = new THREE.Mesh(
+      new THREE.CylinderGeometry(3.2, 3.6, 0.55, 16),
+      matStd(0x334155, { roughness: 0.5 })
+    );
+    pad.position.y = 0.275;
+    pad.receiveShadow = true;
+    pg.add(pad);
+
+    const ring = new THREE.Mesh(
+      new THREE.TorusGeometry(3.25, 0.14, 8, 28),
+      new THREE.MeshBasicMaterial({ color: 0x38bdf8 })
+    );
+    ring.rotation.x = Math.PI / 2;
+    ring.position.y = 0.56;
+    pg.add(ring);
+
+    const label = createFloatingLabelSprite(`Slot #${idx + 1}`, 'Put Animal Here [E]', '#38bdf8');
+    label.position.set(0, 4.3, 0);
+    pg.add(label);
+
+    baseGroup.add(pg);
+    pedestalObjects.push({
+      idx,
+      pos: new THREE.Vector3(pos.x, 0, pos.z),
+      group: pg,
+      ring,
+      label,
+      animalMesh: null,
+      auraMesh: null
+    });
+  });
+
+  function refreshPedestalVisual(idx) {
+    const ped = pedestalObjects[idx];
+    const entry = state.pedestals[idx];
+
+    if (ped.animalMesh) {
+      ped.group.remove(ped.animalMesh);
+      ped.animalMesh = null;
+    }
+    if (ped.auraMesh) {
+      ped.group.remove(ped.auraMesh);
+      ped.auraMesh = null;
+    }
+    if (ped.label) {
+      ped.group.remove(ped.label);
+    }
+
+    if (!entry) {
+      ped.ring.material.color.setHex(0x38bdf8);
+      ped.label = createFloatingLabelSprite(`Slot #${idx + 1}`, 'Put Animal Here [E]', '#38bdf8');
+      ped.label.position.set(0, 4.3, 0);
+      ped.group.add(ped.label);
+    } else {
+      const b = BIOMES[entry.biomeIdx];
+      const eggType = EGG_TYPES[entry.eggTypeIdx] || EGG_TYPES[0];
+      const accentColor = entry.eggTypeIdx > 0 ? eggType.color : b.uiColor;
+      ped.ring.material.color.set(accentColor);
+      const mesh = createMonsterMesh(b.id);
+      const fitScale = Math.min(1.05, 1.15 / Math.max(0.95, b.scale * 0.85));
+      mesh.scale.setScalar(fitScale);
+      mesh.position.set(0, 0.58, 0);
+      // Face toward center walkway
+      mesh.rotation.y = ped.pos.x < 0 ? Math.PI / 2 : -Math.PI / 2;
+      initMonsterBaseY(mesh);
+      ped.group.add(mesh);
+      ped.animalMesh = mesh;
+
+      ped.auraMesh = addPedestalEggAura(ped.group, entry.eggTypeIdx);
+
+      const earned = Math.round(b.income * eggType.mult * getIncomeMultiplier());
+      const prefix = entry.eggTypeIdx > 0 ? `${eggType.emoji} ${eggType.name} ` : `${b.emoji} `;
+      ped.label = createFloatingLabelSprite(`${prefix}${b.monsterName}`, `${formatMoney(earned)}/s`, accentColor);
+      ped.label.position.set(0, 5.4, 0);
+      ped.group.add(ped.label);
+    }
+  }
+
+  for (let i = 0; i < 16; i++) refreshPedestalVisual(i);
+
+  // =========================================================================
+  // 8. BUILD ALL 15 BIOMES STRETCHING STRAIGHT FORWARD (-Z)
+  // =========================================================================
+  const biomeRuntime = []; // holds group, nest, eggMesh, monsterMesh, AI state
+
+  function addBiomeDecor(group, biome, zStart, zEnd) {
+    const zMid = (zStart + zEnd) / 2;
+    const id = biome.id;
+
+    // Side boundaries / cliffs along X = +-24
+    const wallMat = matLambert(biome.accentColor);
+    const leftWall = new THREE.Mesh(new THREE.BoxGeometry(2.5, 4.5, BIOME_LENGTH), wallMat);
+    leftWall.position.set(-ROAD_HALF_WIDTH - 1.25, 2.25, zMid);
+    const rightWall = new THREE.Mesh(new THREE.BoxGeometry(2.5, 4.5, BIOME_LENGTH), wallMat);
+    rightWall.position.set(ROAD_HALF_WIDTH + 1.25, 2.25, zMid);
+    group.add(leftWall, rightWall);
+
+    // Biome Entrance Archway at zStart
+    const archMat = matStd(biome.accentColor, { roughness: 0.4 });
+    const lp = new THREE.Mesh(new THREE.BoxGeometry(2.2, 11, 2.2), archMat);
+    lp.position.set(-14, 5.5, zStart - 1.2);
+    const rp = new THREE.Mesh(new THREE.BoxGeometry(2.2, 11, 2.2), archMat);
+    rp.position.set(14, 5.5, zStart - 1.2);
+    group.add(lp, rp);
+
+    const signTex = createSignTexture(
+      `BIOME ${biome.num}: ${biome.name.toUpperCase()}`,
+      `${biome.emoji} ${biome.monsterName} Egg • ${formatMoney(biome.income)}/s`,
+      '#0f172a',
+      biome.uiColor
+    );
+    const banner = new THREE.Mesh(
+      new THREE.BoxGeometry(28, 4.2, 0.7),
+      new THREE.MeshBasicMaterial({ map: signTex })
+    );
+    banner.position.set(0, 11.4, zStart - 1.2);
+    group.add(banner);
+
+    // Themed props placed neatly along the sides (X in [-21..-14] and [14..21]) so center is clear to run!
+    for (let k = 0; k < 6; k++) {
+      const side = k % 2 === 0 ? -1 : 1;
+      const px = side * (15.5 + (k * 1.7) % 5.5);
+      const pz = zStart - 8 - k * 8.5;
+
+      if (id === 'easy') {
+        // Sunny oak trees + bushes
+        const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.55, 3.2, 7), matLambert(0x854d0e));
+        trunk.position.set(px, 1.6, pz);
+        const top = new THREE.Mesh(new THREE.SphereGeometry(2.1, 8, 8), matLambert(0x22c55e));
+        top.position.set(px, 4.2, pz);
+        group.add(trunk, top);
+      } else if (id === 'river') {
+        // Reeds & river rocks
+        const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(1.6, 0), matLambert(0x64748b));
+        rock.position.set(px, 1.0, pz);
+        const reed = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.16, 4.2, 6), matLambert(0x4d7c0f));
+        reed.position.set(px - side * 1.3, 2.1, pz + 1);
+        group.add(rock, reed);
+      } else if (id === 'jungle') {
+        // Tall palm/jungle trees
+        const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.65, 7.5, 7), matLambert(0x713f12));
+        trunk.position.set(px, 3.75, pz);
+        const canopy = new THREE.Mesh(new THREE.ConeGeometry(3.5, 3.2, 7), matLambert(0x15803d));
+        canopy.position.set(px, 8.2, pz);
+        group.add(trunk, canopy);
+      } else if (id === 'snow') {
+        // Snowy pines & icicles
+        const pine = new THREE.Mesh(new THREE.ConeGeometry(2.4, 7.2, 7), matLambert(0x0f766e));
+        pine.position.set(px, 3.6, pz);
+        const cap = new THREE.Mesh(new THREE.ConeGeometry(1.7, 3.0, 7), matLambert(0xffffff));
+        cap.position.set(px, 6.2, pz);
+        group.add(pine, cap);
+      } else if (id === 'volcano') {
+        // Volcanic obsidian spires & lava pools
+        const spire = new THREE.Mesh(new THREE.ConeGeometry(1.8, 7.5, 6), matLambert(0x1c1917));
+        spire.position.set(px, 3.75, pz);
+        const lava = new THREE.Mesh(new THREE.CylinderGeometry(2.4, 2.4, 0.12, 10), new THREE.MeshBasicMaterial({ color: 0xff4500 }));
+        lava.position.set(px - side * 3.5, 0.06, pz);
+        group.add(spire, lava);
+      } else if (id === 'abyss_ocean') {
+        // Glowing coral pillars & giant bubbles
+        const coral = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 1.3, 7.2, 7), matStd(0x0e7490, { emissive: 0x0891b2, emissiveIntensity: 0.4 }));
+        coral.position.set(px, 3.6, pz);
+        const orb = new THREE.Mesh(new THREE.SphereGeometry(0.95, 10, 10), new THREE.MeshBasicMaterial({ color: 0x00f5d4 }));
+        orb.position.set(px, 7.8, pz);
+        group.add(coral, orb);
+      } else if (id === 'prehistoric') {
+        // Giant fossil rib arches & prehistoric ferns
+        const bone = new THREE.Mesh(new THREE.TorusGeometry(3.8, 0.42, 6, 12, Math.PI * 0.7), matLambert(0xf5f5f4));
+        bone.position.set(px, 0.5, pz);
+        bone.rotation.y = side > 0 ? Math.PI : 0;
+        group.add(bone);
+      } else if (id === 'storm_land') {
+        // Crackling purple lightning spires
+        const tower = new THREE.Mesh(new THREE.ConeGeometry(1.3, 9.0, 5), matStd(0x3b0764));
+        tower.position.set(px, 4.5, pz);
+        const bolt = new THREE.Mesh(new THREE.OctahedronGeometry(1.1), new THREE.MeshBasicMaterial({ color: 0xfef08a }));
+        bolt.position.set(px, 9.6, pz);
+        group.add(tower, bolt);
+      } else if (id === 'cosmic') {
+        // Floating glowing mini-planets with rings!
+        const planet = new THREE.Mesh(
+          new THREE.SphereGeometry(2.1, 12, 10),
+          new THREE.MeshStandardMaterial({ map: GALAXY_TEX, emissive: 0x4f46e5, emissiveIntensity: 0.5 })
+        );
+        planet.position.set(px, 6.2 + (k % 3) * 1.4, pz);
+        const ring = new THREE.Mesh(new THREE.TorusGeometry(3.1, 0.16, 6, 20), new THREE.MeshBasicMaterial({ color: 0x38bdf8 }));
+        ring.rotation.x = 1.2;
+        planet.add(ring);
+        group.add(planet);
+      } else if (id === 'cherry_blossom') {
+        // Sakura trees with pink blossoms!
+        const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.6, 4.8, 7), matLambert(0x5c3a21));
+        trunk.position.set(px, 2.4, pz);
+        const blos = new THREE.Mesh(new THREE.SphereGeometry(2.9, 10, 8), matLambert(0xf9a8d4));
+        blos.position.set(px, 6.0, pz);
+        group.add(trunk, blos);
+      } else if (id === 'titan_temple') {
+        // Giant ancient golden-marble temple columns
+        const col = new THREE.Mesh(new THREE.CylinderGeometry(1.25, 1.4, 11, 10), matStd(0xe7e5e4));
+        col.position.set(px, 5.5, pz);
+        const cap = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.9, 3.2), matStd(0xfacc15, { metalness: 0.5 }));
+        cap.position.set(px, 11.2, pz);
+        group.add(col, cap);
+      } else if (id === 'demon') {
+        // Obsidian demon spikes & hellfire braziers
+        const spike = new THREE.Mesh(new THREE.ConeGeometry(1.5, 9.5, 5), matLambert(0x18181b));
+        spike.position.set(px, 4.75, pz);
+        const fire = new THREE.Mesh(new THREE.OctahedronGeometry(1.2), new THREE.MeshBasicMaterial({ color: 0xef4444 }));
+        fire.position.set(px - side * 2.2, 2.2, pz);
+        group.add(spike, fire);
+      } else if (id === 'angel') {
+        // Pearly white pillars & glowing clouds
+        const pillar = new THREE.Mesh(new THREE.CylinderGeometry(1.0, 1.1, 10, 10), matStd(0xffffff, { emissive: 0xfef3c7, emissiveIntensity: 0.25 }));
+        pillar.position.set(px, 5.0, pz);
+        const halo = new THREE.Mesh(new THREE.TorusGeometry(1.4, 0.14, 8, 18), new THREE.MeshBasicMaterial({ color: 0xfacc15 }));
+        halo.rotation.x = Math.PI / 2;
+        halo.position.set(px, 10.6, pz);
+        group.add(pillar, halo);
+      } else if (id === 'enchanted_forest') {
+        // Giant glowing magical mushrooms & starlit trees!
+        const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.65, 4.8, 8), matLambert(0xe0f2fe));
+        stem.position.set(px, 2.4, pz);
+        const cap = new THREE.Mesh(
+          new THREE.ConeGeometry(2.7, 2.2, 10),
+          new THREE.MeshStandardMaterial({ color: k % 2 === 0 ? 0x2dd4bf : 0xc084fc, emissive: k % 2 === 0 ? 0x0d9488 : 0x7e22ce, emissiveIntensity: 0.65 })
+        );
+        cap.position.set(px, 5.5, pz);
+        group.add(stem, cap);
+      } else if (id === 'alien_planet') {
+        // Alien neon-green glowing crystals & purple spires!
+        const crys = new THREE.Mesh(
+          new THREE.OctahedronGeometry(2.2, 0),
+          new THREE.MeshStandardMaterial({ color: 0x84cc16, emissive: 0x65a30d, emissiveIntensity: 0.6 })
+        );
+        crys.scale.set(0.7, 2.4, 0.7);
+        crys.position.set(px, 3.6, pz);
+        const ring = new THREE.Mesh(new THREE.TorusGeometry(2.4, 0.16, 6, 16), new THREE.MeshBasicMaterial({ color: 0xd946ef }));
+        ring.rotation.x = Math.PI / 2;
+        ring.position.set(px, 0.18, pz);
+        group.add(crys, ring);
+      }
+    }
+
+    // Special extra landmarks for River (wooden bridge strip) & Alien Planet (hovering UFO!)
+    if (id === 'river') {
+      const bridge = new THREE.Mesh(new THREE.BoxGeometry(10, 0.18, BIOME_LENGTH), matLambert(0xb45309));
+      bridge.position.set(0, 0.09, zMid);
+      group.add(bridge);
+    }
+    if (id === 'alien_planet') {
+      const ufo = new THREE.Group();
+      ufo.position.set(0, 22, zMid);
+      const disc = new THREE.Mesh(new THREE.CylinderGeometry(4.5, 7, 1.6, 16), matStd(0x94a3b8, { metalness: 0.7 }));
+      const dome = new THREE.Mesh(new THREE.SphereGeometry(3.2, 12, 10), new THREE.MeshBasicMaterial({ color: 0x84cc16 }));
+      dome.position.y = 1.2;
+      ufo.add(disc, dome);
+      group.add(ufo);
+    }
+  }
+
+  BIOMES.forEach((biome, idx) => {
+    const zStart = -idx * BIOME_LENGTH;
+    const zEnd = zStart - BIOME_LENGTH;
+    const zMid = (zStart + zEnd) / 2;
+
+    const bGroup = new THREE.Group();
+    scene.add(bGroup);
+
+    // Biome Ground Strip
+    const floorMat = biome.id === 'cosmic'
+      ? new THREE.MeshStandardMaterial({ map: GALAXY_TEX, roughness: 0.8 })
+      : matLambert(biome.groundColor);
+    const floor = new THREE.Mesh(new THREE.BoxGeometry(ROAD_HALF_WIDTH * 2, 1, BIOME_LENGTH), floorMat);
+    floor.position.set(0, -0.5, zMid);
+    floor.receiveShadow = true;
+    bGroup.add(floor);
+
+    addBiomeDecor(bGroup, biome, zStart, zEnd);
+
+    // 6 Different Eggs arranged in a gleaming semicircle around the biome nest!
+    const nestPos = new THREE.Vector3(0, 0, zStart - BIOME_LENGTH * 0.68);
+    const eggOffsets = [
+      { x: -11.0, z:  4.5 }, // 0: Common
+      { x:  -6.8, z:  1.2 }, // 1: Golden
+      { x:  -2.3, z: -1.4 }, // 2: Diamond
+      { x:   2.3, z: -1.4 }, // 3: Lava
+      { x:   6.8, z:  1.2 }, // 4: Rainbow
+      { x:  11.0, z:  4.5 }  // 5: Galaxy
+    ];
+
+    const biomeEggs = [];
+    EGG_TYPES.forEach((eggType, eggTypeIdx) => {
+      const off = eggOffsets[eggTypeIdx];
+      const ePos = new THREE.Vector3(nestPos.x + off.x, 0, nestPos.z + off.z);
+
+      const nest = new THREE.Mesh(
+        new THREE.TorusGeometry(1.45, 0.35, 7, 16),
+        matLambert(eggTypeIdx === 0 ? 0x92400e : eggType.hex)
+      );
+      nest.rotation.x = Math.PI / 2;
+      nest.position.set(ePos.x, 0.28, ePos.z);
+      bGroup.add(nest);
+
+      const beacon = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.14, 0.9, 9 + eggTypeIdx * 1.2, 8, 1, true),
+        new THREE.MeshBasicMaterial({
+          color: eggTypeIdx === 0 ? biome.eggSecondary : eggType.hex,
+          transparent: true,
+          opacity: 0.16 + eggTypeIdx * 0.02,
+          side: THREE.DoubleSide
+        })
+      );
+      beacon.position.set(ePos.x, 4.5 + eggTypeIdx * 0.6, ePos.z);
+      bGroup.add(beacon);
+
+      const eggMesh = createEggMesh(biome, eggTypeIdx, true);
+      eggMesh.position.set(ePos.x, 1.2, ePos.z);
+      bGroup.add(eggMesh);
+
+      biomeEggs.push({
+        eggTypeIdx,
+        pos: ePos,
+        beacon,
+        eggMesh,
+        available: true
+      });
+    });
+
+    // Monster guarding this biome!
+    const monsterMesh = createMonsterMesh(biome.id);
+    monsterMesh.scale.setScalar(biome.scale);
+    initMonsterBaseY(monsterMesh);
+    const homePos = new THREE.Vector3(0, 0, nestPos.z + 7.5);
+    monsterMesh.position.copy(homePos);
+    scene.add(monsterMesh); // added directly to scene so it can chase all the way to the Safe Zone!
+
+    biomeRuntime.push({
+      idx,
+      biome,
+      zStart,
+      zEnd,
+      group: bGroup,
+      nestPos,
+      eggs: biomeEggs,
+      monsterMesh,
+      homePos,
+      patrolAngle: idx * 1.1,
+      chasing: false,
+      retreating: false,
+      stunTimer: 0
+    });
+  });
+
+  // Back wall at the very end of Biome 15 (Alien Planet)
+  const endWallZ = -BIOMES.length * BIOME_LENGTH;
+  const endWall = new THREE.Mesh(
+    new THREE.BoxGeometry(ROAD_HALF_WIDTH * 2 + 5, 12, 2),
+    matStd(0x4c1d95, { emissive: 0x3b0764, emissiveIntensity: 0.4 })
+  );
+  endWall.position.set(0, 6, endWallZ - 1);
+  scene.add(endWall);
+
+  // =========================================================================
+  // 9. PLAYER CHARACTER (3D AVATAR + CARRIED EGG)
+  // =========================================================================
+  const playerGroup = new THREE.Group();
+  scene.add(playerGroup);
+
+  const playerBody = new THREE.Group();
+  playerGroup.add(playerBody);
+
+  const pShirt = matLambert(0x3b82f6);
+  const pPants = matLambert(0x1e293b);
+  const pSkin = matLambert(0xfdba74);
+  const pHair = matLambert(0x451a03);
+
+  const pTorso = new THREE.Mesh(new THREE.BoxGeometry(0.95, 1.1, 0.55), pShirt);
+  pTorso.position.y = 1.45; pTorso.castShadow = true;
+  const pHead = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.75, 0.75), pSkin);
+  pHead.position.y = 2.42; pHead.castShadow = true;
+  addEyes(playerBody, 2.48, 0.39, 0.16, 0.065, 0x111111);
+  const pCap = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.26, 0.82), pHair);
+  pCap.position.y = 2.86;
+  const pArmL = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.95, 0.34), pShirt);
+  pArmL.position.set(-0.68, 1.42, 0);
+  const pArmR = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.95, 0.34), pShirt);
+  pArmR.position.set(0.68, 1.42, 0);
+  const pLegL = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.92, 0.4), pPants);
+  pLegL.position.set(-0.24, 0.46, 0);
+  const pLegR = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.92, 0.4), pPants);
+  pLegR.position.set(0.24, 0.46, 0);
+
+  playerBody.add(pTorso, pHead, pCap, pArmL, pArmR, pLegL, pLegR);
+
+  // Carried Egg Holder above player's head
+  const carriedEggHolder = new THREE.Group();
+  carriedEggHolder.position.set(0, 3.65, 0);
+  playerGroup.add(carriedEggHolder);
+  let carriedEggVisual = null;
+
+  const player = {
+    pos: new THREE.Vector3(0, 0, 26),
+    velY: 0,
+    onGround: true,
+    yaw: 0, // 0 faces -Z (straight down the 15 biomes!)
+    pitch: -0.22
+  };
+  playerGroup.position.copy(player.pos);
+
+  // =========================================================================
+  // 10. PARTICLE BURSTS (Hatch celebration / Shield pop)
+  // =========================================================================
+  const particles = [];
+  function spawnBurst(pos, colorHex, count = 26) {
+    const geo = new THREE.BoxGeometry(0.28, 0.28, 0.28);
+    const mat = new THREE.MeshBasicMaterial({ color: colorHex });
+    for (let i = 0; i < count; i++) {
+      const m = new THREE.Mesh(geo, mat);
+      m.position.copy(pos).add(new THREE.Vector3(0, 1.5, 0));
+      scene.add(m);
+      particles.push({
+        mesh: m,
+        vel: new THREE.Vector3(
+          (Math.random() - 0.5) * 11,
+          4 + Math.random() * 9,
+          (Math.random() - 0.5) * 11
+        ),
+        life: 0.9 + Math.random() * 0.5
+      });
+    }
+  }
+
+  // =========================================================================
+  // 11. INPUT HANDLING (WASD, Pointer Lock + Mouse Drag, Keyboard Shortcuts)
+  // =========================================================================
+  const keys = {};
+  let isDragging = false;
+  let lastMouseX = 0;
+  let lastMouseY = 0;
+  let pointerLocked = false;
+
+  window.addEventListener('keydown', (e) => {
+    const code = e.code;
+    keys[code] = true;
+
+    if (!state.started) return;
+
+    if (code === 'KeyB') { toggleModal('shop'); return; }
+    if (code === 'KeyI') { toggleModal('index'); return; }
+    if (code === 'Escape') {
+      if (state.modalOpen) closeAllModals();
+      return;
+    }
+    if (state.modalOpen) return;
+
+    if (code === 'KeyE') {
+      handleInteract();
+    } else if (code === 'KeyV') {
+      toggleCameraMode();
+    } else if (code === 'KeyR') {
+      tryReturnToBase();
+    } else if (code === 'KeyQ') {
+      tryDash();
+    } else if (code === 'Space') {
+      if (state.onTreadmill) {
+        state.onTreadmill = false;
+        player.velY = getJumpVelocity();
+        player.onGround = false;
+        SFX.jump();
+        saveGame();
+      } else if (player.onGround) {
+        player.velY = getJumpVelocity();
+        player.onGround = false;
+        SFX.jump();
+      }
+    }
+  });
+
+  window.addEventListener('keyup', (e) => {
+    keys[e.code] = false;
+  });
+
+  renderer.domElement.addEventListener('mousedown', (e) => {
+    if (!state.started || state.modalOpen) return;
+    ensureAudio();
+    isDragging = true;
+    lastMouseX = e.clientX;
+    lastMouseY = e.clientY;
+    if (!pointerLocked && e.button === 0) {
+      if (renderer.domElement.requestPointerLock) {
+        renderer.domElement.requestPointerLock();
+      }
+    }
+  });
+
+  window.addEventListener('mouseup', () => { isDragging = false; });
+
+  window.addEventListener('mousemove', (e) => {
+    if (!state.started || state.modalOpen) return;
+    if (pointerLocked) {
+      player.yaw -= e.movementX * 0.0028;
+      player.pitch = Math.max(-1.05, Math.min(0.65, player.pitch - e.movementY * 0.0024));
+    } else if (isDragging) {
+      const dx = e.clientX - lastMouseX;
+      const dy = e.clientY - lastMouseY;
+      lastMouseX = e.clientX;
+      lastMouseY = e.clientY;
+      player.yaw -= dx * 0.0055;
+      player.pitch = Math.max(-1.05, Math.min(0.65, player.pitch - dy * 0.0045));
+    }
+  });
+
+  document.addEventListener('pointerlockchange', () => {
+    pointerLocked = (document.pointerLockElement === renderer.domElement);
+    document.getElementById('crosshair').style.display = (pointerLocked && state.firstPerson) ? 'block' : 'none';
+  });
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+
+  // =========================================================================
+  // 12. GAMEPLAY ACTIONS (STEAL, HATCH/PLACE, DASH, CAUGHT, SAFE ESCAPE)
+  // =========================================================================
+  let toastTimer = null;
+  function showToast(msg, borderColor = '#38bdf8') {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.style.borderColor = borderColor;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+  }
+
+  function flashScreen(rgba) {
+    const el = document.getElementById('screen-flash');
+    el.style.background = rgba;
+    el.style.opacity = '1';
+    setTimeout(() => { el.style.opacity = '0'; }, 180);
+  }
+
+  function setCarriedEgg(biomeIdx, eggTypeIdx = 0) {
+    if (carriedEggVisual) {
+      carriedEggHolder.remove(carriedEggVisual);
+      carriedEggVisual = null;
+    }
+    const banner = document.getElementById('carrying-banner');
+    if (biomeIdx !== null) {
+      state.carryingEgg = { biomeIdx, eggTypeIdx };
+      const b = BIOMES[biomeIdx];
+      const et = EGG_TYPES[eggTypeIdx] || EGG_TYPES[0];
+      carriedEggVisual = createEggMesh(b, eggTypeIdx, false);
+      carriedEggVisual.scale.setScalar(0.85);
+      carriedEggHolder.add(carriedEggVisual);
+      banner.textContent = `${et.emoji} Carrying ${et.name} ${b.emoji} ${b.monsterName} Egg (${et.mult}x)! Run back to Base!`;
+      banner.style.borderColor = et.color;
+      banner.style.display = 'block';
+    } else {
+      state.carryingEgg = null;
+      banner.style.display = 'none';
+    }
+    updateHUDButtons();
+  }
+
+  function stealEgg(biomeIdx, eggTypeIdx) {
+    if (state.carryingEgg !== null) {
+      showToast('🥚 Bring your current egg back to Base first!', '#f59e0b');
+      return;
+    }
+    const br = biomeRuntime[biomeIdx];
+    const slot = br && br.eggs[eggTypeIdx];
+    if (!slot || !slot.available) return;
+
+    const et = EGG_TYPES[eggTypeIdx];
+    slot.available = false;
+    slot.eggMesh.visible = false;
+    slot.beacon.visible = false;
+    setCarriedEgg(biomeIdx, eggTypeIdx);
+
+    // Trigger angry chase! Rarer eggs make the monster chase even faster!
+    br.chasing = true;
+    br.retreating = false;
+    br.monsterMesh.userData.angrySprite.visible = true;
+    state.activeChaserIdx = biomeIdx;
+    state.activeChaserSpeedMult = et.chaseMult;
+    state.shieldsRemaining = state.upgrades.shield;
+
+    SFX.steal();
+    flashScreen('rgba(239, 68, 68, 0.35)');
+    showToast(`⚠️ STOLE ${et.emoji} ${et.name.toUpperCase()} ${br.biome.monsterName.toUpperCase()} EGG! RUN!!`, '#ef4444');
+    updateHUD();
+  }
+
+  function placeEggOnPedestal(pedIdx) {
+    if (!state.carryingEgg) return;
+    const { biomeIdx: bIdx, eggTypeIdx } = state.carryingEgg;
+    const biome = BIOMES[bIdx];
+    const et = EGG_TYPES[eggTypeIdx] || EGG_TYPES[0];
+
+    state.pedestals[pedIdx] = { biomeIdx: bIdx, eggTypeIdx };
+    state.collected[biome.id] = true;
+
+    // Hatch reward bonus & Level XP multiplied by egg rarity!
+    const hatchBonus = Math.round(biome.income * et.mult * 8 * getIncomeMultiplier());
+    state.money += hatchBonus;
+    const xpGain = Math.round((30 + bIdx * 20) * Math.sqrt(et.mult));
+    addXp(xpGain);
+
+    refreshPedestalVisual(pedIdx);
+    spawnBurst(pedestalObjects[pedIdx].pos, et.hex, 36);
+
+    // Respawn the egg back in its biome!
+    const br = biomeRuntime[bIdx];
+    const slot = br.eggs[eggTypeIdx];
+    if (slot) {
+      slot.available = true;
+      slot.eggMesh.visible = true;
+      slot.beacon.visible = true;
+    }
+
+    setCarriedEgg(null);
+    SFX.hatch();
+    flashScreen('rgba(74, 222, 128, 0.32)');
+    showToast(`🎉 Hatched ${et.emoji} ${et.name} ${biome.monsterName}! +${formatMoney(hatchBonus)} Bonus!`, et.color);
+    saveGame();
+    updateHUD();
+  }
+
+  function removeAnimalFromPedestal(pedIdx) {
+    const entry = state.pedestals[pedIdx];
+    if (!entry) return;
+    const b = BIOMES[entry.biomeIdx];
+    const et = EGG_TYPES[entry.eggTypeIdx] || EGG_TYPES[0];
+    state.pedestals[pedIdx] = null;
+    refreshPedestalVisual(pedIdx);
+    showToast(`Released ${et.emoji} ${et.name} ${b.monsterName} from Slot #${pedIdx + 1}`, '#94a3b8');
+    saveGame();
+    updateHUD();
+  }
+
+  function onPlayerCaught(br) {
+    if (state.invulnTimer > 0) return;
+
+    // Check Escape Shield!
+    if (state.shieldsRemaining > 0) {
+      state.shieldsRemaining--;
+      state.invulnTimer = 1.6;
+      br.stunTimer = 1.1;
+      state.dashTimer = 0.45; // brief speed burst!
+      spawnBurst(player.pos, 0x38bdf8, 22);
+      SFX.shieldBlock();
+      flashScreen('rgba(56, 189, 248, 0.45)');
+      showToast(`🛡️ SHIELD BLOCKED ${br.biome.monsterName.toUpperCase()}! KEEP RUNNING!`, '#38bdf8');
+      updateHUD();
+      return;
+    }
+
+    // Caught! Drop egg and send player back to Base
+    SFX.caught();
+    flashScreen('rgba(220, 38, 38, 0.65)');
+    showToast(`💥 Caught by ${br.biome.emoji} ${br.biome.monsterName}! Egg returned to nest!`, '#ef4444');
+
+    br.chasing = false;
+    br.retreating = true;
+    br.monsterMesh.userData.angrySprite.visible = false;
+    if (state.carryingEgg && state.carryingEgg.biomeIdx === br.idx) {
+      const slot = br.eggs[state.carryingEgg.eggTypeIdx];
+      if (slot) {
+        slot.available = true;
+        slot.eggMesh.visible = true;
+        slot.beacon.visible = true;
+      }
+    }
+
+    state.activeChaserIdx = null;
+    state.activeChaserSpeedMult = 1;
+    setCarriedEgg(null);
+
+    // Respawn safely inside Base
+    player.pos.set(0, 0, 22);
+    player.velY = 0;
+    player.yaw = 0;
+    state.onTreadmill = false;
+    state.stamina = getMaxStamina();
+    state.shieldsRemaining = state.upgrades.shield;
+    updateHUD();
+  }
+
+  function tryDash() {
+    if (state.onTreadmill) state.onTreadmill = false;
+    if (state.dashCooldown > 0) return;
+    state.dashTimer = 0.34;
+    state.dashCooldown = getDashCooldownMax();
+    SFX.dash();
+  }
+
+  function tryReturnToBase() {
+    if (state.carryingEgg !== null || state.activeChaserIdx !== null) {
+      showToast('❌ You cannot teleport while carrying an egg or being chased!', '#ef4444');
+      return;
+    }
+    state.onTreadmill = false;
+    player.pos.set(0, 0, 22);
+    player.velY = 0;
+    player.yaw = 0;
+    showToast('🏠 Returned to Home Base!', '#10b981');
+  }
+
+  function toggleTreadmill() {
+    if (state.onTreadmill) {
+      state.onTreadmill = false;
+      player.pos.set(treadmillPos.x, 0, treadmillPos.z + 4.0);
+      showToast(`🏃 Finished training! Total Trained Speed: +${state.trainedSpeed.toFixed(1)}`, '#38bdf8');
+      saveGame();
+    } else {
+      state.onTreadmill = true;
+      player.pos.set(treadmillPos.x, 0.58, treadmillPos.z + 0.3);
+      player.velY = 0;
+      playerBody.rotation.y = Math.PI; // face the treadmill console (-Z)
+      showToast(`🏃 Running on Treadmill! (+${getTreadmillRate().toFixed(2)} Speed/sec)`, '#38bdf8');
+    }
+  }
+
+  function toggleCameraMode() {
+    state.firstPerson = !state.firstPerson;
+    playerBody.visible = !state.firstPerson;
+    document.getElementById('toggle-cam-btn').textContent = state.firstPerson ? '👁️ 1st Person (V)' : '👁️ 3rd Person (V)';
+    document.getElementById('crosshair').style.display = (pointerLocked && state.firstPerson) ? 'block' : 'none';
+  }
+
+  // Context-sensitive [E] interaction
+  let currentInteractAction = null;
+
+  function computeNearestInteraction() {
+    currentInteractAction = null;
+    const promptEl = document.getElementById('interact-prompt');
+
+    // 0. Currently on Treadmill?
+    if (state.onTreadmill) {
+      currentInteractAction = { type: 'treadmill' };
+      promptEl.textContent = '🏃 [E] Step Off Treadmill (or press S / Space)';
+      promptEl.className = '';
+      promptEl.style.display = 'block';
+      return;
+    }
+
+    // 1. Check Speed Treadmill in Base
+    if (Math.hypot(player.pos.x - treadmillPos.x, player.pos.z - treadmillPos.z) < 5.2) {
+      currentInteractAction = { type: 'treadmill' };
+      promptEl.textContent = `🏃 [E] Run on Speed Treadmill (+${getTreadmillRate().toFixed(2)} Speed/s)`;
+      promptEl.className = '';
+      promptEl.style.display = 'block';
+      return;
+    }
+
+    // 2. Check Upgrade Shop in Base
+    if (player.pos.distanceTo(shopPos) < 6.2) {
+      currentInteractAction = { type: 'shop' };
+      promptEl.textContent = '🛒 [E] Open Upgrade Shop';
+      promptEl.className = '';
+      promptEl.style.display = 'block';
+      return;
+    }
+
+    // 3. Check Animal Pedestals in Base
+    let bestPed = null;
+    let bestPedDist = 4.6;
+    for (const ped of pedestalObjects) {
+      const dist = Math.hypot(player.pos.x - ped.pos.x, player.pos.z - ped.pos.z);
+      if (dist < bestPedDist) {
+        bestPedDist = dist;
+        bestPed = ped;
+      }
+    }
+    if (bestPed) {
+      const occupied = state.pedestals[bestPed.idx] !== null;
+      if (state.carryingEgg !== null) {
+        const b = BIOMES[state.carryingEgg.biomeIdx];
+        const et = EGG_TYPES[state.carryingEgg.eggTypeIdx];
+        currentInteractAction = { type: 'place', pedIdx: bestPed.idx };
+        promptEl.textContent = occupied
+          ? `🥚 [E] Replace Slot #${bestPed.idx + 1} with ${et.emoji} ${et.name} ${b.monsterName}`
+          : `🥚 [E] Place ${et.emoji} ${et.name} ${b.monsterName} Egg in Slot #${bestPed.idx + 1}!`;
+        promptEl.className = '';
+        promptEl.style.display = 'block';
+        return;
+      } else if (occupied) {
+        const entry = state.pedestals[bestPed.idx];
+        const b = BIOMES[entry.biomeIdx];
+        const et = EGG_TYPES[entry.eggTypeIdx] || EGG_TYPES[0];
+        currentInteractAction = { type: 'remove', pedIdx: bestPed.idx };
+        promptEl.textContent = `🐾 [E] Release ${et.emoji} ${et.name} ${b.monsterName} from Slot #${bestPed.idx + 1}`;
+        promptEl.className = 'danger-prompt';
+        promptEl.style.display = 'block';
+        return;
+      }
+    }
+
+    // 4. Check all 6 Eggs in Biome Nests (pick closest egg within reach!)
+    let bestEgg = null;
+    let bestEggDist = 3.8;
+    for (const br of biomeRuntime) {
+      if (!br.group.visible) continue;
+      for (const slot of br.eggs) {
+        if (!slot.available) continue;
+        const dist = Math.hypot(player.pos.x - slot.pos.x, player.pos.z - slot.pos.z);
+        if (dist < bestEggDist) {
+          bestEggDist = dist;
+          bestEgg = { biomeIdx: br.idx, eggTypeIdx: slot.eggTypeIdx, biome: br.biome };
+        }
+      }
+    }
+    if (bestEgg) {
+      const et = EGG_TYPES[bestEgg.eggTypeIdx];
+      currentInteractAction = { type: 'steal', biomeIdx: bestEgg.biomeIdx, eggTypeIdx: bestEgg.eggTypeIdx };
+      promptEl.textContent = `${et.emoji} [E] STEAL ${et.name.toUpperCase()} ${bestEgg.biome.monsterName.toUpperCase()} EGG (${et.mult}x)!`;
+      promptEl.className = 'danger-prompt';
+      promptEl.style.display = 'block';
+      return;
+    }
+
+    promptEl.style.display = 'none';
+  }
+
+  function handleInteract() {
+    if (!currentInteractAction) return;
+    if (currentInteractAction.type === 'treadmill') {
+      toggleTreadmill();
+    } else if (currentInteractAction.type === 'shop') {
+      toggleModal('shop');
+    } else if (currentInteractAction.type === 'place') {
+      placeEggOnPedestal(currentInteractAction.pedIdx);
+    } else if (currentInteractAction.type === 'remove') {
+      removeAnimalFromPedestal(currentInteractAction.pedIdx);
+    } else if (currentInteractAction.type === 'steal') {
+      stealEgg(currentInteractAction.biomeIdx, currentInteractAction.eggTypeIdx);
+    }
+  }
+
+  // =========================================================================
+  // 13. UI MODALS (SHOP & 15-BIOME INDEX) & HUD UPDATES
+  // =========================================================================
+  function buildRoadProgressSegments() {
+    const container = document.getElementById('road-segments');
+    const baseSeg = document.createElement('div');
+    baseSeg.className = 'road-seg';
+    baseSeg.style.background = '#10b981';
+    baseSeg.title = 'Home Base';
+    container.insertBefore(baseSeg, document.getElementById('player-dot'));
+
+    BIOMES.forEach(b => {
+      const seg = document.createElement('div');
+      seg.className = 'road-seg';
+      seg.style.background = b.uiColor;
+      seg.title = `${b.num}. ${b.name} (${b.monsterName})`;
+      container.insertBefore(seg, document.getElementById('player-dot'));
+    });
+  }
+  buildRoadProgressSegments();
+
+  function renderShop() {
+    document.getElementById('shop-money').textContent = formatMoney(state.money);
+    const grid = document.getElementById('shop-grid');
+    grid.innerHTML = '';
+
+    for (const [key, u] of Object.entries(UPGRADES)) {
+      const lvl = state.upgrades[key];
+      const maxed = lvl >= u.maxLevel;
+      const cost = getUpgradeCost(key);
+      const canBuy = !maxed && state.money >= cost;
+
+      const card = document.createElement('div');
+      card.className = 'shop-item';
+      card.innerHTML = `
+        <div class="shop-item-top">
+          <div>
+            <h3>${u.name}</h3>
+            <p>${u.desc}</p>
+          </div>
+          <span class="lvl-badge">Lv ${lvl} / ${u.maxLevel}</span>
+        </div>
+        <button class="buy-btn" ${canBuy ? '' : 'disabled'}>
+          ${maxed ? '✅ MAXED OUT!' : `Buy Upgrade • ${formatMoney(cost)}`}
+        </button>
+      `;
+      card.querySelector('.buy-btn').addEventListener('click', () => {
+        if (state.money < cost || state.upgrades[key] >= u.maxLevel) return;
+        state.money -= cost;
+        state.upgrades[key]++;
+        if (key === 'shield') state.shieldsRemaining = state.upgrades.shield;
+        if (key === 'stamina') state.stamina = getMaxStamina();
+        if (key === 'income') {
+          for (let i = 0; i < 16; i++) refreshPedestalVisual(i);
+        }
+        SFX.buy();
+        addXp(18);
+        saveGame();
+        renderShop();
+        updateHUD();
+      });
+      grid.appendChild(card);
+    }
+  }
+
+  function renderIndex() {
+    const legend = document.getElementById('egg-legend');
+    legend.innerHTML = EGG_TYPES.map(et =>
+      `<span class="egg-chip" style="border-color:${et.color};">${et.emoji} ${et.name} (${et.mult}x)</span>`
+    ).join('');
+
+    const grid = document.getElementById('index-grid');
+    grid.innerHTML = '';
+    let count = 0;
+    BIOMES.forEach(b => {
+      const unlocked = !!state.collected[b.id];
+      if (unlocked) count++;
+      const card = document.createElement('div');
+      card.className = 'index-card' + (unlocked ? ' unlocked' : '');
+      card.innerHTML = `
+        <div class="index-num">BIOME #${b.num} ${unlocked ? '✅' : '🔒'}</div>
+        <div class="index-name">${b.emoji} ${b.monsterName}</div>
+        <span class="index-biome" style="background:${b.uiColor};">${b.name}</span>
+        <div class="index-stats">
+          💰 Base ${formatMoney(Math.round(b.income * getIncomeMultiplier()))}/s (up to 25x Galaxy!)<br>
+          🏃 Monster Speed: ${b.chaseSpeed}
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+    document.getElementById('index-summary').textContent = `Collected ${count} / ${BIOMES.length} Monsters`;
+  }
+
+  function closeAllModals() {
+    document.getElementById('shop-modal').classList.remove('open');
+    document.getElementById('index-modal').classList.remove('open');
+    state.modalOpen = false;
+  }
+
+  function toggleModal(which) {
+    const modal = document.getElementById(which + '-modal');
+    const isOpen = modal.classList.contains('open');
+    closeAllModals();
+    if (!isOpen) {
+      if (pointerLocked && document.exitPointerLock) document.exitPointerLock();
+      if (which === 'shop') renderShop();
+      if (which === 'index') renderIndex();
+      modal.classList.add('open');
+      state.modalOpen = true;
+    }
+  }
+
+  function updateHUDButtons() {
+    const locked = state.carryingEgg !== null || state.activeChaserIdx !== null;
+    document.getElementById('return-base-btn').disabled = locked;
+  }
+
+  function updateHUD() {
+    document.getElementById('money-display').textContent = formatMoney(state.money);
+    document.getElementById('income-display').textContent = '+' + formatMoney(getTotalIncomePerSec()) + '/s';
+    const collectedCount = Object.keys(state.collected).filter(k => state.collected[k]).length;
+    document.getElementById('collection-display').textContent = `Collection: ${collectedCount} / ${BIOMES.length}`;
+    const placedCount = state.pedestals.filter(v => v !== null).length;
+    document.getElementById('base-slots-display').textContent = `Base: ${placedCount} / 16`;
+    document.getElementById('shield-display').textContent = `🛡️ ${state.shieldsRemaining}`;
+    document.getElementById('speed-stat').textContent = Math.round(getPlayerSprintSpeed());
+    document.getElementById('trained-stat').textContent = (state.isOwner && state.ownerMaxSpeed)
+      ? '(👑 MAX)'
+      : `(+${state.trainedSpeed.toFixed(1)} gym)`;
+
+    // Level & XP HUD (Max Level 20)
+    const lvlEl = document.getElementById('level-display');
+    const xpText = document.getElementById('xp-text');
+    const xpFill = document.getElementById('xp-fill');
+    if (state.level >= MAX_LEVEL) {
+      lvlEl.textContent = `👑 Level ${MAX_LEVEL} / ${MAX_LEVEL} (MAX)`;
+      xpText.textContent = 'MAX LEVEL!';
+      xpFill.style.width = '100%';
+    } else {
+      const need = getXpNeeded(state.level);
+      lvlEl.textContent = `⭐ Level ${state.level} / ${MAX_LEVEL}`;
+      xpText.textContent = `${Math.floor(state.xp)} / ${need} XP`;
+      xpFill.style.width = Math.min(100, (state.xp / need) * 100).toFixed(1) + '%';
+    }
+
+    // Owner-only Max Speed toggle button (hidden for other players)
+    const ownerBtn = document.getElementById('owner-speed-btn');
+    if (state.isOwner) {
+      ownerBtn.style.display = 'flex';
+      ownerBtn.textContent = state.ownerMaxSpeed ? '👑 Max Speed: ON' : '👑 Max Speed: OFF';
+    } else {
+      ownerBtn.style.display = 'none';
+    }
+
+    updateHUDButtons();
+  }
+
+  // Owner Max Speed button + secret Ctrl+Shift+K unlock
+  document.getElementById('owner-speed-btn').addEventListener('click', () => {
+    if (!state.isOwner) return;
+    state.ownerMaxSpeed = !state.ownerMaxSpeed;
+    updateHUD();
+    showToast(state.ownerMaxSpeed ? '👑 Owner MAX SPEED Activated!' : '🏃 Switched to Normal Speed', '#facc15');
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if (e.ctrlKey && e.shiftKey && e.code === 'KeyK') {
+      e.preventDefault();
+      const code = prompt('Enter Owner Key:');
+      if (code && hashCodeStr(code.trim().toLowerCase()) === OWNER_HASH) {
+        state.isOwner = true;
+        state.ownerMaxSpeed = true;
+        try { localStorage.setItem(OWNER_KEY, '1'); } catch (err) {}
+        updateHUD();
+        showToast('👑 Owner MAX SPEED Unlocked!', '#facc15');
+      }
+    }
+  });
+
+  // Wire buttons
+  document.getElementById('play-btn').addEventListener('click', () => {
+    ensureAudio();
+    document.getElementById('start-overlay').style.display = 'none';
+    state.started = true;
+    updateHUD();
+    showToast('🏃 Head straight through the green Safe Zone gate into Biome 1!', '#4ade80');
+  });
+  document.getElementById('open-shop-btn').addEventListener('click', () => toggleModal('shop'));
+  document.getElementById('close-shop-btn').addEventListener('click', closeAllModals);
+  document.getElementById('open-index-btn').addEventListener('click', () => toggleModal('index'));
+  document.getElementById('close-index-btn').addEventListener('click', closeAllModals);
+  document.getElementById('return-base-btn').addEventListener('click', tryReturnToBase);
+  document.getElementById('toggle-cam-btn').addEventListener('click', toggleCameraMode);
+  document.getElementById('interact-prompt').addEventListener('click', handleInteract);
+  document.getElementById('toggle-sound-btn').addEventListener('click', () => {
+    soundEnabled = !soundEnabled;
+    document.getElementById('toggle-sound-btn').textContent = soundEnabled ? '🔊' : '🔇';
+  });
+  document.getElementById('reset-save-btn').addEventListener('click', () => {
+    if (!confirm('Reset all coins, upgrades, and animals?')) return;
+    localStorage.removeItem(SAVE_KEY);
+    location.reload();
+  });
+
+  // =========================================================================
+  // 14. MAIN GAME LOOP (Movement, Chasing AI, Atmosphere Lerp, Income)
+  // =========================================================================
+  const clock = new THREE.Clock();
+  const targetSkyColor = new THREE.Color(0x7dd3fc);
+  const targetFogColor = new THREE.Color(0xa5e4ff);
+  let lastIncomeTick = 0;
+  let lastSaveTick = 0;
+  let treadmillSfxTick = 0;
+  let treadmillSparkTick = 0;
+
+  function getCurrentBiomeIndex() {
+    if (player.pos.z >= 0) return -1; // Home Base!
+    const idx = Math.floor(-player.pos.z / BIOME_LENGTH);
+    return Math.min(BIOMES.length - 1, Math.max(0, idx));
+  }
+
+  function animate() {
+    requestAnimationFrame(animate);
+    const dt = Math.min(clock.getDelta(), 0.05);
+    const elapsed = clock.getElapsedTime();
+
+    // Passive income from placed animals in Base
+    lastIncomeTick += dt;
+    if (lastIncomeTick >= 0.25) {
+      const inc = getTotalIncomePerSec();
+      if (inc > 0) {
+        state.money += inc * lastIncomeTick;
+        document.getElementById('money-display').textContent = formatMoney(state.money);
+        if (state.modalOpen && document.getElementById('shop-modal').classList.contains('open')) {
+          document.getElementById('shop-money').textContent = formatMoney(state.money);
+        }
+      }
+      lastIncomeTick = 0;
+    }
+
+    lastSaveTick += dt;
+    if (lastSaveTick >= 6) {
+      saveGame();
+      lastSaveTick = 0;
+    }
+
+    // Cooldowns
+    if (state.invulnTimer > 0) state.invulnTimer -= dt;
+    if (state.dashTimer > 0) state.dashTimer -= dt;
+    if (state.dashCooldown > 0) state.dashCooldown = Math.max(0, state.dashCooldown - dt);
+
+    // -----------------------------------------------------------------------
+    // Player Movement + Speed Treadmill Training
+    // -----------------------------------------------------------------------
+    let moving = false;
+    let onBeltRunning = false;
+    const tmBanner = document.getElementById('treadmill-banner');
+
+    // Animate treadmill belt continuously (faster when player is running on it!)
+    TREADMILL_BELT_TEX.offset.y -= dt * (state.onTreadmill ? 3.8 : 0.9);
+
+    if (state.started && !state.modalOpen) {
+      if (keys['ArrowLeft']) player.yaw += 2.2 * dt;
+      if (keys['ArrowRight']) player.yaw -= 2.2 * dt;
+
+      // Auto-hop onto treadmill if player walks right onto the running belt!
+      if (!state.onTreadmill && state.carryingEgg === null && player.onGround &&
+          Math.abs(player.pos.x - treadmillPos.x) < 1.35 &&
+          Math.abs(player.pos.z - (treadmillPos.z + 0.2)) < 2.1 &&
+          (keys['KeyW'] || keys['ArrowUp'])) {
+        state.onTreadmill = true;
+        player.pos.set(treadmillPos.x, 0.58, treadmillPos.z + 0.3);
+        playerBody.rotation.y = Math.PI;
+      }
+
+      if (state.onTreadmill) {
+        // Stepping off with S / A / D / ArrowDown
+        if (keys['KeyS'] || keys['ArrowDown'] || keys['KeyA'] || keys['KeyD']) {
+          state.onTreadmill = false;
+          player.pos.set(treadmillPos.x, 0, treadmillPos.z + 4.0);
+          saveGame();
+        } else {
+          onBeltRunning = true;
+          moving = true;
+          player.pos.set(treadmillPos.x, 0.58, treadmillPos.z + 0.3);
+          player.velY = 0;
+          player.onGround = true;
+          playerBody.rotation.y = Math.PI; // face the console
+
+          // Gain Trained Speed & Level XP!
+          const rate = getTreadmillRate();
+          if (state.trainedSpeed < 55) {
+            state.trainedSpeed = Math.min(55, state.trainedSpeed + rate * dt);
+          }
+          addXp(14 * (1 + (state.upgrades.treadmill - 1) * 0.4) * dt);
+          state.stamina = Math.min(getMaxStamina(), state.stamina + 35 * dt);
+
+          // Speed sparks & rhythmic treadmill step sound
+          treadmillSparkTick += dt;
+          if (treadmillSparkTick >= 0.28) {
+            treadmillSparkTick = 0;
+            spawnBurst(new THREE.Vector3(treadmillPos.x, -0.5, treadmillPos.z + 1.4), 0x38bdf8, 4);
+          }
+          treadmillSfxTick += dt;
+          if (treadmillSfxTick >= 0.34) {
+            treadmillSfxTick = 0;
+            playTone(300 + state.trainedSpeed * 6, 0.06, 'triangle', 0.06, 420 + state.trainedSpeed * 6);
+          }
+
+          tmBanner.textContent = state.trainedSpeed >= 55
+            ? `🏋️ MAX TREADMILL SPEED! (+55.0 Trained) • Earning Level XP! (S/Space to exit)`
+            : `🏃 TRAINING ON TREADMILL! +${rate.toFixed(2)} Speed/s • Trained: +${state.trainedSpeed.toFixed(1)} (S/Space to exit)`;
+          tmBanner.style.display = 'block';
+          updateHUD();
+        }
+      }
+
+      if (!state.onTreadmill) {
+        tmBanner.style.display = 'none';
+        const fwd = new THREE.Vector3(-Math.sin(player.yaw), 0, -Math.cos(player.yaw));
+        const right = new THREE.Vector3(Math.cos(player.yaw), 0, -Math.sin(player.yaw));
+
+        const moveDir = new THREE.Vector3();
+        if (keys['KeyW'] || keys['ArrowUp']) moveDir.add(fwd);
+        if (keys['KeyS'] || keys['ArrowDown']) moveDir.sub(fwd);
+        if (keys['KeyD']) moveDir.add(right);
+        if (keys['KeyA']) moveDir.sub(right);
+
+        const wantsSprint = (keys['ShiftLeft'] || keys['ShiftRight']) && state.stamina > 2;
+        let speed = wantsSprint ? getPlayerSprintSpeed() : getPlayerWalkSpeed();
+        if (state.dashTimer > 0) speed *= 1.85;
+
+        if (moveDir.lengthSq() > 0.001) {
+          moving = true;
+          moveDir.normalize();
+          player.pos.addScaledVector(moveDir, speed * dt);
+
+          // Rotate player avatar smoothly toward travel direction
+          const targetAngle = Math.atan2(moveDir.x, moveDir.z);
+          let diff = targetAngle - playerBody.rotation.y;
+          while (diff > Math.PI) diff -= Math.PI * 2;
+          while (diff < -Math.PI) diff += Math.PI * 2;
+          playerBody.rotation.y += diff * Math.min(1, dt * 14);
+
+          // Stamina drain (infinite stamina in Owner Max Speed mode)
+          if (wantsSprint && state.dashTimer <= 0 && !(state.isOwner && state.ownerMaxSpeed)) {
+            state.stamina = Math.max(0, state.stamina - 22 * dt);
+          }
+        }
+
+        // Stamina recharge
+        const maxStam = getMaxStamina();
+        if (!wantsSprint || !moving) {
+          state.stamina = Math.min(maxStam, state.stamina + (26 + state.upgrades.stamina * 4) * dt);
+        }
+
+        // Gravity & Jumping
+        player.velY -= 34 * dt;
+        player.pos.y += player.velY * dt;
+        if (player.pos.y <= 0) {
+          player.pos.y = 0;
+          player.velY = 0;
+          player.onGround = true;
+        }
+
+        // Keep player within Base & Long Biome Corridor bounds
+        const maxX = player.pos.z > 0 ? (BASE_HALF_WIDTH - 1.5) : (ROAD_HALF_WIDTH - 1.3);
+        player.pos.x = Math.max(-maxX, Math.min(maxX, player.pos.x));
+        player.pos.z = Math.max(endWallZ + 2, Math.min(BASE_DEPTH - 1.8, player.pos.z));
+      }
+    } else {
+      tmBanner.style.display = 'none';
+    }
+
+    playerGroup.position.copy(player.pos);
+
+    // Animate player limbs (extra fast sprint on treadmill!)
+    const walkFreq = onBeltRunning ? 22 : 14;
+    const walkAnim = moving ? Math.sin(elapsed * walkFreq) : 0;
+    pLegL.rotation.x = walkAnim * 0.72;
+    pLegR.rotation.x = -walkAnim * 0.72;
+    if (state.carryingEgg !== null) {
+      // Raise arms to hold egg!
+      pArmL.rotation.x = Math.PI * 0.88;
+      pArmR.rotation.x = Math.PI * 0.88;
+      if (carriedEggVisual) {
+        carriedEggVisual.rotation.y = elapsed * 2.2;
+        if (carriedEggVisual.userData.spinGroup) carriedEggVisual.userData.spinGroup.rotation.y = elapsed * 3.0;
+        if (carriedEggVisual.userData.rainbowMat) {
+          carriedEggVisual.userData.rainbowMat.emissive.setHSL((elapsed * 0.5) % 1, 0.9, 0.45);
+        }
+      }
+    } else {
+      pArmL.rotation.x = -walkAnim * 0.65;
+      pArmR.rotation.x = walkAnim * 0.65;
+    }
+
+    // -----------------------------------------------------------------------
+    // Camera Follow (3rd Person / 1st Person)
+    // -----------------------------------------------------------------------
+    if (state.firstPerson) {
+      camera.position.set(player.pos.x, player.pos.y + 2.55, player.pos.z);
+      const lookDir = new THREE.Vector3(
+        -Math.sin(player.yaw) * Math.cos(player.pitch),
+        Math.sin(player.pitch),
+        -Math.cos(player.yaw) * Math.cos(player.pitch)
+      );
+      camera.lookAt(camera.position.clone().add(lookDir));
+    } else {
+      const camDist = 11.5;
+      const camOffset = new THREE.Vector3(
+        Math.sin(player.yaw) * Math.cos(player.pitch) * camDist,
+        Math.max(2.2, 4.4 - Math.sin(player.pitch) * camDist * 0.7),
+        Math.cos(player.yaw) * Math.cos(player.pitch) * camDist
+      );
+      camera.position.copy(player.pos).add(camOffset);
+      camera.lookAt(player.pos.x, player.pos.y + 2.4, player.pos.z);
+    }
+
+    // Move directional shadow light with player so shadows stay crisp across all 15 biomes!
+    dirLight.position.set(player.pos.x + 30, 60, player.pos.z + 25);
+    dirLight.target.position.copy(player.pos);
+
+    // -----------------------------------------------------------------------
+    // Biome Atmosphere, Visibility Culling & Monster Chase AI
+    // -----------------------------------------------------------------------
+    const bIdx = getCurrentBiomeIndex();
+    const biomeLabel = document.getElementById('biome-display');
+    const biomeDot = document.getElementById('biome-dot');
+
+    if (bIdx === -1) {
+      biomeLabel.textContent = '🏠 Home Base (Safe Zone)';
+      biomeDot.style.background = '#4ade80';
+      targetSkyColor.setHex(0x7dd3fc);
+      targetFogColor.setHex(0xa5e4ff);
+    } else {
+      const b = BIOMES[bIdx];
+      biomeLabel.textContent = `${b.emoji} Biome ${b.num}/15: ${b.name}`;
+      biomeDot.style.background = b.uiColor;
+      targetSkyColor.setHex(b.skyColor);
+      targetFogColor.setHex(b.fogColor);
+    }
+
+    // Subtle lightning flash in Storm Land!
+    if (bIdx === 7 && Math.random() < 0.008) {
+      scene.background.setHex(0xe9d5ff);
+    } else {
+      scene.background.lerp(targetSkyColor, dt * 3.5);
+    }
+    scene.fog.color.lerp(targetFogColor, dt * 3.5);
+
+    // Update placed animals & auras in base
+    if (player.pos.z > -80) {
+      for (const ped of pedestalObjects) {
+        if (ped.animalMesh) {
+          animateMonster(ped.animalMesh, elapsed + ped.idx * 0.5, 0.55);
+        }
+        if (ped.auraMesh) {
+          ped.auraMesh.rotation.y = elapsed * 1.4;
+        }
+      }
+    }
+
+    // Update all 15 biomes, 6 eggs per biome & monsters
+    let activeChaserDist = null;
+    for (const br of biomeRuntime) {
+      const distToBiomeZ = Math.abs(player.pos.z - (br.zStart - BIOME_LENGTH / 2));
+      br.group.visible = distToBiomeZ < 245;
+
+      // Bob & animate all 6 distinct eggs smoothly!
+      if (br.group.visible) {
+        for (const slot of br.eggs) {
+          if (!slot.available) continue;
+          slot.eggMesh.position.y = 1.25 + Math.sin(elapsed * 3.2 + br.idx + slot.eggTypeIdx * 0.7) * 0.24;
+          slot.eggMesh.rotation.y = elapsed * (1.2 + slot.eggTypeIdx * 0.25);
+          if (slot.eggMesh.userData.spinGroup) {
+            slot.eggMesh.userData.spinGroup.rotation.y = -elapsed * (1.8 + slot.eggTypeIdx * 0.3);
+          }
+          if (slot.eggMesh.userData.rainbowMat) {
+            slot.eggMesh.userData.rainbowMat.emissive.setHSL((elapsed * 0.5) % 1, 0.9, 0.45);
+          }
+        }
+      }
+
+      // Monster visibility: always visible if chasing/retreating or within range
+      const mPos = br.monsterMesh.position;
+      const distToPlayer = Math.hypot(player.pos.x - mPos.x, player.pos.z - mPos.z);
+      br.monsterMesh.visible = br.chasing || br.retreating || distToPlayer < 210;
+
+      if (!br.monsterMesh.visible) continue;
+
+      if (br.stunTimer > 0) {
+        br.stunTimer -= dt;
+        br.monsterMesh.rotation.y += 10 * dt;
+        continue;
+      }
+
+      if (br.chasing) {
+        // Did player reach the Safe Zone (Base)?
+        if (player.pos.z >= 0.4) {
+          br.chasing = false;
+          br.retreating = true;
+          br.monsterMesh.userData.angrySprite.visible = false;
+          state.activeChaserIdx = null;
+          state.activeChaserSpeedMult = 1;
+          SFX.safeEscape();
+          showToast(`✅ SAFE! ${br.biome.emoji} ${br.biome.monsterName} can't enter your Base! Place the egg!`, '#4ade80');
+          updateHUDButtons();
+        } else {
+          // Chase the player relentlessly!
+          const dirX = player.pos.x - mPos.x;
+          const dirZ = player.pos.z - mPos.z;
+          const len = Math.hypot(dirX, dirZ) || 1;
+          const step = br.biome.chaseSpeed * state.activeChaserSpeedMult * dt;
+
+          mPos.x += (dirX / len) * step;
+          mPos.z += (dirZ / len) * step;
+          // Respect Safe Zone barrier
+          if (mPos.z > -1.2) mPos.z = -1.2;
+
+          br.monsterMesh.lookAt(player.pos.x, 0, player.pos.z);
+          animateMonster(br.monsterMesh, elapsed, 1.55);
+
+          activeChaserDist = len;
+
+          // Catch radius check!
+          const catchRadius = 1.85 + br.biome.scale * 0.6;
+          if (len < catchRadius && player.pos.y < 3.6) {
+            onPlayerCaught(br);
+          }
+        }
+      } else if (br.retreating) {
+        // Walk back to home nest
+        const dx = br.homePos.x - mPos.x;
+        const dz = br.homePos.z - mPos.z;
+        const len = Math.hypot(dx, dz);
+        if (len < 1.2) {
+          br.retreating = false;
+        } else {
+          const spd = Math.max(22, br.biome.chaseSpeed * 1.15);
+          mPos.x += (dx / len) * spd * dt;
+          mPos.z += (dz / len) * spd * dt;
+          br.monsterMesh.lookAt(br.homePos.x, 0, br.homePos.z);
+          animateMonster(br.monsterMesh, elapsed, 1.1);
+        }
+      } else {
+        // Peaceful patrol circling around the egg nest
+        br.patrolAngle += dt * 0.72;
+        const tx = br.nestPos.x + Math.cos(br.patrolAngle) * 7.5;
+        const tz = br.nestPos.z + Math.sin(br.patrolAngle) * 5.2;
+        mPos.x += (tx - mPos.x) * Math.min(1, dt * 3);
+        mPos.z += (tz - mPos.z) * Math.min(1, dt * 3);
+        br.monsterMesh.lookAt(tx, 0, tz);
+        animateMonster(br.monsterMesh, elapsed, 0.8);
+      }
+    }
+
+    // Update Chase Alert UI & Danger Vignette
+    const chaseBanner = document.getElementById('chase-banner');
+    const vignette = document.getElementById('chase-vignette');
+    if (state.activeChaserIdx !== null && activeChaserDist !== null) {
+      const cb = BIOMES[state.activeChaserIdx];
+      chaseBanner.textContent = `⚠️ ${cb.emoji} ${cb.monsterName.toUpperCase()} IS CHASING YOU! (${Math.round(activeChaserDist)}m away!)`;
+      chaseBanner.style.display = 'block';
+      if (activeChaserDist < 28) vignette.classList.add('active');
+      else vignette.classList.remove('active');
+    } else {
+      chaseBanner.style.display = 'none';
+      vignette.classList.remove('active');
+    }
+
+    // Update Particles
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.life -= dt;
+      if (p.life <= 0) {
+        scene.remove(p.mesh);
+        particles.splice(i, 1);
+      } else {
+        p.vel.y -= 20 * dt;
+        p.mesh.position.addScaledVector(p.vel, dt);
+        p.mesh.rotation.x += 5 * dt;
+        p.mesh.rotation.y += 5 * dt;
+        p.mesh.scale.setScalar(Math.max(0.01, p.life));
+      }
+    }
+
+    // Update HUD bars & road progress dot
+    const maxStam = getMaxStamina();
+    const stamPct = Math.round((state.stamina / maxStam) * 100);
+    document.getElementById('stamina-fill').style.width = stamPct + '%';
+    document.getElementById('stamina-label').textContent = `⚡ Stamina ${stamPct}%`;
+
+    const dashMax = getDashCooldownMax();
+    const dashPct = Math.round(((dashMax - state.dashCooldown) / dashMax) * 100);
+    document.getElementById('dash-fill').style.width = dashPct + '%';
+    document.getElementById('dash-label').textContent = state.dashCooldown <= 0 ? '💨 Dash Ready (Q)' : `💨 ${state.dashCooldown.toFixed(1)}s`;
+
+    const totalRoadLen = BIOMES.length * BIOME_LENGTH;
+    const progressRatio = Math.max(0, Math.min(1, (BASE_DEPTH - player.pos.z) / (BASE_DEPTH + totalRoadLen)));
+    document.getElementById('player-dot').style.left = (progressRatio * 100).toFixed(1) + '%';
+    const distMeters = Math.max(0, Math.round(-player.pos.z));
+    document.getElementById('distance-stat').textContent = `Distance: ${distMeters}m`;
+
+    // Check interactable prompts
+    if (state.started && !state.modalOpen) {
+      computeNearestInteraction();
+    } else {
+      document.getElementById('interact-prompt').style.display = 'none';
+    }
+
+    renderer.render(scene, camera);
+  }
+
+  updateHUD();
+  animate();
+})();
+</script>
+</body>
+</html>
