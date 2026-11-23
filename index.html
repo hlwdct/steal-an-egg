@@ -939,7 +939,7 @@
     <div class="diff-selector" id="start-diff-selector">
       <button class="diff-choice selected" data-diff="hard">
         <span class="diff-name">🔥 HARD</span>
-        <span class="diff-desc">Fast monsters, projectiles &amp; Night Stalkers (1x 💰)</span>
+        <span class="diff-desc">Fast monsters &amp; projectiles when you steal an egg (1x 💰)</span>
       </button>
       <button class="diff-choice" data-diff="nightmare">
         <span class="diff-name">💀 NIGHTMARE</span>
@@ -1222,8 +1222,6 @@
       projectileRate: 1.0,
       hazardSpeedMult: 1.0,
       eggAggroDist: 19.0,
-      guardAggroDist: 6.5,
-      nightHuntDist: 34.0,
       nightSpeedMult: 1.18,
       catchCashLoss: 0.15,
       rewardMult: 1.0
@@ -1234,8 +1232,6 @@
       projectileRate: 1.6,
       hazardSpeedMult: 1.32,
       eggAggroDist: 26.0,
-      guardAggroDist: 9.5,
-      nightHuntDist: 46.0,
       nightSpeedMult: 1.32,
       catchCashLoss: 0.25,
       rewardMult: 2.0
@@ -1246,8 +1242,6 @@
       projectileRate: 2.35,
       hazardSpeedMult: 1.65,
       eggAggroDist: 35.0,
-      guardAggroDist: 13.5,
-      nightHuntDist: 60.0,
       nightSpeedMult: 1.46,
       catchCashLoss: 0.40,
       rewardMult: 3.5
@@ -1258,7 +1252,7 @@
   const MAX_LEVEL = 20;
   const MAX_TRAINED_SPEED = 36;
   const DAY_DURATION = 45;   // seconds of Day Time
-  const NIGHT_DURATION = 30; // 30 seconds of Night Time (eggs locked + Night Stalkers!)
+  const NIGHT_DURATION = 30; // 30 seconds of Night Time (eggs locked!)
   const OWNER_KEY = 'steal_an_egg_owner_v1';
 
   function hashCodeStr(s) {
@@ -3904,7 +3898,7 @@
     if (state.staminaExhaustedTimer > 0) state.staminaExhaustedTimer = Math.max(0, state.staminaExhaustedTimer - dt);
 
     // -----------------------------------------------------------------------
-    // Day / Night Cycle (30-second Night Time: Eggs Locked + NIGHT STALKERS!)
+    // Day / Night Cycle (30-second Night Time: Eggs Locked!)
     // -----------------------------------------------------------------------
     if (state.started) {
       state.phaseTimer -= dt;
@@ -3914,11 +3908,11 @@
         if (state.isNight) {
           SFX.nightfall();
           flashScreen('rgba(30, 27, 75, 0.48)');
-          showToast(`🌙 NIGHT TIME (${NIGHT_DURATION}s)! Eggs LOCKED & Monsters HUNT outside Base!`, '#818cf8');
+          showToast(`🌙 NIGHT TIME (${NIGHT_DURATION}s)! All eggs are LOCKED until Sunrise!`, '#818cf8');
         } else {
           SFX.sunrise();
           flashScreen('rgba(253, 224, 71, 0.28)');
-          showToast('☀️ SUNRISE! Night Stalkers calm down — Eggs UNLOCKED!', '#facc15');
+          showToast('☀️ SUNRISE! All eggs are UNLOCKED — go steal them!', '#facc15');
         }
       }
     }
@@ -4242,18 +4236,15 @@
       }
 
       if (br.chasing) {
-        const lostNightAggro = br.aggroMode === 'night' && !state.isNight && state.carryingEgg === null;
-        const lostGuardAggro = br.aggroMode === 'guard' && state.carryingEgg === null && !state.isNight && distToPlayer > 34;
-
-        // Did player reach the Safe Zone (Base), or lose non-egg aggro?
-        if (player.pos.z >= 0.4 || lostNightAggro || lostGuardAggro) {
+        // Only chase while player is carrying an egg outside the Safe Zone!
+        if (player.pos.z >= 0.4 || state.carryingEgg === null) {
           br.chasing = false;
           br.retreating = true;
           br.aggroMode = 'none';
           br.rageTime = 0;
           br.lungeTimer = 0;
           br.monsterMesh.userData.angrySprite.visible = false;
-          if (player.pos.z >= 0.4) escapedSafeNow = true;
+          if (player.pos.z >= 0.4 && state.carryingEgg !== null) escapedSafeNow = true;
         } else {
           // Rage ramps up sharply + frequent fierce Lunge bursts!
           br.rageTime += dt;
@@ -4331,41 +4322,17 @@
         br.monsterMesh.lookAt(tx, 0, tz);
         animateMonster(br.monsterMesh, elapsed, 1.15);
 
-        if (state.started && !state.modalOpen && player.pos.z < -2) {
-          if (state.carryingEgg !== null && distToPlayer < diff.eggAggroDist) {
-            // Nearby biome monsters JOIN THE CHASE when you run past carrying an egg!
-            br.chasing = true;
-            br.retreating = false;
-            br.aggroMode = 'egg';
-            br.rageTime = 0;
-            br.lungeCooldown = 2.0;
-            br.fireCooldown = 1.6 / diff.projectileRate;
-            br.monsterMesh.userData.angrySprite.visible = true;
-            SFX.steal();
-            showToast(`🔥 ${br.biome.emoji} ${br.biome.monsterName.toUpperCase()} JOINED THE CHASE!!`, '#ef4444');
-          } else if (state.isNight && distToPlayer < diff.nightHuntDist) {
-            // NIGHT STALKER: Monsters hunt ANY player caught outside the Safe Zone at Night!
-            br.chasing = true;
-            br.retreating = false;
-            br.aggroMode = 'night';
-            br.rageTime = 0;
-            br.lungeCooldown = 2.2;
-            br.fireCooldown = 1.8 / diff.projectileRate;
-            br.monsterMesh.userData.angrySprite.visible = true;
-            SFX.steal();
-            showToast(`🌙 NIGHT STALKER! ${br.biome.emoji} ${br.biome.monsterName.toUpperCase()} SPOTTED YOU! RUN TO BASE!!`, '#a855f7');
-          } else if (state.carryingEgg === null && distToPlayer < diff.guardAggroDist && player.pos.y < 3.4) {
-            // TERRITORIAL GUARD AGGRO: Getting too close to a monster provokes it!
-            br.chasing = true;
-            br.retreating = false;
-            br.aggroMode = 'guard';
-            br.rageTime = 0;
-            br.lungeCooldown = 2.4;
-            br.fireCooldown = 1.9 / diff.projectileRate;
-            br.monsterMesh.userData.angrySprite.visible = true;
-            SFX.steal();
-            showToast(`💢 ${br.biome.emoji} ${br.biome.monsterName.toUpperCase()} SPOTTED YOU! SNEAK AROUND ITS PATROL!!`, '#f97316');
-          }
+        if (state.started && !state.modalOpen && player.pos.z < -2 && state.carryingEgg !== null && distToPlayer < diff.eggAggroDist) {
+          // Nearby biome monsters JOIN THE CHASE when you run past carrying an egg!
+          br.chasing = true;
+          br.retreating = false;
+          br.aggroMode = 'egg';
+          br.rageTime = 0;
+          br.lungeCooldown = 2.0;
+          br.fireCooldown = 1.6 / diff.projectileRate;
+          br.monsterMesh.userData.angrySprite.visible = true;
+          SFX.steal();
+          showToast(`🔥 ${br.biome.emoji} ${br.biome.monsterName.toUpperCase()} JOINED THE CHASE!!`, '#ef4444');
         }
       }
     }
