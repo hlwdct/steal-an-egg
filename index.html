@@ -939,7 +939,7 @@
     <div class="diff-selector" id="start-diff-selector">
       <button class="diff-choice selected" data-diff="hard">
         <span class="diff-name">🔥 HARD</span>
-        <span class="diff-desc">Fast monsters, projectiles, laser traps &amp; Night Stalkers (1x 💰)</span>
+        <span class="diff-desc">Fast monsters, projectiles &amp; Night Stalkers (1x 💰)</span>
       </button>
       <button class="diff-choice" data-diff="nightmare">
         <span class="diff-name">💀 NIGHTMARE</span>
@@ -1296,7 +1296,7 @@
     },
     jump: {
       name: '🦘 Super Jump',
-      desc: 'Leap higher over laser barriers, traps, and monsters!',
+      desc: 'Leap higher over monsters and dodge incoming blasts!',
       maxLevel: 8,
       baseCost: 110,
       costMult: 2.65
@@ -1335,7 +1335,6 @@
     shieldsRemaining: 0,
     invulnTimer: 0,
     slowTimer: 0,
-    hazardHitCooldown: 0,
     dashTimer: 0,
     dashCooldown: 0,
     stamina: 100,
@@ -2997,78 +2996,6 @@
       });
     });
 
-    // Biome Hazards! Floor traps (ALL biomes), Sweeping Orbs (Biome 2+) & Pulsing Laser Barriers (Biome 4+)!
-    const biomeHazards = [];
-    const trapCount = idx >= 10 ? 4 : (idx >= 5 ? 3 : (idx >= 2 ? 2 : 1));
-    for (let h = 0; h < trapCount; h++) {
-      const hx = ((idx * 7 + h * 11) % 3 - 1) * 9.5;
-      const hz = zStart - 10 - h * 10.5;
-      const radius = 3.2 + Math.min(1.6, idx * 0.09);
-      const pad = new THREE.Mesh(
-        new THREE.CylinderGeometry(radius, radius + 0.3, 0.22, 16),
-        new THREE.MeshBasicMaterial({ color: 0xef4444, transparent: true, opacity: 0.65 })
-      );
-      pad.position.set(hx, 0.12, hz);
-      const rim = new THREE.Mesh(
-        new THREE.TorusGeometry(radius, 0.16, 6, 20),
-        new THREE.MeshBasicMaterial({ color: 0xfef08a })
-      );
-      rim.rotation.x = Math.PI / 2;
-      rim.position.set(hx, 0.25, hz);
-      bGroup.add(pad, rim);
-      biomeHazards.push({ type: 'floor', x: hx, z: hz, radius, mesh: pad });
-    }
-    if (idx >= 1) {
-      const orbCount = idx >= 10 ? 3 : (idx >= 5 ? 2 : 1);
-      for (let m = 0; m < orbCount; m++) {
-        const oz = zStart - 15 - m * 14;
-        const orb = new THREE.Mesh(
-          new THREE.OctahedronGeometry(1.5, 0),
-          new THREE.MeshBasicMaterial({ color: idx >= 10 ? 0xff1e56 : 0xf97316 })
-        );
-        orb.position.set(0, 1.65, oz);
-        const ring = new THREE.Mesh(
-          new THREE.TorusGeometry(1.9, 0.13, 6, 16),
-          new THREE.MeshBasicMaterial({ color: 0xfef08a })
-        );
-        orb.add(ring);
-        bGroup.add(orb);
-        biomeHazards.push({
-          type: 'sweeper',
-          z: oz,
-          amp: ROAD_HALF_WIDTH - 4.0,
-          speed: 1.65 + idx * 0.16 + m * 0.4,
-          phase: idx * 1.3 + m * 2.4,
-          radius: 2.25,
-          mesh: orb
-        });
-      }
-    }
-    if (idx >= 3) {
-      // Pulsing Laser Jump Barrier across the corridor (JUMP over with Space!)
-      const lz = zStart - 28;
-      const postMat = matStd(0x334155, { metalness: 0.6, roughness: 0.3 });
-      const postL = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.8, 3.2, 8), postMat);
-      postL.position.set(-ROAD_HALF_WIDTH + 1.0, 1.6, lz);
-      const postR = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.8, 3.2, 8), postMat);
-      postR.position.set(ROAD_HALF_WIDTH - 1.0, 1.6, lz);
-      const beamMat = new THREE.MeshBasicMaterial({
-        color: idx >= 9 ? 0xe879f9 : 0xff2255,
-        transparent: true,
-        opacity: 0.88
-      });
-      const beam = new THREE.Mesh(new THREE.BoxGeometry((ROAD_HALF_WIDTH - 1.0) * 2, 0.52, 0.52), beamMat);
-      beam.position.set(0, 1.15, lz);
-      bGroup.add(postL, postR, beam);
-      biomeHazards.push({
-        type: 'laser',
-        z: lz,
-        period: Math.max(2.1, 3.5 - idx * 0.08),
-        phase: idx * 0.9,
-        mesh: beam
-      });
-    }
-
     // Monster guarding this biome!
     const monsterMesh = createMonsterMesh(biome.id);
     monsterMesh.scale.setScalar(biome.scale);
@@ -3085,7 +3012,6 @@
       group: bGroup,
       nestPos,
       eggs: biomeEggs,
-      hazards: biomeHazards,
       monsterMesh,
       homePos,
       patrolAngle: idx * 1.1,
@@ -3973,7 +3899,6 @@
     // Cooldowns
     if (state.invulnTimer > 0) state.invulnTimer -= dt;
     if (state.slowTimer > 0) state.slowTimer -= dt;
-    if (state.hazardHitCooldown > 0) state.hazardHitCooldown -= dt;
     if (state.dashTimer > 0) state.dashTimer -= dt;
     if (state.dashCooldown > 0) state.dashCooldown = Math.max(0, state.dashCooldown - dt);
     if (state.staminaExhaustedTimer > 0) state.staminaExhaustedTimer = Math.max(0, state.staminaExhaustedTimer - dt);
@@ -4103,7 +4028,7 @@
           const et = EGG_TYPES[state.carryingEgg.eggTypeIdx] || EGG_TYPES[0];
           speed *= (et.weightSlow || 0.88);
         }
-        // Slowed by a biome hazard trap, laser, or monster projectile!
+        // Slowed by a monster projectile!
         if (state.slowTimer > 0) {
           speed *= (state.isOwner && state.ownerMaxSpeed) ? 0.65 : 0.44;
         }
@@ -4268,9 +4193,8 @@
       }
     }
 
-    // Update all 15 biomes, 6 eggs, hazards, projectiles & monsters!
+    // Update all 15 biomes, 6 eggs, projectiles & monsters!
     const diff = getDiff();
-    const hazardTimeMult = diff.hazardSpeedMult * (state.isNight ? 1.25 : 1.0);
     let closestChaser = null;
     let closestChaserDist = Infinity;
     let totalChasers = 0;
@@ -4280,7 +4204,7 @@
       const distToBiomeZ = Math.abs(player.pos.z - (br.zStart - BIOME_LENGTH / 2));
       br.group.visible = distToBiomeZ < 245;
 
-      // Bob & animate all 6 distinct eggs + Biome Hazards!
+      // Bob & animate all 6 distinct eggs!
       if (br.group.visible) {
         for (const slot of br.eggs) {
           if (!slot.available) {
@@ -4300,66 +4224,6 @@
           }
           if (slot.eggMesh.userData.rainbowMat) {
             slot.eggMesh.userData.rainbowMat.emissive.setHSL((elapsed * 0.5) % 1, 0.9, 0.45);
-          }
-        }
-
-        // Animate & check Biome Hazards (Floor Traps + Sweeping Danger Orbs + Pulsing Laser Barriers!)
-        if (br.hazards && state.started && !state.modalOpen) {
-          for (const hz of br.hazards) {
-            if (hz.type === 'floor') {
-              hz.mesh.material.opacity = 0.48 + Math.sin(elapsed * 5.5 + hz.x) * 0.22;
-              if (player.pos.y < 1.0 && state.hazardHitCooldown <= 0) {
-                const hd = Math.hypot(player.pos.x - hz.x, player.pos.z - hz.z);
-                if (hd < hz.radius) {
-                  state.slowTimer = 1.55;
-                  state.hazardHitCooldown = 1.3;
-                  state.stamina = Math.max(0, state.stamina - 22);
-                  SFX.caught();
-                  flashScreen('rgba(249, 115, 22, 0.38)');
-                  showToast('⚠️ SHOCK TRAP! Slowed & stamina drained — JUMP over traps!', '#f97316');
-                }
-              }
-            } else if (hz.type === 'sweeper') {
-              const ox = Math.sin(elapsed * hz.speed * hazardTimeMult + hz.phase) * hz.amp;
-              hz.mesh.position.x = ox;
-              hz.mesh.rotation.y = elapsed * 5.0 * hazardTimeMult;
-              hz.mesh.rotation.z = elapsed * 3.6 * hazardTimeMult;
-              if (player.pos.y < 2.85 && state.hazardHitCooldown <= 0 && state.invulnTimer <= 0) {
-                const od = Math.hypot(player.pos.x - ox, player.pos.z - hz.z);
-                if (od < hz.radius) {
-                  state.hazardHitCooldown = 1.25;
-                  state.slowTimer = 1.6;
-                  state.stamina = Math.max(0, state.stamina - 30);
-                  player.velY = 9.0;
-                  player.onGround = false;
-                  player.pos.z -= 4.2; // knock player back away from base!
-                  spawnBurst(player.pos, 0xff4500, 16);
-                  SFX.caught();
-                  flashScreen('rgba(239, 68, 68, 0.45)');
-                  showToast('💥 HIT BY DANGER ORB! Blasted backward & slowed!', '#ef4444');
-                }
-              }
-            } else if (hz.type === 'laser') {
-              const cycle = ((elapsed * hazardTimeMult + hz.phase) % hz.period) / hz.period;
-              const active = cycle < 0.65;
-              const warning = !active && cycle > 0.84;
-              hz.mesh.visible = active || (warning && Math.floor(elapsed * 20) % 2 === 0);
-              hz.mesh.material.opacity = active ? 0.9 : 0.32;
-              if (active && player.pos.y < 1.85 && state.hazardHitCooldown <= 0 && state.invulnTimer <= 0) {
-                if (Math.abs(player.pos.z - hz.z) < 1.15) {
-                  state.hazardHitCooldown = 1.2;
-                  state.slowTimer = 1.65;
-                  state.stamina = Math.max(0, state.stamina - 35);
-                  player.velY = 8.0;
-                  player.onGround = false;
-                  player.pos.z -= 4.8;
-                  spawnBurst(player.pos, 0xff2255, 18);
-                  SFX.laserHit();
-                  flashScreen('rgba(236, 72, 153, 0.48)');
-                  showToast('⚡ ZAPPED BY LASER BARRIER! JUMP [Space] over lasers!', '#ec4899');
-                }
-              }
-            }
           }
         }
       }
