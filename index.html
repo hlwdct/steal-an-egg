@@ -28,6 +28,21 @@
     height: 100%;
   }
 
+  /* Soft indigo night-time vignette */
+  #night-vignette {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 4;
+    box-shadow: inset 0 0 140px rgba(15, 23, 72, 0);
+    background: rgba(8, 12, 38, 0);
+    transition: box-shadow 0.9s ease, background 0.9s ease;
+  }
+  #night-vignette.active {
+    box-shadow: inset 0 0 150px rgba(30, 27, 95, 0.72);
+    background: rgba(8, 12, 42, 0.14);
+  }
+
   /* Red chase vignette */
   #chase-vignette {
     position: fixed;
@@ -114,6 +129,18 @@
     font-weight: 700;
     border-color: #38bdf8;
   }
+  .time-pill {
+    font-size: 15px;
+    font-weight: 700;
+    border-color: #facc15;
+    transition: border-color 0.4s ease, background 0.4s ease, box-shadow 0.4s ease;
+  }
+  .time-pill.night-mode {
+    border-color: #818cf8;
+    background: rgba(30, 27, 75, 0.92);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45);
+    color: #e0e7ff;
+  }
   .biome-dot {
     width: 14px;
     height: 14px;
@@ -156,6 +183,20 @@
     font-weight: 700;
     text-shadow: 0 2px 4px rgba(0,0,0,0.5);
     box-shadow: 0 8px 24px rgba(6, 182, 212, 0.5);
+    text-align: center;
+  }
+
+  #night-banner {
+    display: none;
+    background: linear-gradient(135deg, rgba(49, 46, 129, 0.95), rgba(30, 27, 75, 0.96));
+    border: 3px solid #a5b4fc;
+    border-radius: 20px;
+    padding: 8px 22px;
+    color: #e0e7ff;
+    font-size: 17px;
+    font-weight: 700;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.6);
+    box-shadow: 0 8px 26px rgba(99, 102, 241, 0.55);
     text-align: center;
   }
 
@@ -312,6 +353,13 @@
     background: linear-gradient(135deg, #f97316, #ea580c);
     border-color: #fed7aa;
     box-shadow: 0 8px 25px rgba(249, 115, 22, 0.55);
+  }
+  #interact-prompt.night-locked-prompt {
+    background: linear-gradient(135deg, #4338ca, #1e1b4b);
+    border-color: #a5b4fc;
+    color: #e0e7ff;
+    box-shadow: 0 8px 25px rgba(99, 102, 241, 0.55);
+    animation: none;
   }
   @keyframes bouncePrompt {
     from { transform: translateY(0); }
@@ -730,6 +778,7 @@
 </head>
 <body>
 
+<div id="night-vignette"></div>
 <div id="chase-vignette"></div>
 <div id="screen-flash"></div>
 <div id="crosshair"></div>
@@ -755,6 +804,9 @@
         <span class="biome-dot" id="biome-dot"></span>
         <span id="biome-display">🏠 Home Base (Safe Zone)</span>
       </div>
+      <div class="pill time-pill" id="time-pill">
+        <span id="time-display">☀️ Day Time • 45s</span>
+      </div>
       <div class="pill" style="font-size:15px;">
         <span>🥚</span>
         <span id="collection-display">Collection: 0 / 15</span>
@@ -764,6 +816,7 @@
     </div>
 
     <div class="hud-center-top">
+      <div id="night-banner">🌙 NIGHT TIME (30s) — EGGS LOCKED! Cannot steal until Sunrise!</div>
       <div id="carrying-banner">🥚 Carrying Egg! Run back to Base!</div>
       <div id="treadmill-banner">🏃 Training on Treadmill!</div>
       <div id="chase-banner">⚠️ MONSTER IS CHASING YOU!</div>
@@ -1076,6 +1129,19 @@
     },
     dash() {
       playTone(420, 0.16, 'sawtooth', 0.12, 160);
+    },
+    locked() {
+      playTone(185, 0.11, 'square', 0.15, 130);
+      setTimeout(() => playTone(140, 0.15, 'square', 0.14, 95), 95);
+    },
+    nightfall() {
+      playTone(440, 0.22, 'sine', 0.14, 330);
+      setTimeout(() => playTone(330, 0.28, 'sine', 0.14, 220), 180);
+      setTimeout(() => playTone(220, 0.45, 'triangle', 0.16, 165), 380);
+    },
+    sunrise() {
+      const notes = [392, 494, 587, 784];
+      notes.forEach((n, idx) => setTimeout(() => playTone(n, 0.22, 'triangle', 0.15), idx * 90));
     }
   };
 
@@ -1095,6 +1161,8 @@
   ];
 
   const MAX_LEVEL = 20;
+  const DAY_DURATION = 45;   // seconds of Day Time
+  const NIGHT_DURATION = 30; // 30 seconds of Night Time (eggs locked!)
   const OWNER_KEY = 'steal_an_egg_owner_v1';
 
   function hashCodeStr(s) {
@@ -1176,7 +1244,10 @@
     stamina: 100,
     firstPerson: false,
     started: false,
-    modalOpen: false
+    modalOpen: false,
+    isNight: false,
+    phaseTimer: DAY_DURATION,
+    nightBlend: 0
   };
 
   function detectOwnerMode() {
@@ -1597,6 +1668,47 @@
   dirLight.shadow.camera.bottom = -d;
   scene.add(dirLight);
   scene.add(dirLight.target);
+
+  // Night Sky Dome (Glowing Moon + Twinkling Stars that follow the player!)
+  const nightSkyGroup = new THREE.Group();
+  scene.add(nightSkyGroup);
+
+  const moonGroup = new THREE.Group();
+  const moonMesh = new THREE.Mesh(
+    new THREE.SphereGeometry(9.5, 20, 16),
+    new THREE.MeshBasicMaterial({ color: 0xfef9c3, fog: false })
+  );
+  const moonHalo = new THREE.Mesh(
+    new THREE.SphereGeometry(13.5, 16, 12),
+    new THREE.MeshBasicMaterial({ color: 0x93c5fd, transparent: true, opacity: 0.24, fog: false })
+  );
+  moonGroup.add(moonMesh, moonHalo);
+  moonGroup.position.set(42, -25, -135);
+  moonGroup.visible = false;
+  nightSkyGroup.add(moonGroup);
+
+  const starCount = 340;
+  const starPositions = new Float32Array(starCount * 3);
+  for (let i = 0; i < starCount; i++) {
+    const theta = Math.random() * Math.PI * 2;
+    const phi = Math.random() * Math.PI * 0.44;
+    const r = 145 + Math.random() * 55;
+    starPositions[i * 3] = Math.sin(phi) * Math.cos(theta) * r;
+    starPositions[i * 3 + 1] = Math.cos(phi) * r + 15;
+    starPositions[i * 3 + 2] = Math.sin(phi) * Math.sin(theta) * r;
+  }
+  const starGeo = new THREE.BufferGeometry();
+  starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+  const starMat = new THREE.PointsMaterial({
+    color: 0xe0e7ff,
+    size: 1.9,
+    transparent: true,
+    opacity: 0,
+    fog: false
+  });
+  const starField = new THREE.Points(starGeo, starMat);
+  starField.visible = false;
+  nightSkyGroup.add(starField);
 
   // =========================================================================
   // 6. DETAILED 3D MONSTER / ANIMAL BUILDERS (ALL 15 UNIQUE CREATURES!)
@@ -2755,11 +2867,26 @@
       eggMesh.position.set(ePos.x, 1.2, ePos.z);
       bGroup.add(eggMesh);
 
+      // Protective Night-Time Lock Dome around each egg!
+      const lockDome = new THREE.Mesh(
+        new THREE.SphereGeometry(1.55, 12, 10),
+        new THREE.MeshBasicMaterial({
+          color: 0x818cf8,
+          transparent: true,
+          opacity: 0.3,
+          wireframe: true
+        })
+      );
+      lockDome.position.set(ePos.x, 1.35, ePos.z);
+      lockDome.visible = false;
+      bGroup.add(lockDome);
+
       biomeEggs.push({
         eggTypeIdx,
         pos: ePos,
         beacon,
         eggMesh,
+        lockDome,
         available: true
       });
     });
@@ -2889,6 +3016,11 @@
   carriedEggHolder.position.set(0, 3.65, 0);
   playerGroup.add(carriedEggHolder);
   let carriedEggVisual = null;
+
+  // Player Night Lantern (automatically glows during Night Time!)
+  const playerNightLight = new THREE.PointLight(0xfef08a, 0, 30, 1.4);
+  playerNightLight.position.set(0, 3.2, 0);
+  playerGroup.add(playerNightLight);
 
   const player = {
     pos: new THREE.Vector3(0, 0, 26),
@@ -3057,6 +3189,12 @@
   }
 
   function stealEgg(biomeIdx, eggTypeIdx) {
+    if (state.isNight) {
+      SFX.locked();
+      flashScreen('rgba(99, 102, 241, 0.28)');
+      showToast(`🌙 NIGHT TIME! Eggs are LOCKED for ${Math.ceil(state.phaseTimer)}s — wait for Sunrise!`, '#818cf8');
+      return;
+    }
     if (state.carryingEgg !== null) {
       showToast('🥚 Bring your current egg back to Base first!', '#f59e0b');
       return;
@@ -3069,6 +3207,7 @@
     slot.available = false;
     slot.eggMesh.visible = false;
     slot.beacon.visible = false;
+    slot.lockDome.visible = false;
     setCarriedEgg(biomeIdx, eggTypeIdx);
 
     // Trigger angry chase! Rarer eggs make the monster chase even faster!
@@ -3112,7 +3251,8 @@
     if (slot) {
       slot.available = true;
       slot.eggMesh.visible = true;
-      slot.beacon.visible = true;
+      slot.beacon.visible = !state.isNight;
+      slot.lockDome.visible = state.isNight;
     }
 
     setCarriedEgg(null);
@@ -3172,7 +3312,8 @@
       if (slot) {
         slot.available = true;
         slot.eggMesh.visible = true;
-        slot.beacon.visible = true;
+        slot.beacon.visible = !state.isNight;
+        slot.lockDome.visible = state.isNight;
       }
     }
 
@@ -3318,8 +3459,13 @@
     if (bestEgg) {
       const et = EGG_TYPES[bestEgg.eggTypeIdx];
       currentInteractAction = { type: 'steal', biomeIdx: bestEgg.biomeIdx, eggTypeIdx: bestEgg.eggTypeIdx };
-      promptEl.textContent = `${et.emoji} [E] STEAL ${et.name.toUpperCase()} ${bestEgg.biome.monsterName.toUpperCase()} EGG (${et.mult}x)!`;
-      promptEl.className = 'danger-prompt';
+      if (state.isNight) {
+        promptEl.textContent = `🌙 EGGS LOCKED AT NIGHT! Wait ${Math.ceil(state.phaseTimer)}s for Sunrise`;
+        promptEl.className = 'night-locked-prompt';
+      } else {
+        promptEl.textContent = `${et.emoji} [E] STEAL ${et.name.toUpperCase()} ${bestEgg.biome.monsterName.toUpperCase()} EGG (${et.mult}x)!`;
+        promptEl.className = 'danger-prompt';
+      }
       promptEl.style.display = 'block';
       return;
     }
@@ -3552,6 +3698,12 @@
   const clock = new THREE.Clock();
   const targetSkyColor = new THREE.Color(0x7dd3fc);
   const targetFogColor = new THREE.Color(0xa5e4ff);
+  const NIGHT_SKY_COLOR = new THREE.Color(0x05081a);
+  const NIGHT_FOG_COLOR = new THREE.Color(0x0a102b);
+  const DAY_HEMI_COLOR = new THREE.Color(0xffffff);
+  const NIGHT_HEMI_COLOR = new THREE.Color(0x6366f1);
+  const DAY_DIR_COLOR = new THREE.Color(0xffffff);
+  const NIGHT_DIR_COLOR = new THREE.Color(0x93c5fd);
   let lastIncomeTick = 0;
   let lastSaveTick = 0;
   let treadmillSfxTick = 0;
@@ -3594,6 +3746,47 @@
     if (state.hazardHitCooldown > 0) state.hazardHitCooldown -= dt;
     if (state.dashTimer > 0) state.dashTimer -= dt;
     if (state.dashCooldown > 0) state.dashCooldown = Math.max(0, state.dashCooldown - dt);
+
+    // -----------------------------------------------------------------------
+    // Day / Night Cycle (30-second Night Time where Eggs CANNOT be stolen!)
+    // -----------------------------------------------------------------------
+    if (state.started) {
+      state.phaseTimer -= dt;
+      if (state.phaseTimer <= 0) {
+        state.isNight = !state.isNight;
+        state.phaseTimer = state.isNight ? NIGHT_DURATION : DAY_DURATION;
+        if (state.isNight) {
+          SFX.nightfall();
+          flashScreen('rgba(30, 27, 75, 0.45)');
+          showToast(`🌙 NIGHT TIME (${NIGHT_DURATION}s)! Eggs are LOCKED — you cannot steal until Sunrise!`, '#818cf8');
+        } else {
+          SFX.sunrise();
+          flashScreen('rgba(253, 224, 71, 0.28)');
+          showToast('☀️ SUNRISE! Day Time is back — Eggs are UNLOCKED! Go steal!', '#facc15');
+        }
+      }
+    }
+    const targetNight = state.isNight ? 1 : 0;
+    state.nightBlend += (targetNight - state.nightBlend) * Math.min(1, dt * 2.2);
+
+    // Update Time-of-Day Pill, Night Banner & Night Vignette
+    const secsLeft = Math.max(0, Math.ceil(state.phaseTimer));
+    const timePill = document.getElementById('time-pill');
+    const timeDisplay = document.getElementById('time-display');
+    const nightBanner = document.getElementById('night-banner');
+    const nightVig = document.getElementById('night-vignette');
+    if (state.isNight) {
+      timePill.classList.add('night-mode');
+      timeDisplay.textContent = `🌙 Night Time • ${secsLeft}s (No Stealing!)`;
+      nightBanner.textContent = `🌙 NIGHT TIME (${secsLeft}s) — EGGS LOCKED! Cannot steal until Sunrise!`;
+      nightBanner.style.display = 'block';
+      nightVig.classList.add('active');
+    } else {
+      timePill.classList.remove('night-mode');
+      timeDisplay.textContent = `☀️ Day Time • ${secsLeft}s`;
+      nightBanner.style.display = 'none';
+      nightVig.classList.remove('active');
+    }
 
     // -----------------------------------------------------------------------
     // Player Movement + Speed Treadmill Training
@@ -3796,6 +3989,29 @@
       targetFogColor.setHex(b.fogColor);
     }
 
+    // Apply Night Time sky, fog, lighting, moon, stars & player lantern!
+    if (state.nightBlend > 0.001) {
+      targetSkyColor.lerp(NIGHT_SKY_COLOR, state.nightBlend * 0.9);
+      targetFogColor.lerp(NIGHT_FOG_COLOR, state.nightBlend * 0.86);
+    }
+    hemiLight.intensity = 0.95 - state.nightBlend * 0.62;
+    hemiLight.color.lerpColors(DAY_HEMI_COLOR, NIGHT_HEMI_COLOR, state.nightBlend);
+    dirLight.intensity = 0.90 - state.nightBlend * 0.62;
+    dirLight.color.lerpColors(DAY_DIR_COLOR, NIGHT_DIR_COLOR, state.nightBlend);
+    playerNightLight.intensity = state.nightBlend * 1.25;
+
+    nightSkyGroup.position.set(player.pos.x, 0, player.pos.z);
+    moonGroup.visible = state.nightBlend > 0.02;
+    if (moonGroup.visible) {
+      moonGroup.position.y = -25 + state.nightBlend * 98;
+      moonHalo.scale.setScalar(1 + Math.sin(elapsed * 2.0) * 0.05);
+    }
+    starField.visible = state.nightBlend > 0.02;
+    if (starField.visible) {
+      starMat.opacity = state.nightBlend * (0.78 + Math.sin(elapsed * 3.1) * 0.14);
+      starField.rotation.y = elapsed * 0.012;
+    }
+
     // Subtle lightning flash in Storm Land!
     if (bIdx === 7 && Math.random() < 0.008) {
       scene.background.setHex(0xe9d5ff);
@@ -3829,7 +4045,16 @@
       // Bob & animate all 6 distinct eggs + Biome Hazards!
       if (br.group.visible) {
         for (const slot of br.eggs) {
-          if (!slot.available) continue;
+          if (!slot.available) {
+            slot.lockDome.visible = false;
+            continue;
+          }
+          slot.beacon.visible = !state.isNight;
+          slot.lockDome.visible = state.isNight;
+          if (state.isNight) {
+            slot.lockDome.rotation.y = elapsed * 1.4;
+            slot.lockDome.material.opacity = 0.24 + Math.sin(elapsed * 4.5 + slot.eggTypeIdx) * 0.1;
+          }
           slot.eggMesh.position.y = 1.25 + Math.sin(elapsed * 3.2 + br.idx + slot.eggTypeIdx * 0.7) * 0.24;
           slot.eggMesh.rotation.y = elapsed * (1.2 + slot.eggTypeIdx * 0.25);
           if (slot.eggMesh.userData.spinGroup) {
