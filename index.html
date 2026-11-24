@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Steal An Egg! - 21 Biomes 3D Adventure</title>
+<title>Steal An Egg! - 25 Biomes 3D Adventure</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
@@ -886,7 +886,7 @@
       </div>
       <div class="pill" style="font-size:15px;">
         <span>🥚</span>
-        <span id="collection-display">Collection: 0 / 21</span>
+        <span id="collection-display">Collection: 0 / 25</span>
         <span style="color:#94a3b8;">|</span>
         <span id="base-slots-display">Base: 0 / 16</span>
       </div>
@@ -946,8 +946,8 @@
           </div>
           <div class="road-labels">
             <span>🏠 Base</span>
-            <span>🐔 Easy → 🌋 Volcano → 👑 Kingdoms → 🚀 Space → 💎 Limited</span>
-            <span>🌈 Exotic</span>
+            <span>🐔 Easy → 👑 Kingdoms → 🚀 Space → 🕳️ Void → 👋 Bye Bye</span>
+            <span>☠️ Possible</span>
           </div>
         </div>
       </div>
@@ -965,13 +965,13 @@
   <div class="start-card">
     <div class="start-title">🥚 STEAL AN EGG!</div>
     <p class="start-sub">
-      Build your animal sanctuary, venture straight ahead through <b>21 wild biomes</b>, steal eggs from legendary monsters, and <b>OUTRUN THEM</b> back to your Safe Zone!
+      Build your animal sanctuary, venture straight ahead through <b>25 wild biomes</b>, steal eggs from legendary monsters, and <b>OUTRUN THEM</b> back to your Safe Zone!
     </p>
     <div class="start-steps">
       <div class="step-box">
         <span class="emoji">🏃</span>
-        <b>1. Explore 21 Biomes</b><br>
-        Easy, Volcano, Kingdoms... all the way to Space, Limited &amp; Exotic!
+        <b>1. Explore 25 Biomes</b><br>
+        Easy, Kingdoms, Space, Exotic... all the way to Void, Sorry, Bye Bye &amp; Possible!
       </div>
       <div class="step-box">
         <span class="emoji">💤</span>
@@ -1024,13 +1024,13 @@
 <div class="modal-backdrop" id="index-modal">
   <div class="modal-box index-box">
     <div class="modal-header">
-      <h2>📖 21 Biomes & 6 Egg Types Index</h2>
+      <h2>📖 25 Biomes & 6 Egg Types Index</h2>
       <button class="close-btn" id="close-index-btn">✕</button>
     </div>
     <div class="egg-legend" id="egg-legend"></div>
     <div class="modal-body index-grid" id="index-grid"></div>
     <div class="modal-footer">
-      <span id="index-summary">Collected 0 / 21 Monsters</span>
+      <span id="index-summary">Collected 0 / 25 Monsters</span>
       <span>Place any stolen egg on a pedestal in your Base!</span>
     </div>
   </div>
@@ -1198,22 +1198,50 @@
       id: 'space', num: 19, name: 'Space', monsterName: 'Astro Titan', emoji: '🚀',
       groundColor: 0x0b1026, accentColor: 0x38bdf8, skyColor: 0x020617, fogColor: 0x0f172a,
       uiColor: '#60a5fa', eggPrimary: 0x0f172a, eggSecondary: 0x38bdf8,
-      chaseSpeed: 185.0, income: 100000000, scale: 1.65,
+      chaseSpeed: 185.0, income: 1000000000, scale: 1.65,
       desc: 'Zero-gravity outer space launchpad patrolled by the jetpack-powered Astro Titan!'
     },
     {
       id: 'limited', num: 20, name: 'Limited', monsterName: 'Limited Phantom', emoji: '💎',
       groundColor: 0x140b18, accentColor: 0xf43f5e, skyColor: 0x1a0612, fogColor: 0x3b0a28,
       uiColor: '#fb7185', eggPrimary: 0x18181b, eggSecondary: 0xf43f5e,
-      chaseSpeed: 215.0, income: 500000000, scale: 1.72,
+      chaseSpeed: 215.0, income: 500000000000, scale: 1.72,
       desc: 'Exclusive black-and-rose-gold VIP vault guarded by the ultra-rare Limited Phantom!'
     },
     {
       id: 'exotic', num: 21, name: 'Exotic', monsterName: 'Exotic Phoenix', emoji: '🌈',
       groundColor: 0x0c2436, accentColor: 0xec4899, skyColor: 0x130738, fogColor: 0x2d1054,
       uiColor: '#f472b6', eggPrimary: 0xec4899, eggSecondary: 0x2dd4bf,
-      chaseSpeed: 250.0, income: 2500000000, scale: 1.80,
+      chaseSpeed: 250.0, income: 1000000000000, scale: 1.80,
       desc: 'Dazzling prismatic paradise ruled by the mythical 4-winged Exotic Phoenix!'
+    },
+    {
+      id: 'void', num: 22, name: 'Void', monsterName: 'Void Devourer', emoji: '🕳️',
+      groundColor: 0x05030a, accentColor: 0x9333ea, skyColor: 0x020105, fogColor: 0x1e0736,
+      uiColor: '#a855f7', eggPrimary: 0x09090b, eggSecondary: 0xa855f7,
+      chaseSpeed: 310.0, income: 5000000000000, scale: 1.85,
+      desc: 'Pitch-black abyssal singularity guarded by the 3-eyed Void Devourer!'
+    },
+    {
+      id: 'sorry', num: 23, name: 'Sorry', monsterName: 'Sorry Titan', emoji: '🥺',
+      groundColor: 0x1e3a5f, accentColor: 0x60a5fa, skyColor: 0x0c1e35, fogColor: 0x1e40af,
+      uiColor: '#60a5fa', eggPrimary: 0x3b82f6, eggSecondary: 0xe0f2fe,
+      chaseSpeed: 380.0, income: 25000000000000, scale: 1.85,
+      desc: 'Tearful neon-blue apology realm guarded by the super-fast Sorry Titan!'
+    },
+    {
+      id: 'bye_bye', num: 24, name: 'Bye Bye', monsterName: 'Bye Bye Wraith', emoji: '👋',
+      groundColor: 0x431407, accentColor: 0xfb923c, skyColor: 0x2e0b16, fogColor: 0x7c2d12,
+      uiColor: '#fb923c', eggPrimary: 0xea580c, eggSecondary: 0xfde047,
+      chaseSpeed: 460.0, income: 125000000000000, scale: 1.90,
+      desc: 'Fiery farewell dimension where the Bye Bye Wraith waves you goodbye!'
+    },
+    {
+      id: 'possible', num: 25, name: 'Possible', monsterName: 'Impossible Overlord', emoji: '☠️',
+      groundColor: 0x18040b, accentColor: 0xff2255, skyColor: 0x0f0206, fogColor: 0x450a0a,
+      uiColor: '#ff2255', eggPrimary: 0x18181b, eggSecondary: 0xff2255,
+      chaseSpeed: 560.0, income: 1000000000000000, scale: 2.0,
+      desc: 'Named "Possible"... but guarded by the terrifying IMPOSSIBLE Overlord!'
     }
   ];
 
@@ -1577,7 +1605,7 @@
   const DIFF_ORDER = ['hard', 'nightmare', 'impossible'];
 
   const MAX_LEVEL = 20;
-  const MAX_TRAINED_SPEED = 520;
+  const MAX_TRAINED_SPEED = Infinity;
   const DAY_DURATION = 300;  // 5 minutes (300s) of Day Time
   const NIGHT_DURATION = 30; // 30 seconds of Night Time (eggs locked!)
   const OWNER_KEY = 'steal_an_egg_owner_v1';
@@ -1596,15 +1624,15 @@
   const UPGRADES = {
     speed: {
       name: '🏃 Speed Boots',
-      desc: 'Run much faster (up to 1,000+ Speed for Henry Kingdom)!',
-      maxLevel: 35,
+      desc: 'Run infinitely faster — NO speed cap (up to ∞)!',
+      maxLevel: Infinity,
       baseCost: 55,
       costMult: 1.95
     },
     treadmill: {
       name: '🏋️ Turbo Treadmill',
-      desc: 'Train Speed (up to +520!) & Level XP MUCH faster on your Base Treadmill!',
-      maxLevel: 30,
+      desc: 'Train INFINITE Speed (∞) & Level XP MUCH faster on your Base Treadmill!',
+      maxLevel: Infinity,
       baseCost: 70,
       costMult: 1.95
     },
@@ -1753,11 +1781,12 @@
     return 0.35 + (state.upgrades.treadmill - 1) * 0.50 + Math.max(0, state.upgrades.treadmill - 10) * 2.2;
   }
   function getPlayerWalkSpeed() {
-    if (state.isOwner && state.ownerMaxSpeed) return 750;
-    return 12.5 + (state.upgrades.speed - 1) * 5.0 + (state.level - 1) * 1.5 + Math.min(MAX_TRAINED_SPEED, state.trainedSpeed);
+    const baseWalk = 12.5 + (state.upgrades.speed - 1) * 5.0 + (state.level - 1) * 1.5 + Math.min(MAX_TRAINED_SPEED, state.trainedSpeed);
+    if (state.isOwner && state.ownerMaxSpeed) return Math.max(750, baseWalk);
+    return baseWalk;
   }
   function getPlayerSprintSpeed() {
-    if (state.isOwner && state.ownerMaxSpeed) return 1050;
+    if (state.isOwner && state.ownerMaxSpeed) return Math.max(1050, getPlayerWalkSpeed() * 1.40);
     return getPlayerWalkSpeed() * 1.40;
   }
   function getMaxStamina() {
@@ -1790,6 +1819,13 @@
 
   function formatMoney(n) {
     if (!Number.isFinite(n)) return '$INF';
+    if (n >= 1e33) return '$' + (n / 1e33).toFixed(2) + 'Dc';
+    if (n >= 1e30) return '$' + (n / 1e30).toFixed(2) + 'No';
+    if (n >= 1e27) return '$' + (n / 1e27).toFixed(2) + 'Oc';
+    if (n >= 1e24) return '$' + (n / 1e24).toFixed(2) + 'Sp';
+    if (n >= 1e21) return '$' + (n / 1e21).toFixed(2) + 'Sx';
+    if (n >= 1e18) return '$' + (n / 1e18).toFixed(2) + 'Qi';
+    if (n >= 1e15) return '$' + (n / 1e15).toFixed(2) + 'Q';
     if (n >= 1e12) return '$' + (n / 1e12).toFixed(2) + 'T';
     if (n >= 1e9) return '$' + (n / 1e9).toFixed(2) + 'B';
     if (n >= 1e6) return '$' + (n / 1e6).toFixed(2) + 'M';
@@ -3419,6 +3455,154 @@
         { obj: rw2, type: 'wingR' }
       );
     }
+    else if (biomeId === 'void') {
+      // 22. VOID DEVOURER (Pitch-black black-hole entity with 3 glowing white eyes & twin event-horizon rings!)
+      const voidBlk = matStd(0x05030a, { metalness: 0.7, roughness: 0.15, emissive: 0x2e1065, emissiveIntensity: 0.35 });
+      const voidPurp = new THREE.MeshBasicMaterial({ color: 0xa855f7 });
+      const voidWhite = new THREE.MeshBasicMaterial({ color: 0xf8fafc });
+
+      const bodyG = new THREE.Group();
+      bodyG.position.y = 0.75;
+      bodyG.add(sph(1.25, voidBlk, 0, 2.5, 0)); // black hole torso
+      bodyG.add(cone(1.05, 1.9, voidBlk, 0, 1.15, 0)); // tapering shadow tail
+      // 3 Glowing White Void Eyes!
+      bodyG.add(sph(0.22, voidWhite, -0.45, 2.75, 1.12));
+      bodyG.add(sph(0.22, voidWhite, 0.45, 2.75, 1.12));
+      bodyG.add(sph(0.26, voidPurp, 0, 3.25, 1.05));
+      // Jagged Void Horns
+      const lh = cone(0.22, 1.35, voidPurp, -0.75, 3.85, 0); lh.rotation.z = 0.4;
+      const rh = cone(0.22, 1.35, voidPurp, 0.75, 3.85, 0); rh.rotation.z = -0.4;
+      bodyG.add(lh, rh);
+      // Twin Counter-Spinning Event-Horizon Rings!
+      const ring1 = new THREE.Mesh(new THREE.TorusGeometry(2.05, 0.12, 10, 32), voidPurp);
+      ring1.position.set(0, 2.5, 0);
+      const ring2 = new THREE.Mesh(new THREE.TorusGeometry(1.65, 0.08, 8, 28), voidWhite);
+      ring2.rotation.x = Math.PI / 2;
+      ring2.position.set(0, 2.5, 0);
+      bodyG.add(ring1, ring2);
+      // Floating Shadow Claw Arms
+      const la = box(0.45, 1.75, 0.45, voidBlk, -1.65, 2.25, 0.45);
+      const ra = box(0.45, 1.75, 0.45, voidBlk, 1.65, 2.25, 0.45);
+      bodyG.add(la, ra);
+      root.add(bodyG);
+      limbs.push(la, ra);
+      extras.push({ obj: bodyG, type: 'float' }, { obj: ring1, type: 'spin' }, { obj: ring2, type: 'spinRev' });
+    }
+    else if (biomeId === 'sorry') {
+      // 23. SORRY TITAN (Adorable-yet-huge glowing blue blocky teardrop titan with sparkling eyes & waterfall tears!)
+      const sadBlue = matStd(0x3b82f6, { roughness: 0.25, emissive: 0x1d4ed8, emissiveIntensity: 0.3 });
+      const tearCyan = new THREE.MeshBasicMaterial({ color: 0x7dd3fc });
+      const whiteMat = matLambert(0xf8fafc);
+
+      root.add(box(1.65, 1.85, 1.15, sadBlue, 0, 2.25, 0)); // blocky blue torso
+      root.add(box(1.25, 1.2, 1.15, sadBlue, 0, 3.85, 0.05)); // big head
+      // Giant Cute Sparkling Puppy-Dog Eyes + Glowing Tear Streams!
+      addEyes(root, 4.02, 0.64, 0.34, 0.22, 0x0f172a, false);
+      addEyes(root, 4.10, 0.78, 0.30, 0.08, 0xffffff, true);
+      root.add(box(0.18, 0.85, 0.14, tearCyan, -0.34, 3.5, 0.64)); // left tear stream
+      root.add(box(0.18, 0.85, 0.14, tearCyan, 0.34, 3.5, 0.64)); // right tear stream
+      // Apology Halo above head
+      const sorryHalo = new THREE.Mesh(new THREE.TorusGeometry(0.75, 0.09, 8, 22), tearCyan);
+      sorryHalo.rotation.x = Math.PI / 2;
+      sorryHalo.position.set(0, 4.82, 0.05);
+      root.add(sorryHalo);
+      // Arms holding a glowing "SORRY!" sign shield
+      const la = box(0.52, 1.5, 0.52, sadBlue, -1.16, 2.15, 0.18);
+      const ra = box(0.52, 1.5, 0.52, sadBlue, 1.16, 2.15, 0.32);
+      const signBoard = new THREE.Mesh(
+        new THREE.BoxGeometry(1.45, 0.9, 0.14),
+        new THREE.MeshBasicMaterial({ map: createSignTexture('SORRY!! 🥺', 'MY BAD!', '#1e3a8a', '#7dd3fc') })
+      );
+      signBoard.position.set(0, 0.35, 0.55);
+      ra.add(signBoard);
+      const ll = box(0.58, 1.38, 0.58, whiteMat, -0.45, 0.69, 0);
+      const rl = box(0.58, 1.38, 0.58, whiteMat, 0.45, 0.69, 0);
+      root.add(la, ra, ll, rl);
+      limbs.push(ll, rl, la, ra);
+      extras.push({ obj: sorryHalo, type: 'spin' });
+    }
+    else if (biomeId === 'bye_bye') {
+      // 24. BYE BYE WRAITH (Sunset-gold phantom with giant raised waving hand & spinning exit portal!)
+      const sunset = matStd(0xea580c, { metalness: 0.45, roughness: 0.25, emissive: 0x9a3412, emissiveIntensity: 0.45 });
+      const goldGlow = new THREE.MeshBasicMaterial({ color: 0xfde047 });
+      const darkCloak = matStd(0x2e0b16, { roughness: 0.4 });
+
+      const bodyG = new THREE.Group();
+      bodyG.position.y = 0.6;
+      bodyG.add(cone(1.25, 2.7, darkCloak, 0, 1.55, 0)); // phantom robe
+      bodyG.add(box(1.45, 1.2, 0.95, sunset, 0, 2.6, 0)); // fiery armor chest
+      bodyG.add(sph(0.68, sunset, 0, 3.78, 0)); // glowing head
+      addEyes(bodyG, 3.85, 0.62, 0.24, 0.12, 0xfde047, true);
+      // Giant Spinning Farewell Portal behind back!
+      const portal = new THREE.Mesh(new THREE.TorusGeometry(1.9, 0.16, 10, 28), goldGlow);
+      portal.position.set(0, 2.65, -0.82);
+      bodyG.add(portal);
+      // Giant Oversized Waving Golden Hand ("BYE BYE!")
+      const waveArm = new THREE.Group();
+      waveArm.position.set(1.25, 3.0, 0.2);
+      waveArm.add(box(0.42, 1.4, 0.42, sunset, 0, 0.65, 0));
+      waveArm.add(box(0.95, 0.95, 0.28, goldGlow, 0, 1.65, 0)); // palm
+      for (let f = -2; f <= 2; f++) {
+        waveArm.add(box(0.14, 0.58, 0.22, goldGlow, f * 0.19, 2.35, 0));
+      }
+      bodyG.add(waveArm);
+      const la = box(0.46, 1.5, 0.46, sunset, -1.12, 2.3, 0.2);
+      bodyG.add(la);
+      root.add(bodyG);
+      limbs.push(la);
+      extras.push({ obj: bodyG, type: 'float' }, { obj: portal, type: 'spin' }, { obj: waveArm, type: 'wingR' });
+    }
+    else if (biomeId === 'possible') {
+      // 25. IMPOSSIBLE OVERLORD (Colossal Crimson-Obsidian Final Boss w/ 4 Glitch Wings, Triple Rings & Twin Blade!)
+      const obs = matStd(0x09090b, { metalness: 0.8, roughness: 0.18, emissive: 0x450a0a, emissiveIntensity: 0.4 });
+      const neonRed = new THREE.MeshBasicMaterial({ color: 0xff2255 });
+      const hyperGold = matStd(0xfacc15, { metalness: 0.9, roughness: 0.12, emissive: 0xd97706, emissiveIntensity: 0.5 });
+
+      const bodyG = new THREE.Group();
+      bodyG.position.y = 0.75;
+      bodyG.add(box(1.85, 2.15, 1.2, obs, 0, 2.4, 0)); // colossal obsidian torso
+      bodyG.add(box(1.92, 0.35, 1.26, hyperGold, 0, 3.15, 0)); // shoulder trim
+      bodyG.add(new THREE.Mesh(new THREE.OctahedronGeometry(0.55, 0), neonRed));
+      bodyG.children[bodyG.children.length - 1].position.set(0, 2.45, 0.72);
+      // Horned Overlord Head + Blazing Red Crown
+      bodyG.add(box(1.12, 1.12, 1.12, obs, 0, 4.05, 0.05));
+      addEyes(bodyG, 4.15, 0.64, 0.28, 0.14, 0xff2255, true);
+      for (let i = 0; i < 6; i++) {
+        const a = (i / 6) * Math.PI * 2;
+        bodyG.add(cone(0.16, 0.78, neonRed, Math.cos(a) * 0.58, 4.95, 0.05 + Math.sin(a) * 0.58));
+      }
+      // 4 Blazing Crimson-Gold Final Boss Wings!
+      const lw1 = box(3.3, 1.2, 0.18, neonRed, -2.35, 3.1, -0.45);
+      const rw1 = box(3.3, 1.2, 0.18, neonRed, 2.35, 3.1, -0.45);
+      const lw2 = box(2.5, 0.9, 0.16, hyperGold, -1.95, 1.9, -0.52);
+      const rw2 = box(2.5, 0.9, 0.16, hyperGold, 1.95, 1.9, -0.52);
+      bodyG.add(lw1, rw1, lw2, rw2);
+      // Double Spinning Hyper-Rings!
+      const hr1 = new THREE.Mesh(new THREE.TorusGeometry(2.3, 0.14, 10, 32), neonRed);
+      hr1.position.set(0, 2.8, -0.95);
+      const hr2 = new THREE.Mesh(new THREE.TorusGeometry(1.75, 0.11, 8, 28), hyperGold);
+      hr2.position.set(0, 2.8, -0.95);
+      bodyG.add(hr1, hr2);
+      // Arms + Colossal Impossible Greatsword
+      const la = box(0.56, 1.75, 0.56, obs, -1.32, 2.25, 0.2);
+      const ra = box(0.56, 1.75, 0.56, obs, 1.32, 2.25, 0.28);
+      const blade = box(0.36, 3.6, 0.14, neonRed, 0, 1.5, 0.62); blade.rotation.x = 0.42;
+      ra.add(blade);
+      const ll = box(0.62, 1.5, 0.62, obs, -0.48, 0.75, 0);
+      const rl = box(0.62, 1.5, 0.62, obs, 0.48, 0.75, 0);
+      bodyG.add(la, ra, ll, rl);
+      root.add(bodyG);
+      limbs.push(ll, rl, la, ra);
+      extras.push(
+        { obj: bodyG, type: 'float' },
+        { obj: hr1, type: 'spin' },
+        { obj: hr2, type: 'spinRev' },
+        { obj: lw1, type: 'wingL' },
+        { obj: rw1, type: 'wingR' },
+        { obj: lw2, type: 'wingL' },
+        { obj: rw2, type: 'wingR' }
+      );
+    }
 
     // Wrap all monster geometry in visualGroup so sleeping monsters can lie down & breathe cleanly!
     const visualGroup = new THREE.Group();
@@ -3518,7 +3702,7 @@
   addWall(-20, 0, 16, 2.4, 1.2, fenceMat);
   addWall(20, 0, 16, 2.4, 1.2, fenceMat);
 
-  const safeSignTex = createSignTexture('SAFE ZONE — MY ANIMAL BASE', '21 BIOMES STRAIGHT AHEAD ⬆', '#064e3b', '#34d399');
+  const safeSignTex = createSignTexture('SAFE ZONE — MY ANIMAL BASE', '25 BIOMES STRAIGHT AHEAD ⬆', '#064e3b', '#34d399');
   const safeBanner = new THREE.Mesh(
     new THREE.BoxGeometry(24, 4.2, 0.7),
     new THREE.MeshBasicMaterial({ map: safeSignTex })
@@ -3976,6 +4160,38 @@
         aura.rotation.x = Math.PI / 2.4;
         aura.position.set(px, 10.9, pz);
         group.add(stem, blossom, aura);
+      } else if (id === 'void') {
+        // Floating pitch-black void monoliths ringed with purple rift energy!
+        const mono = new THREE.Mesh(new THREE.BoxGeometry(2.4, 11.5, 2.4), matStd(0x09090b, { metalness: 0.8, roughness: 0.15, emissive: 0x3b0764, emissiveIntensity: 0.35 }));
+        mono.position.set(px, 6.2, pz);
+        const riftRing = new THREE.Mesh(new THREE.TorusGeometry(2.4, 0.18, 8, 22), new THREE.MeshBasicMaterial({ color: 0xa855f7 }));
+        riftRing.rotation.x = Math.PI / 2.3;
+        riftRing.position.set(px, 8.8, pz);
+        group.add(mono, riftRing);
+      } else if (id === 'sorry') {
+        // Giant glowing blue crystal teardrop statues!
+        const baseP = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.8, 4.2, 8), matStd(0x1e40af, { roughness: 0.3 }));
+        baseP.position.set(px, 2.1, pz);
+        const dropBot = new THREE.Mesh(new THREE.SphereGeometry(1.8, 12, 10), new THREE.MeshBasicMaterial({ color: 0x60a5fa }));
+        dropBot.position.set(px, 6.4, pz);
+        const dropTop = new THREE.Mesh(new THREE.ConeGeometry(1.75, 3.6, 12), new THREE.MeshBasicMaterial({ color: 0x93c5fd }));
+        dropTop.position.set(px, 9.2, pz);
+        group.add(baseP, dropBot, dropTop);
+      } else if (id === 'bye_bye') {
+        // Fiery farewell portal pillars with glowing golden crowns!
+        const pillar = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.4, 10.5, 8), matStd(0x7c2d12, { emissive: 0xea580c, emissiveIntensity: 0.35 }));
+        pillar.position.set(px, 5.25, pz);
+        const ring = new THREE.Mesh(new THREE.TorusGeometry(2.3, 0.24, 8, 22), new THREE.MeshBasicMaterial({ color: 0xfde047 }));
+        ring.position.set(px, 12.2, pz);
+        group.add(pillar, ring);
+      } else if (id === 'possible') {
+        // Apocalyptic obsidian-and-neon-red lightning obelisks with floating glitch cubes!
+        const ob = new THREE.Mesh(new THREE.BoxGeometry(2.6, 13.0, 2.6), matStd(0x09090b, { metalness: 0.85, roughness: 0.15, emissive: 0x881337, emissiveIntensity: 0.4 }));
+        ob.position.set(px, 6.5, pz);
+        const cube = new THREE.Mesh(new THREE.BoxGeometry(2.1, 2.1, 2.1), new THREE.MeshBasicMaterial({ color: 0xff2255 }));
+        cube.position.set(px, 15.2, pz);
+        cube.rotation.set(0.5, 0.7, 0.3);
+        group.add(ob, cube);
       }
     }
 
@@ -4089,6 +4305,64 @@
         archGroup.add(arc);
       });
       group.add(strip1, strip2, strip3, archGroup);
+    }
+    if (id === 'void') {
+      // Glowing Violet Abyss Runway + Colossal Black Hole Vortex overhead!
+      const vRoad = new THREE.Mesh(new THREE.BoxGeometry(10.5, 0.14, BIOME_LENGTH), matStd(0x09090b, { emissive: 0x3b0764, emissiveIntensity: 0.4 }));
+      vRoad.position.set(0, 0.07, zMid);
+      const edgeL = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.16, BIOME_LENGTH), new THREE.MeshBasicMaterial({ color: 0xa855f7 }));
+      edgeL.position.set(-5.4, 0.08, zMid);
+      const edgeR = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.16, BIOME_LENGTH), new THREE.MeshBasicMaterial({ color: 0xa855f7 }));
+      edgeR.position.set(5.4, 0.08, zMid);
+      const bh = new THREE.Group();
+      bh.position.set(0, 23, zMid);
+      const hole = new THREE.Mesh(new THREE.SphereGeometry(5.4, 18, 14), new THREE.MeshBasicMaterial({ color: 0x000000 }));
+      const disk1 = new THREE.Mesh(new THREE.TorusGeometry(9.2, 0.75, 10, 36), new THREE.MeshBasicMaterial({ color: 0xa855f7 }));
+      disk1.rotation.x = Math.PI / 2.4;
+      const disk2 = new THREE.Mesh(new THREE.TorusGeometry(7.2, 0.38, 8, 32), new THREE.MeshBasicMaterial({ color: 0xf8fafc }));
+      bh.add(hole, disk1, disk2);
+      group.add(vRoad, edgeL, edgeR, bh);
+    }
+    if (id === 'sorry') {
+      // Tear-Blue Runway + Giant Floating "SORRY!! 🥺" Neon Sky Billboard!
+      const sRoad = new THREE.Mesh(new THREE.BoxGeometry(10.5, 0.14, BIOME_LENGTH), matStd(0x1d4ed8, { emissive: 0x2563eb, emissiveIntensity: 0.35 }));
+      sRoad.position.set(0, 0.07, zMid);
+      const sorrySkySign = new THREE.Mesh(
+        new THREE.BoxGeometry(22, 6.2, 0.8),
+        new THREE.MeshBasicMaterial({ map: createSignTexture('🥺 SORRY!!', 'FORGIVE ME — DON\'T STEAL!', '#1e3a8a', '#93c5fd') })
+      );
+      sorrySkySign.position.set(0, 22, zMid);
+      group.add(sRoad, sorrySkySign);
+    }
+    if (id === 'bye_bye') {
+      // Sunset Gold Runway + Giant Floating "BYE BYE! 👋" Exit Portal overhead!
+      const bRoad = new THREE.Mesh(new THREE.BoxGeometry(11.0, 0.14, BIOME_LENGTH), matStd(0x9a3412, { emissive: 0xea580c, emissiveIntensity: 0.35 }));
+      bRoad.position.set(0, 0.07, zMid);
+      const portalRing = new THREE.Mesh(new THREE.TorusGeometry(9.0, 0.85, 12, 36), new THREE.MeshBasicMaterial({ color: 0xfde047 }));
+      portalRing.position.set(0, 22, zMid);
+      const byeSign = new THREE.Mesh(
+        new THREE.BoxGeometry(16, 4.5, 0.8),
+        new THREE.MeshBasicMaterial({ map: createSignTexture('👋 BYE BYE!!', 'SEE YA LATER!', '#7c2d12', '#fde047') })
+      );
+      byeSign.position.set(0, 22, zMid);
+      group.add(bRoad, portalRing, byeSign);
+    }
+    if (id === 'possible') {
+      // Neon Crimson-Gold Final Boss Runway + Colossal Hyper-Ring Monument overhead!
+      const pRoad = new THREE.Mesh(new THREE.BoxGeometry(12.0, 0.15, BIOME_LENGTH), matStd(0x18181b, { metalness: 0.8, emissive: 0x450a0a, emissiveIntensity: 0.45 }));
+      pRoad.position.set(0, 0.08, zMid);
+      const rL = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.17, BIOME_LENGTH), new THREE.MeshBasicMaterial({ color: 0xff2255 }));
+      rL.position.set(-6.1, 0.09, zMid);
+      const rR = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.17, BIOME_LENGTH), new THREE.MeshBasicMaterial({ color: 0xff2255 }));
+      rR.position.set(6.1, 0.09, zMid);
+      const hyperGate = new THREE.Group();
+      hyperGate.position.set(0, 23, zMid);
+      const ringA = new THREE.Mesh(new THREE.TorusGeometry(10.5, 0.65, 12, 36), new THREE.MeshBasicMaterial({ color: 0xff2255 }));
+      const ringB = new THREE.Mesh(new THREE.TorusGeometry(7.8, 0.45, 10, 32), new THREE.MeshBasicMaterial({ color: 0xfacc15 }));
+      ringB.rotation.y = Math.PI / 3;
+      const core = new THREE.Mesh(new THREE.OctahedronGeometry(3.4, 0), new THREE.MeshBasicMaterial({ color: 0xff2255 }));
+      hyperGate.add(ringA, ringB, core);
+      group.add(pRoad, rL, rR, hyperGate);
     }
   }
 
@@ -4211,11 +4485,11 @@
     });
   });
 
-  // Back wall at the very end of Biome 21 (Exotic)
+  // Back wall at the very end of Biome 25 (Possible / Impossible)
   const endWallZ = -BIOMES.length * BIOME_LENGTH;
   const endWall = new THREE.Mesh(
-    new THREE.BoxGeometry(ROAD_HALF_WIDTH * 2 + 5, 14, 2),
-    matStd(0x831843, { emissive: 0xec4899, emissiveIntensity: 0.45 })
+    new THREE.BoxGeometry(ROAD_HALF_WIDTH * 2 + 5, 16, 2),
+    matStd(0x18040b, { emissive: 0xff2255, emissiveIntensity: 0.5 })
   );
   endWall.position.set(0, 6, endWallZ - 1);
   scene.add(endWall);
@@ -4996,7 +5270,7 @@
             <h3>${u.name}</h3>
             <p>${u.desc}</p>
           </div>
-          <span class="lvl-badge">Lv ${lvl} / ${u.maxLevel}</span>
+          <span class="lvl-badge">Lv ${lvl} / ${Number.isFinite(u.maxLevel) ? u.maxLevel : '∞'}</span>
         </div>
         <button class="buy-btn" ${canBuy ? '' : 'disabled'}>
           ${maxed ? '✅ MAXED OUT!' : `Buy Upgrade • ${formatMoney(cost)}`}
@@ -5004,7 +5278,7 @@
       `;
       card.querySelector('.buy-btn').addEventListener('click', () => {
         if (state.money < cost || state.upgrades[key] >= u.maxLevel) return;
-        state.money -= cost;
+        if (Number.isFinite(state.money)) state.money -= cost;
         state.upgrades[key]++;
         if (key === 'shield') state.shieldsRemaining = state.upgrades.shield;
         if (key === 'stamina') state.stamina = getMaxStamina();
@@ -5236,8 +5510,8 @@
     document.getElementById('shield-display').textContent = `🛡️ ${state.shieldsRemaining}`;
     const slowWalkSpeed = Math.min(14, getPlayerWalkSpeed() * 0.5);
     document.getElementById('speed-stat').textContent = state.slowMode
-      ? Math.round(slowWalkSpeed * 1.4)
-      : Math.round(getPlayerSprintSpeed());
+      ? Math.round(slowWalkSpeed * 1.4).toLocaleString()
+      : Math.round(getPlayerSprintSpeed()).toLocaleString();
     document.getElementById('trained-stat').textContent = state.slowMode
       ? '(🐢 SLOW)'
       : ((state.isOwner && state.ownerMaxSpeed)
@@ -5529,9 +5803,10 @@
             playTone(toneHz, 0.06, 'triangle', 0.06, toneHz + 120);
           }
 
+          const maxTrainedLabel = Number.isFinite(MAX_TRAINED_SPEED) ? MAX_TRAINED_SPEED : '∞';
           tmBanner.textContent = state.trainedSpeed >= MAX_TRAINED_SPEED
-            ? `🏋️ MAX TREADMILL SPEED! (+${MAX_TRAINED_SPEED}.0 Trained) • Earning Level XP! (S/Space to exit)`
-            : `🏃 TRAINING ON TREADMILL! +${rate.toFixed(2)} Speed/s • Trained: +${state.trainedSpeed.toFixed(1)} / ${MAX_TRAINED_SPEED} (S/Space to exit)`;
+            ? `🏋️ MAX TREADMILL SPEED! (+${maxTrainedLabel} Trained) • Earning Level XP! (S/Space to exit)`
+            : `🏃 TRAINING ON TREADMILL! +${rate.toFixed(2)} Speed/s • Trained: +${state.trainedSpeed.toFixed(1)} / ${maxTrainedLabel} (S/Space to exit)`;
           tmBanner.style.display = 'block';
           updateHUD();
         }
