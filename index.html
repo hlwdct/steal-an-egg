@@ -97,17 +97,17 @@
 
   .pill {
     pointer-events: auto;
-    background: rgba(15, 23, 42, 0.84);
+    background: linear-gradient(180deg, rgba(30, 41, 59, 0.92), rgba(15, 23, 42, 0.94));
     backdrop-filter: blur(8px);
-    border: 3px solid rgba(255, 255, 255, 0.24);
-    border-radius: 18px;
+    border: 3px solid rgba(255, 255, 255, 0.35);
+    border-radius: 16px;
     padding: 8px 16px;
     color: #fff;
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+    box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.22), 0 5px 0 rgba(0, 0, 0, 0.45), 0 8px 18px rgba(0, 0, 0, 0.45);
     display: flex;
     align-items: center;
     gap: 10px;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.6);
+    text-shadow: 0 2px 0 rgba(0,0,0,0.85);
   }
 
   .money-val {
@@ -253,8 +253,8 @@
     font-weight: 700;
     color: #fff;
     cursor: pointer;
-    text-shadow: 0 2px 3px rgba(0,0,0,0.5);
-    box-shadow: 0 5px 0 rgba(0,0,0,0.35), 0 8px 16px rgba(0,0,0,0.35);
+    text-shadow: 0 2px 0 rgba(0,0,0,0.75);
+    box-shadow: inset 0 3px 0 rgba(255,255,255,0.32), 0 5px 0 rgba(0,0,0,0.45), 0 8px 16px rgba(0,0,0,0.35);
     transition: transform 0.1s ease, filter 0.15s ease;
     display: flex;
     align-items: center;
@@ -930,9 +930,9 @@
         Easy, Volcano, Kingdoms... all the way to Space, Limited &amp; Exotic!
       </div>
       <div class="step-box">
-        <span class="emoji">🥚</span>
-        <b>2. Steal & Escape!</b><br>
-        Grab a monster's egg with <b>[E]</b> — it will get furious and chase you down the road!
+        <span class="emoji">💤</span>
+        <b>2. Sneak, Steal &amp; Escape!</b><br>
+        Monsters are <b>sleeping (Zzz...)</b> — steal an egg with <b>[E]</b> to WAKE them up and outrun them!
       </div>
       <div class="step-box">
         <span class="emoji">🐾</span>
@@ -1410,8 +1410,10 @@
       setTimeout(() => playTone(660, 0.25, 'sine', 0.18, 880), 100);
     },
     caught() {
-      playTone(220, 0.25, 'sawtooth', 0.25, 70);
-      setTimeout(() => playTone(130, 0.4, 'square', 0.22, 45), 130);
+      // Classic Roblox-style "OOF" descending synth boop!
+      playTone(340, 0.16, 'triangle', 0.28, 155);
+      setTimeout(() => playTone(180, 0.22, 'sawtooth', 0.22, 95), 70);
+      setTimeout(() => playTone(120, 0.28, 'sine', 0.2, 62), 140);
     },
     shieldBlock() {
       playTone(620, 0.18, 'triangle', 0.24, 980);
@@ -1845,6 +1847,72 @@
     return tex;
   }
 
+  // Classic Roblox Plastic Studs Baseplate Texture (shared canvas tinted by material color!)
+  const ROBLOX_STUD_CANVAS = (() => {
+    const c = document.createElement('canvas');
+    c.width = 128; c.height = 128;
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = '#e8edf2';
+    ctx.fillRect(0, 0, 128, 128);
+    // Subtle bevel tile seams
+    ctx.strokeStyle = 'rgba(0,0,0,0.09)';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(1, 1, 126, 126);
+    // 2x2 raised circular Roblox studs
+    const centers = [32, 96];
+    for (const cx of centers) {
+      for (const cy of centers) {
+        // Bottom stud shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.18)';
+        ctx.beginPath(); ctx.arc(cx, cy + 3, 18, 0, Math.PI * 2); ctx.fill();
+        // Stud body
+        ctx.fillStyle = '#f8fafc';
+        ctx.beginPath(); ctx.arc(cx, cy, 17, 0, Math.PI * 2); ctx.fill();
+        // Top glossy highlight ring
+        ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+        ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.arc(cx - 1, cy - 1, 13.5, Math.PI * 1.05, Math.PI * 1.95); ctx.stroke();
+        // Inner subtle stud rim
+        ctx.strokeStyle = 'rgba(0,0,0,0.12)';
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(cx, cy, 17, 0, Math.PI * 2); ctx.stroke();
+      }
+    }
+    return c;
+  })();
+
+  function matRobloxStud(color, repeatX = 12, repeatY = 12, extra = {}) {
+    const tex = new THREE.CanvasTexture(ROBLOX_STUD_CANVAS);
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    tex.repeat.set(repeatX, repeatY);
+    return new THREE.MeshLambertMaterial(Object.assign({ color, map: tex }, extra));
+  }
+
+  // Classic Iconic Roblox Smiley Face Texture (:D / :))
+  function createRobloxFaceTexture() {
+    const c = document.createElement('canvas');
+    c.width = 128; c.height = 128;
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = '#facc15';
+    ctx.fillRect(0, 0, 128, 128);
+    // Classic vertical oval eyes
+    ctx.fillStyle = '#111827';
+    ctx.beginPath(); ctx.ellipse(44, 52, 7.5, 11.5, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(84, 52, 7.5, 11.5, 0, 0, Math.PI * 2); ctx.fill();
+    // Cute eye glints
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath(); ctx.arc(41.5, 47, 2.5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(81.5, 47, 2.5, 0, Math.PI * 2); ctx.fill();
+    // Classic wide Roblox smile
+    ctx.strokeStyle = '#111827';
+    ctx.lineWidth = 6.5;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.arc(64, 66, 26, 0.22 * Math.PI, 0.78 * Math.PI);
+    ctx.stroke();
+    return new THREE.CanvasTexture(c);
+  }
+
   function createSignTexture(title, subtitle, bgHex, borderHex) {
     const c = document.createElement('canvas');
     c.width = 640; c.height = 180;
@@ -2082,6 +2150,27 @@
   const starField = new THREE.Points(starGeo, starMat);
   starField.visible = false;
   nightSkyGroup.add(starField);
+
+  // Classic Blocky Fluffy Roblox Clouds drifting overhead!
+  const robloxClouds = [];
+  const cloudMat = new THREE.MeshLambertMaterial({ color: 0xffffff, transparent: true, opacity: 0.9 });
+  for (let ci = 0; ci < 36; ci++) {
+    const cg = new THREE.Group();
+    const w1 = 10 + (ci * 3.7) % 14;
+    const d1 = 6 + (ci * 2.3) % 8;
+    const puff1 = new THREE.Mesh(new THREE.BoxGeometry(w1, 2.6, d1), cloudMat);
+    const puff2 = new THREE.Mesh(new THREE.BoxGeometry(w1 * 0.65, 2.2, d1 * 0.75), cloudMat);
+    puff2.position.set(w1 * 0.16, 1.8, 0.5);
+    const puff3 = new THREE.Mesh(new THREE.BoxGeometry(w1 * 0.55, 1.8, d1 * 0.65), cloudMat);
+    puff3.position.set(-w1 * 0.22, 1.4, -0.4);
+    cg.add(puff1, puff2, puff3);
+    const cx = -95 + ((ci * 37) % 190);
+    const cy = 44 + (ci % 4) * 5.5;
+    const cz = 55 - ci * 42;
+    cg.position.set(cx, cy, cz);
+    scene.add(cg);
+    robloxClouds.push({ mesh: cg, speed: 1.4 + (ci % 5) * 0.35 });
+  }
 
   // =========================================================================
   // 6. DETAILED 3D MONSTER / ANIMAL BUILDERS (ALL 15 UNIQUE CREATURES!)
@@ -3187,14 +3276,26 @@
       );
     }
 
-    // Angry indicator sprite (hidden until chasing!)
-    const angrySprite = createFloatingLabelSprite('💢 ANGRY!', 'CHASING YOU!', '#ef4444');
+    // Wrap all monster geometry in visualGroup so sleeping monsters can lie down & breathe cleanly!
+    const visualGroup = new THREE.Group();
+    while (root.children.length > 0) visualGroup.add(root.children[0]);
+    root.add(visualGroup);
+
+    // Sleeping indicator sprite (visible when biome monster is asleep!)
+    const sleepSprite = createFloatingLabelSprite('💤 Zzz...', 'SLEEPING — STEAL EGG!', '#93c5fd');
+    sleepSprite.position.set(0, 3.8, 0);
+    sleepSprite.scale.set(3.6, 1.15, 1);
+    sleepSprite.visible = false;
+    root.add(sleepSprite);
+
+    // Angry indicator sprite (hidden until woken up & chasing!)
+    const angrySprite = createFloatingLabelSprite('💢 AWAKE!', 'CHASING YOU!', '#ef4444');
     angrySprite.position.set(0, 5.4, 0);
     angrySprite.scale.set(3.8, 1.25, 1);
     angrySprite.visible = false;
     root.add(angrySprite);
 
-    root.userData = { limbs, extras, angrySprite };
+    root.userData = { visualGroup, limbs, extras, angrySprite, sleepSprite };
     return root;
   }
 
@@ -3233,26 +3334,26 @@
   const baseGroup = new THREE.Group();
   scene.add(baseGroup);
 
-  // Base Floor (Z: 0 to +52, X: -28 to +28)
+  // Base Floor (Classic Roblox Studded Grass Baseplate! Z: 0 to +52, X: -28 to +28)
   const baseFloor = new THREE.Mesh(
     new THREE.BoxGeometry(BASE_HALF_WIDTH * 2, 1, BASE_DEPTH),
-    matLambert(0x4ade80)
+    matRobloxStud(0x4ade80, 18, 17)
   );
   baseFloor.position.set(0, -0.5, BASE_DEPTH / 2);
   baseFloor.receiveShadow = true;
   baseGroup.add(baseFloor);
 
-  // Central Stone Walkway leading straight to the biome road!
+  // Central Roblox Studded Stone Walkway leading straight to the biome road!
   const walkway = new THREE.Mesh(
     new THREE.BoxGeometry(10, 0.08, BASE_DEPTH - 2),
-    matLambert(0xe2e8f0)
+    matRobloxStud(0xd1d5db, 3, 16)
   );
   walkway.position.set(0, 0.04, BASE_DEPTH / 2);
   walkway.receiveShadow = true;
   baseGroup.add(walkway);
 
   // Base Perimeter Fences
-  const fenceMat = matLambert(0x92400e);
+  const fenceMat = matRobloxStud(0x92400e, 10, 1);
   const postMat = matLambert(0x78350f);
   function addWall(x, z, w, h, d, mat) {
     const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
@@ -3509,8 +3610,8 @@
     const zMid = (zStart + zEnd) / 2;
     const id = biome.id;
 
-    // Side boundaries / cliffs along X = +-24
-    const wallMat = matLambert(biome.accentColor);
+    // Side boundaries / cliffs along X = +-24 (Roblox studded brick walls!)
+    const wallMat = matRobloxStud(biome.accentColor, 2, 20);
     const leftWall = new THREE.Mesh(new THREE.BoxGeometry(2.5, 4.5, BIOME_LENGTH), wallMat);
     leftWall.position.set(-ROAD_HALF_WIDTH - 1.25, 2.25, zMid);
     const rightWall = new THREE.Mesh(new THREE.BoxGeometry(2.5, 4.5, BIOME_LENGTH), wallMat);
@@ -3855,10 +3956,10 @@
     const bGroup = new THREE.Group();
     scene.add(bGroup);
 
-    // Biome Ground Strip
+    // Biome Ground Strip (Classic Roblox Studs!)
     const floorMat = (biome.id === 'cosmic' || biome.id === 'space')
       ? new THREE.MeshStandardMaterial({ map: GALAXY_TEX, roughness: 0.8 })
-      : matLambert(biome.groundColor);
+      : matRobloxStud(biome.groundColor, 15, 20);
     const floor = new THREE.Mesh(new THREE.BoxGeometry(ROAD_HALF_WIDTH * 2, 1, BIOME_LENGTH), floorMat);
     floor.position.set(0, -0.5, zMid);
     floor.receiveShadow = true;
@@ -3930,12 +4031,16 @@
       });
     });
 
-    // Monster guarding this biome!
+    // Monster sleeping beside this biome's nest until you steal an egg!
     const monsterMesh = createMonsterMesh(biome.id);
     monsterMesh.scale.setScalar(biome.scale);
     initMonsterBaseY(monsterMesh);
     const homePos = new THREE.Vector3(0, 0, nestPos.z + 7.5);
     monsterMesh.position.copy(homePos);
+    // Start curled up asleep with Zzz label!
+    monsterMesh.userData.visualGroup.rotation.z = Math.PI * 0.44;
+    monsterMesh.userData.visualGroup.position.y = 0.68;
+    monsterMesh.userData.sleepSprite.visible = true;
     scene.add(monsterMesh); // added directly to scene so it can chase all the way to the Safe Zone!
 
     biomeRuntime.push({
@@ -3949,6 +4054,8 @@
       monsterMesh,
       homePos,
       patrolAngle: idx * 1.1,
+      sleeping: true,
+      sleepBlend: 1,
       chasing: false,
       retreating: false,
       aggroMode: 'none', // 'none' | 'egg' | 'guard' | 'night'
@@ -3978,28 +4085,43 @@
   const playerBody = new THREE.Group();
   playerGroup.add(playerBody);
 
-  const pShirt = matLambert(0x3b82f6);
-  const pPants = matLambert(0x1e293b);
-  const pSkin = matLambert(0xfdba74);
-  const pHair = matLambert(0x451a03);
+  // Classic Roblox R6 Blocky Noob Avatar (Yellow Head w/ Smiley Face, Royal Blue Torso, Yellow Arms, Green Legs!)
+  const pShirt = matLambert(0x2563eb);
+  const pPants = matLambert(0x22c55e);
+  const pSkin = matLambert(0xfacc15);
+  const pFaceTex = createRobloxFaceTexture();
+  const pHeadMats = [
+    pSkin, pSkin, pSkin, pSkin,
+    new THREE.MeshLambertMaterial({ map: pFaceTex }), // +Z front face!
+    pSkin
+  ];
 
-  const pTorso = new THREE.Mesh(new THREE.BoxGeometry(0.95, 1.1, 0.55), pShirt);
-  pTorso.position.y = 1.45; pTorso.castShadow = true;
-  const pHead = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.75, 0.75), pSkin);
-  pHead.position.y = 2.42; pHead.castShadow = true;
-  addEyes(playerBody, 2.48, 0.39, 0.16, 0.065, 0x111111);
-  const pCap = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.26, 0.82), pHair);
-  pCap.position.y = 2.86;
-  const pArmL = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.95, 0.34), pShirt);
-  pArmL.position.set(-0.68, 1.42, 0);
-  const pArmR = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.95, 0.34), pShirt);
-  pArmR.position.set(0.68, 1.42, 0);
-  const pLegL = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.92, 0.4), pPants);
-  pLegL.position.set(-0.24, 0.46, 0);
-  const pLegR = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.92, 0.4), pPants);
-  pLegR.position.set(0.24, 0.46, 0);
+  const pTorso = new THREE.Mesh(new THREE.BoxGeometry(1.06, 1.15, 0.56), pShirt);
+  pTorso.position.y = 1.52; pTorso.castShadow = true;
+  const pHead = new THREE.Mesh(new THREE.BoxGeometry(0.76, 0.76, 0.76), pHeadMats);
+  pHead.position.y = 2.52; pHead.castShadow = true;
+  // Classic Roblox head stud / rounded top cap
+  const pCap = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.24, 0.08, 12), pSkin);
+  pCap.position.y = 2.93;
+  const pArmL = new THREE.Mesh(new THREE.BoxGeometry(0.46, 1.12, 0.48), pSkin);
+  pArmL.position.set(-0.79, 1.52, 0); pArmL.castShadow = true;
+  const pArmR = new THREE.Mesh(new THREE.BoxGeometry(0.46, 1.12, 0.48), pSkin);
+  pArmR.position.set(0.79, 1.52, 0); pArmR.castShadow = true;
+  const pLegL = new THREE.Mesh(new THREE.BoxGeometry(0.5, 1.0, 0.52), pPants);
+  pLegL.position.set(-0.27, 0.5, 0); pLegL.castShadow = true;
+  const pLegR = new THREE.Mesh(new THREE.BoxGeometry(0.5, 1.0, 0.52), pPants);
+  pLegR.position.set(0.27, 0.5, 0); pLegR.castShadow = true;
 
-  playerBody.add(pTorso, pHead, pCap, pArmL, pArmR, pLegL, pLegR);
+  // Classic Roblox Overhead Username Billboard!
+  const playerNameTag = createFloatingLabelSprite(
+    state.isOwner ? '👑 Owner' : '🧱 Robloxian',
+    'STEAL AN EGG!',
+    state.isOwner ? '#facc15' : '#38bdf8'
+  );
+  playerNameTag.position.set(0, 3.55, 0);
+  playerNameTag.scale.set(2.4, 0.78, 1);
+
+  playerBody.add(pTorso, pHead, pCap, pArmL, pArmR, pLegL, pLegR, playerNameTag);
 
   // Carried Egg Holder above player's head
   const carriedEggHolder = new THREE.Group();
@@ -4248,7 +4370,8 @@
     slot.lockDome.visible = false;
     setCarriedEgg(biomeIdx, eggTypeIdx);
 
-    // Trigger angry chase! Rarer eggs make the monster chase even faster!
+    // WAKE UP the sleeping monster & trigger angry chase!
+    br.sleeping = false;
     br.chasing = true;
     br.retreating = false;
     br.aggroMode = 'egg';
@@ -4256,14 +4379,16 @@
     br.lungeCooldown = 2.6;
     br.lungeTimer = 0;
     br.fireCooldown = 1.8 / getDiff().projectileRate;
+    br.monsterMesh.userData.sleepSprite.visible = false;
     br.monsterMesh.userData.angrySprite.visible = true;
+    spawnBurst(br.monsterMesh.position, 0xef4444, 24);
     state.activeChaserIdx = biomeIdx;
     state.activeChaserSpeedMult = et.chaseMult;
     state.shieldsRemaining = state.upgrades.shield;
 
     SFX.steal();
     flashScreen('rgba(239, 68, 68, 0.35)');
-    showToast(`⚠️ STOLE ${et.emoji} ${et.name.toUpperCase()} ${br.biome.monsterName.toUpperCase()} EGG! RUN!!`, '#ef4444');
+    showToast(`😱 YOU WOKE UP THE ${br.biome.monsterName.toUpperCase()}! (${et.emoji} ${et.name} Egg) — RUN!!`, '#ef4444');
     updateHUD();
   }
 
@@ -4883,6 +5008,12 @@
     if (state.dashCooldown > 0) state.dashCooldown = Math.max(0, state.dashCooldown - dt);
     if (state.staminaExhaustedTimer > 0) state.staminaExhaustedTimer = Math.max(0, state.staminaExhaustedTimer - dt);
 
+    // Gently drift blocky Roblox sky clouds!
+    for (const c of robloxClouds) {
+      c.mesh.position.x += c.speed * dt;
+      if (c.mesh.position.x > 110) c.mesh.position.x = -110;
+    }
+
     // Permanent bright Day Time (No Night Time!)
     state.isNight = false;
     state.nightBlend = 0;
@@ -5195,8 +5326,18 @@
           br.rageTime = 0;
           br.lungeTimer = 0;
           br.monsterMesh.userData.angrySprite.visible = false;
+          br.monsterMesh.userData.sleepSprite.visible = false;
           if (player.pos.z >= 0.4 && state.carryingEgg !== null) escapedSafeNow = true;
         } else {
+          // Snap upright from sleeping pose!
+          const vg = br.monsterMesh.userData.visualGroup;
+          br.sleepBlend = Math.max(0, br.sleepBlend - dt * 10);
+          vg.rotation.z = Math.PI * 0.44 * br.sleepBlend;
+          vg.position.y = 0.68 * br.sleepBlend;
+          vg.scale.set(1, 1, 1);
+          br.monsterMesh.userData.sleepSprite.visible = false;
+          br.monsterMesh.userData.angrySprite.visible = true;
+
           // Rage ramps up sharply + frequent fierce Lunge bursts!
           br.rageTime += dt;
           const rageMult = 1 + Math.min(0.48, br.rageTime * 0.036);
@@ -5250,11 +5391,20 @@
           }
         }
       } else if (br.retreating) {
+        const vg = br.monsterMesh.userData.visualGroup;
+        br.sleepBlend = Math.max(0, br.sleepBlend - dt * 8);
+        vg.rotation.z = Math.PI * 0.44 * br.sleepBlend;
+        vg.position.y = 0.68 * br.sleepBlend;
+        vg.scale.set(1, 1, 1);
+        br.monsterMesh.userData.sleepSprite.visible = false;
+
         const dx = br.homePos.x - mPos.x;
         const dz = br.homePos.z - mPos.z;
         const len = Math.hypot(dx, dz);
         if (len < 1.2) {
           br.retreating = false;
+          br.sleeping = true;
+          mPos.copy(br.homePos);
         } else {
           const spd = Math.max(30, br.biome.chaseSpeed * 1.2);
           mPos.x += (dx / len) * spd * dt;
@@ -5263,15 +5413,30 @@
           animateMonster(br.monsterMesh, elapsed, 1.1);
         }
       } else {
-        // Fast aggressive patrol circling around the 6 eggs!
-        const patrolSpd = (1.28 + br.idx * 0.045) * diff.hazardSpeedMult * (state.isNight ? 1.25 : 1.0);
-        br.patrolAngle += dt * patrolSpd;
-        const tx = br.nestPos.x + Math.cos(br.patrolAngle) * 8.4;
-        const tz = br.nestPos.z + Math.sin(br.patrolAngle) * 5.8;
-        mPos.x += (tx - mPos.x) * Math.min(1, dt * 4.5);
-        mPos.z += (tz - mPos.z) * Math.min(1, dt * 4.5);
-        br.monsterMesh.lookAt(tx, 0, tz);
-        animateMonster(br.monsterMesh, elapsed, 1.15);
+        // PEACEFULLY SLEEPING at nest until the player steals one of its eggs!
+        br.sleeping = true;
+        br.sleepBlend = Math.min(1, br.sleepBlend + dt * 3.5);
+        mPos.x += (br.homePos.x - mPos.x) * Math.min(1, dt * 5);
+        mPos.z += (br.homePos.z - mPos.z) * Math.min(1, dt * 5);
+
+        const vg = br.monsterMesh.userData.visualGroup;
+        vg.rotation.z = Math.PI * 0.44 * br.sleepBlend;
+        vg.position.y = 0.68 * br.sleepBlend;
+        const breathe = Math.sin(elapsed * 2.1 + br.idx) * 0.045 * br.sleepBlend;
+        vg.scale.set(1 + breathe, 1 - breathe * 0.7, 1 + breathe);
+
+        // Relax limbs gently while sleeping
+        if (br.monsterMesh.userData.limbs) {
+          for (const limb of br.monsterMesh.userData.limbs) {
+            limb.rotation.x *= Math.max(0, 1 - dt * 8);
+          }
+        }
+
+        // Bobbing Zzz... sleep label overhead!
+        const sleepSp = br.monsterMesh.userData.sleepSprite;
+        sleepSp.visible = true;
+        sleepSp.position.y = 3.8 + Math.sin(elapsed * 2.4 + br.idx) * 0.35;
+        br.monsterMesh.userData.angrySprite.visible = false;
       }
     }
 
