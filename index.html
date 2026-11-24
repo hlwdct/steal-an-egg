@@ -268,6 +268,8 @@
   .btn-index  { background: linear-gradient(180deg, #8b5cf6, #6d28d9); }
   .btn-base   { background: linear-gradient(180deg, #10b981, #059669); }
   .btn-cam    { background: linear-gradient(180deg, #3b82f6, #2563eb); }
+  .btn-music  { background: linear-gradient(180deg, #ec4899, #be185d); }
+  .btn-music.muted { background: linear-gradient(180deg, #475569, #334155); opacity: 0.85; }
   .btn-sound  { background: linear-gradient(180deg, #475569, #334155); }
   .btn-owner  { background: linear-gradient(180deg, #facc15, #ea580c); border-color: #fef08a; }
   .btn-diff   { background: linear-gradient(180deg, #ea580c, #9a3412); border-color: #fed7aa; }
@@ -838,7 +840,7 @@
         <span id="biome-display">🏠 Home Base (Safe Zone)</span>
       </div>
       <div class="pill time-pill" id="time-pill">
-        <span id="time-display">☀️ Day Time • 45s</span>
+        <span id="time-display">☀️ Day Time • 5:00</span>
       </div>
       <div class="pill" style="font-size:15px;">
         <span>🥚</span>
@@ -862,7 +864,8 @@
       <button class="btn btn-index" id="open-index-btn">📖 Index (I)</button>
       <button class="btn btn-base" id="return-base-btn">🏠 Base (R)</button>
       <button class="btn btn-cam" id="toggle-cam-btn">👁️ 3rd Person (V)</button>
-      <button class="btn btn-sound" id="toggle-sound-btn">🔊</button>
+      <button class="btn btn-music" id="toggle-music-btn" title="Toggle Background Music">🎵</button>
+      <button class="btn btn-sound" id="toggle-sound-btn" title="Mute All Sound">🔊</button>
     </div>
   </div>
 
@@ -1110,22 +1113,262 @@
   ];
 
   // =========================================================================
-  // 2. SOUND ENGINE (Web Audio API - No external assets required)
+  // 2. SOUND ENGINE & DYNAMIC SOUNDTRACK (Web Audio API - No external assets)
   // =========================================================================
   let soundEnabled = true;
+  let musicEnabled = true;
   let audioCtx = null;
+  let musicGain = null;
+  let musicFilter = null;
+  let noiseBuffer = null;
 
   function ensureAudio() {
     if (!soundEnabled) return null;
     if (!audioCtx) {
       const AC = window.AudioContext || window.webkitAudioContext;
-      if (AC) audioCtx = new AC();
+      if (AC) {
+        audioCtx = new AC();
+        musicFilter = audioCtx.createBiquadFilter();
+        musicFilter.type = 'lowpass';
+        musicFilter.frequency.value = 3400;
+        musicGain = audioCtx.createGain();
+        musicGain.gain.value = musicEnabled ? 0.28 : 0.0;
+        musicFilter.connect(musicGain);
+        musicGain.connect(audioCtx.destination);
+        // Reusable noise buffer for drums
+        const len = Math.floor(audioCtx.sampleRate * 0.25);
+        noiseBuffer = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
+        const data = noiseBuffer.getChannelData(0);
+        for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+      }
     }
     if (audioCtx && audioCtx.state === 'suspended') {
       audioCtx.resume().catch(() => {});
     }
     return audioCtx;
   }
+
+  function midiToFreq(m) {
+    return 440 * Math.pow(2, (m - 69) / 12);
+  }
+
+  // Dynamic Procedural Soundtrack: Day Adventure, Chase Mode, & Night Mystery!
+  const BGM = (() => {
+    // 8-bar (128 sixteenth-note) cheerful upbeat Adventure Melody (C major)
+    const DAY_LEAD = [
+      // Bar 1 (C)
+      76,0,79,0, 84,0,83,0, 79,0,76,0, 79,0,0,0,
+      // Bar 2 (G)
+      74,0,79,0, 83,0,81,0, 79,0,74,0, 71,0,0,0,
+      // Bar 3 (Am)
+      72,0,76,0, 81,0,79,0, 76,0,72,0, 76,0,0,0,
+      // Bar 4 (F -> G)
+      77,0,81,0, 84,0,81,0, 83,0,79,0, 74,0,0,0,
+      // Bar 5 (C)
+      76,0,79,0, 84,0,86,0, 88,0,84,0, 79,0,0,0,
+      // Bar 6 (Em)
+      83,0,79,0, 76,0,79,0, 83,0,81,0, 79,0,0,0,
+      // Bar 7 (F)
+      81,0,84,0, 89,0,88,0, 86,0,84,0, 81,0,0,0,
+      // Bar 8 (G turnaround)
+      83,0,86,0, 91,0,86,0, 83,0,79,0, 74,0,76,0
+    ];
+    const DAY_CHORDS = [
+      [60,64,67], [55,59,62], [57,60,64], [53,57,60],
+      [60,64,67], [52,55,59], [53,57,60], [55,59,62]
+    ];
+    const DAY_BASS = [48, 43, 45, 41, 48, 40, 41, 43];
+
+    // 4-bar (64 sixteenth-note) high-energy Chase Theme (D minor)
+    const CHASE_LEAD = [
+      74,0,77,0, 81,0,82,0, 81,0,79,0, 77,0,76,0,
+      74,0,70,0, 74,0,77,0, 82,0,81,0, 79,0,0,0,
+      72,0,76,0, 79,0,81,0, 79,0,77,0, 76,0,72,0,
+      73,0,76,0, 81,0,85,0, 88,0,85,0, 81,0,79,0
+    ];
+    const CHASE_BASS = [38, 34, 36, 33]; // D2, Bb1, C2, A1
+    const CHASE_CHORDS = [[62,65,69], [58,62,65], [60,64,67], [57,61,64]];
+
+    // 4-bar (64 sixteenth-note) dreamy Night Mystery Theme (A minor)
+    const NIGHT_LEAD = [
+      81,0,0,0, 76,0,84,0, 83,0,0,0, 79,0,0,0,
+      77,0,0,0, 72,0,81,0, 79,0,0,0, 76,0,0,0,
+      74,0,0,0, 77,0,81,0, 84,0,0,0, 83,0,79,0,
+      76,0,0,0, 79,0,83,0, 81,0,0,0, 0,0,0,0
+    ];
+    const NIGHT_BASS = [45, 41, 38, 40]; // A2, F2, D2, E2
+    const NIGHT_CHORDS = [[57,60,64,67], [53,57,60,64], [50,53,57,60], [52,55,59,64]];
+
+    let timerId = null;
+    let step = 0;
+    let nextTime = 0;
+    let currentMood = 'day';
+
+    function playVoice(ctx, time, freq, dur, type, vol, slideFreq = null) {
+      if (!musicFilter) return;
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, time);
+      if (slideFreq) osc.frequency.exponentialRampToValueAtTime(Math.max(20, slideFreq), time + dur);
+      g.gain.setValueAtTime(0.0001, time);
+      g.gain.linearRampToValueAtTime(vol, time + 0.012);
+      g.gain.exponentialRampToValueAtTime(0.0008, time + dur);
+      osc.connect(g);
+      g.connect(musicFilter);
+      osc.start(time);
+      osc.stop(time + dur + 0.02);
+    }
+
+    function playNoiseHit(ctx, time, dur, vol, hpFreq) {
+      if (!noiseBuffer || !musicFilter) return;
+      const src = ctx.createBufferSource();
+      src.buffer = noiseBuffer;
+      const filt = ctx.createBiquadFilter();
+      filt.type = 'highpass';
+      filt.frequency.value = hpFreq;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(vol, time);
+      g.gain.exponentialRampToValueAtTime(0.0008, time + dur);
+      src.connect(filt);
+      filt.connect(g);
+      g.connect(musicFilter);
+      src.start(time);
+      src.stop(time + dur + 0.01);
+    }
+
+    function getMood() {
+      if (typeof isBeingChased === 'function' && isBeingChased()) return 'chase';
+      if (typeof state !== 'undefined' && state.isNight) return 'night';
+      return 'day';
+    }
+
+    function scheduleStep(ctx, time) {
+      const mood = getMood();
+      if (mood !== currentMood) {
+        currentMood = mood;
+        step = step % 16; // seamless beat-aligned mood switch!
+      }
+
+      if (mood === 'day') {
+        const s = step % 128;
+        const bar = Math.floor(s / 16);
+        const beatStep = s % 16;
+        const chord = DAY_CHORDS[bar];
+        const bassRoot = DAY_BASS[bar];
+
+        // Catchy bouncy lead (triangle + soft octave shimmer)
+        const leadNote = DAY_LEAD[s];
+        if (leadNote > 0) {
+          playVoice(ctx, time, midiToFreq(leadNote), 0.21, 'triangle', 0.26);
+          playVoice(ctx, time, midiToFreq(leadNote - 12), 0.16, 'sine', 0.10);
+        }
+        // Sparkly marimba arpeggio on 8th notes
+        if (beatStep % 2 === 0) {
+          const arpNote = chord[(beatStep / 2) % chord.length];
+          playVoice(ctx, time, midiToFreq(arpNote), 0.13, 'sine', 0.11);
+        }
+        // Warm bouncy bassline
+        if (beatStep === 0 || beatStep === 6 || beatStep === 8 || beatStep === 14) {
+          const bNote = (beatStep === 6 || beatStep === 14) ? bassRoot + 7 : (beatStep === 8 ? bassRoot + 12 : bassRoot);
+          playVoice(ctx, time, midiToFreq(bNote), 0.22, 'triangle', 0.28);
+        }
+        // Light upbeat drums
+        if (beatStep === 0 || beatStep === 8 || beatStep === 10) {
+          playVoice(ctx, time, 125, 0.12, 'sine', 0.36, 42);
+        }
+        if (beatStep === 4 || beatStep === 12) {
+          playNoiseHit(ctx, time, 0.09, 0.14, 1400);
+          playVoice(ctx, time, 210, 0.06, 'triangle', 0.12, 110);
+        }
+        if (beatStep % 2 === 0) {
+          playNoiseHit(ctx, time, 0.035, beatStep % 4 === 2 ? 0.075 : 0.035, 5800);
+        }
+      } else if (mood === 'chase') {
+        const s = step % 64;
+        const bar = Math.floor(s / 16);
+        const beatStep = s % 16;
+        const chord = CHASE_CHORDS[bar];
+        const bassRoot = CHASE_BASS[bar];
+
+        // Urgent synth lead
+        const leadNote = CHASE_LEAD[s];
+        if (leadNote > 0) {
+          playVoice(ctx, time, midiToFreq(leadNote), 0.16, 'sawtooth', 0.17);
+          playVoice(ctx, time, midiToFreq(leadNote), 0.17, 'triangle', 0.18);
+        }
+        // Driving 8th-note bassline
+        if (beatStep % 2 === 0) {
+          const bNote = (beatStep % 4 === 2) ? bassRoot + 12 : bassRoot;
+          playVoice(ctx, time, midiToFreq(bNote), 0.14, 'sawtooth', 0.20);
+        }
+        // Tension chord stabs
+        if (beatStep === 0 || beatStep === 6 || beatStep === 12) {
+          for (const cn of chord) playVoice(ctx, time, midiToFreq(cn), 0.14, 'triangle', 0.075);
+        }
+        // Energetic chase drums
+        if (beatStep === 0 || beatStep === 6 || beatStep === 8 || beatStep === 14) {
+          playVoice(ctx, time, 145, 0.11, 'sine', 0.42, 40);
+        }
+        if (beatStep === 4 || beatStep === 12) {
+          playNoiseHit(ctx, time, 0.10, 0.19, 1200);
+        }
+        playNoiseHit(ctx, time, 0.03, beatStep % 2 === 1 ? 0.07 : 0.035, 6500);
+      } else {
+        // Night Mystery (gentle celesta bells + deep pad bass)
+        const s = step % 64;
+        const bar = Math.floor(s / 16);
+        const beatStep = s % 16;
+        const chord = NIGHT_CHORDS[bar];
+        const bassRoot = NIGHT_BASS[bar];
+
+        const leadNote = NIGHT_LEAD[s];
+        if (leadNote > 0) {
+          playVoice(ctx, time, midiToFreq(leadNote), 0.55, 'sine', 0.20);
+          playVoice(ctx, time, midiToFreq(leadNote + 12), 0.30, 'sine', 0.06);
+        }
+        if (beatStep % 4 === 0) {
+          const arpNote = chord[(beatStep / 4) % chord.length];
+          playVoice(ctx, time, midiToFreq(arpNote), 0.45, 'triangle', 0.10);
+        }
+        if (beatStep === 0) {
+          playVoice(ctx, time, midiToFreq(bassRoot), 1.25, 'sine', 0.24);
+        }
+      }
+      step++;
+    }
+
+    function stepDurSeconds() {
+      const bpm = currentMood === 'chase' ? 156 : (currentMood === 'night' ? 92 : 126);
+      return 60 / bpm / 4; // sixteenth note
+    }
+
+    function tick() {
+      if (!soundEnabled || !musicEnabled || document.hidden) return;
+      if (!audioCtx || audioCtx.state !== 'running') return;
+      const now = audioCtx.currentTime;
+      if (nextTime < now - 0.2) nextTime = now + 0.05;
+      while (nextTime < now + 0.14) {
+        scheduleStep(audioCtx, nextTime);
+        nextTime += stepDurSeconds();
+      }
+    }
+
+    return {
+      start() {
+        const ctx = ensureAudio();
+        this.syncVolume();
+        if (!ctx) return;
+        if (nextTime < ctx.currentTime) nextTime = ctx.currentTime + 0.05;
+        if (!timerId) timerId = setInterval(tick, 45);
+      },
+      syncVolume() {
+        if (!audioCtx || !musicGain) return;
+        const active = soundEnabled && musicEnabled && !document.hidden;
+        musicGain.gain.setTargetAtTime(active ? 0.28 : 0.0, audioCtx.currentTime, 0.04);
+      }
+    };
+  })();
 
   function playTone(freq, duration, type = 'sine', gainVal = 0.16, slideTo = null) {
     const ctx = ensureAudio();
@@ -1251,7 +1494,7 @@
 
   const MAX_LEVEL = 20;
   const MAX_TRAINED_SPEED = 36;
-  const DAY_DURATION = 45;   // seconds of Day Time
+  const DAY_DURATION = 300;  // 5 minutes (300s) of Day Time
   const NIGHT_DURATION = 30; // 30 seconds of Night Time (eggs locked!)
   const OWNER_KEY = 'steal_an_egg_owner_v1';
 
@@ -3820,6 +4063,7 @@
   // Wire buttons
   document.getElementById('play-btn').addEventListener('click', () => {
     ensureAudio();
+    BGM.start();
     document.getElementById('start-overlay').style.display = 'none';
     state.started = true;
     updateHUD();
@@ -3832,10 +4076,21 @@
   document.getElementById('return-base-btn').addEventListener('click', tryReturnToBase);
   document.getElementById('toggle-cam-btn').addEventListener('click', toggleCameraMode);
   document.getElementById('interact-prompt').addEventListener('click', handleInteract);
+  document.getElementById('toggle-music-btn').addEventListener('click', () => {
+    musicEnabled = !musicEnabled;
+    const btn = document.getElementById('toggle-music-btn');
+    btn.textContent = musicEnabled ? '🎵' : '🎵✕';
+    btn.classList.toggle('muted', !musicEnabled);
+    if (musicEnabled && soundEnabled) BGM.start();
+    else BGM.syncVolume();
+  });
   document.getElementById('toggle-sound-btn').addEventListener('click', () => {
     soundEnabled = !soundEnabled;
     document.getElementById('toggle-sound-btn').textContent = soundEnabled ? '🔊' : '🔇';
+    if (soundEnabled && musicEnabled && state.started) BGM.start();
+    else BGM.syncVolume();
   });
+  document.addEventListener('visibilitychange', () => BGM.syncVolume());
   document.getElementById('reset-save-btn').addEventListener('click', () => {
     if (!confirm('Reset all coins, upgrades, and animals?')) return;
     localStorage.removeItem(SAVE_KEY);
@@ -3921,6 +4176,9 @@
 
     // Update Time-of-Day Pill, Night Banner & Night Vignette
     const secsLeft = Math.max(0, Math.ceil(state.phaseTimer));
+    const minsLeft = Math.floor(secsLeft / 60);
+    const remSecs = secsLeft % 60;
+    const dayClockStr = minsLeft > 0 ? `${minsLeft}:${String(remSecs).padStart(2, '0')}` : `${remSecs}s`;
     const timePill = document.getElementById('time-pill');
     const timeDisplay = document.getElementById('time-display');
     const nightBanner = document.getElementById('night-banner');
@@ -3933,7 +4191,7 @@
       nightVig.classList.add('active');
     } else {
       timePill.classList.remove('night-mode');
-      timeDisplay.textContent = `☀️ Day Time • ${secsLeft}s`;
+      timeDisplay.textContent = `☀️ Day Time • ${dayClockStr}`;
       nightBanner.style.display = 'none';
       nightVig.classList.remove('active');
     }
