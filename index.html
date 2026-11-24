@@ -4931,8 +4931,8 @@
       }
 
       if (br.chasing) {
-        // Only chase while player is carrying an egg outside the Safe Zone!
-        if (player.pos.z >= 0.4 || state.carryingEgg === null) {
+        // Only the monster from the egg's own biome can chase while carrying an egg outside Base!
+        if (player.pos.z >= 0.4 || state.carryingEgg === null || br.idx !== state.carryingEgg.biomeIdx) {
           br.chasing = false;
           br.retreating = true;
           br.aggroMode = 'none';
@@ -5016,19 +5016,6 @@
         mPos.z += (tz - mPos.z) * Math.min(1, dt * 4.5);
         br.monsterMesh.lookAt(tx, 0, tz);
         animateMonster(br.monsterMesh, elapsed, 1.15);
-
-        if (state.started && !state.modalOpen && player.pos.z < -2 && state.carryingEgg !== null && distToPlayer < diff.eggAggroDist) {
-          // Nearby biome monsters JOIN THE CHASE when you run past carrying an egg!
-          br.chasing = true;
-          br.retreating = false;
-          br.aggroMode = 'egg';
-          br.rageTime = 0;
-          br.lungeCooldown = 2.0;
-          br.fireCooldown = 1.6 / diff.projectileRate;
-          br.monsterMesh.userData.angrySprite.visible = true;
-          SFX.steal();
-          showToast(`🔥 ${br.biome.emoji} ${br.biome.monsterName.toUpperCase()} JOINED THE CHASE!!`, '#ef4444');
-        }
       }
     }
 
