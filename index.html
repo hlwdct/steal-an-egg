@@ -1125,8 +1125,8 @@
       id: 'henry_kingdom', num: 18, name: 'Henry Kingdom', monsterName: 'King Henry', emoji: '🏆',
       groundColor: 0x064e3b, accentColor: 0x34d399, skyColor: 0x022c22, fogColor: 0x065f46,
       uiColor: '#10b981', eggPrimary: 0x10b981, eggSecondary: 0xfde047,
-      chaseSpeed: 172.0, income: 75000000, scale: 1.75,
-      desc: 'The ultimate supreme emerald-and-gold empire of King Henry!'
+      chaseSpeed: 880.0, income: Infinity, reqSpeed: 1000, scale: 1.75,
+      desc: 'Requires 1,000 Speed! The ultimate supreme empire of King Henry (gives INF 💰/s)!'
     }
   ];
 
@@ -1524,7 +1524,7 @@
   const DIFF_ORDER = ['hard', 'nightmare', 'impossible'];
 
   const MAX_LEVEL = 20;
-  const MAX_TRAINED_SPEED = 48;
+  const MAX_TRAINED_SPEED = 520;
   const DAY_DURATION = 300;  // 5 minutes (300s) of Day Time
   const NIGHT_DURATION = 30; // 30 seconds of Night Time (eggs locked!)
   const OWNER_KEY = 'steal_an_egg_owner_v1';
@@ -1543,17 +1543,17 @@
   const UPGRADES = {
     speed: {
       name: '🏃 Speed Boots',
-      desc: 'Run much faster to outrun deep-biome monsters!',
-      maxLevel: 20,
+      desc: 'Run much faster (up to 1,000+ Speed for Henry Kingdom)!',
+      maxLevel: 35,
       baseCost: 55,
-      costMult: 2.35
+      costMult: 1.95
     },
     treadmill: {
       name: '🏋️ Turbo Treadmill',
-      desc: 'Train Speed & Level XP MUCH faster on your Base Treadmill!',
-      maxLevel: 20,
+      desc: 'Train Speed (up to +520!) & Level XP MUCH faster on your Base Treadmill!',
+      maxLevel: 30,
       baseCost: 70,
-      costMult: 2.3
+      costMult: 1.95
     },
     stamina: {
       name: '⚡ Turbo Stamina & Dash',
@@ -1687,14 +1687,14 @@
   }
 
   function getTreadmillRate() {
-    return 0.28 + (state.upgrades.treadmill - 1) * 0.30;
+    return 0.35 + (state.upgrades.treadmill - 1) * 0.50 + Math.max(0, state.upgrades.treadmill - 10) * 2.2;
   }
   function getPlayerWalkSpeed() {
-    if (state.isOwner && state.ownerMaxSpeed) return 145;
-    return 12.5 + (state.upgrades.speed - 1) * 2.0 + (state.level - 1) * 0.85 + Math.min(MAX_TRAINED_SPEED, state.trainedSpeed);
+    if (state.isOwner && state.ownerMaxSpeed) return 750;
+    return 12.5 + (state.upgrades.speed - 1) * 5.0 + (state.level - 1) * 1.5 + Math.min(MAX_TRAINED_SPEED, state.trainedSpeed);
   }
   function getPlayerSprintSpeed() {
-    if (state.isOwner && state.ownerMaxSpeed) return 210;
+    if (state.isOwner && state.ownerMaxSpeed) return 1050;
     return getPlayerWalkSpeed() * 1.40;
   }
   function getMaxStamina() {
@@ -1714,16 +1714,19 @@
     let total = 0;
     for (const entry of state.pedestals) {
       if (entry && BIOMES[entry.biomeIdx]) {
+        const baseInc = BIOMES[entry.biomeIdx].income;
+        if (!Number.isFinite(baseInc)) return Infinity;
         const eggType = EGG_TYPES[entry.eggTypeIdx] || EGG_TYPES[0];
         const sp = SURPRISE_HATCHES[entry.surpriseIdx];
         const spMult = sp ? (1 + sp.bonus) : 1;
-        total += BIOMES[entry.biomeIdx].income * eggType.mult * spMult;
+        total += baseInc * eggType.mult * spMult;
       }
     }
     return Math.round(total * getIncomeMultiplier());
   }
 
   function formatMoney(n) {
+    if (!Number.isFinite(n)) return '$INF';
     if (n >= 1e12) return '$' + (n / 1e12).toFixed(2) + 'T';
     if (n >= 1e9) return '$' + (n / 1e9).toFixed(2) + 'B';
     if (n >= 1e6) return '$' + (n / 1e6).toFixed(2) + 'M';
@@ -1734,7 +1737,7 @@
   function saveGame() {
     try {
       localStorage.setItem(SAVE_KEY, JSON.stringify({
-        money: Math.floor(state.money),
+        money: Number.isFinite(state.money) ? Math.floor(state.money) : 'INF',
         level: state.level,
         xp: Math.floor(state.xp),
         trainedSpeed: Math.round(state.trainedSpeed * 10) / 10,
@@ -1751,7 +1754,8 @@
       const raw = localStorage.getItem(SAVE_KEY);
       if (!raw) return;
       const data = JSON.parse(raw);
-      if (typeof data.money === 'number') state.money = data.money;
+      if (data.money === 'INF') state.money = Infinity;
+      else if (typeof data.money === 'number') state.money = data.money;
       if (typeof data.level === 'number') state.level = Math.min(MAX_LEVEL, Math.max(1, Math.floor(data.level)));
       if (typeof data.xp === 'number') state.xp = Math.max(0, data.xp);
       if (typeof data.trainedSpeed === 'number') state.trainedSpeed = Math.min(MAX_TRAINED_SPEED, Math.max(0, data.trainedSpeed));
@@ -3354,7 +3358,7 @@
       ped.auraMesh = addPedestalEggAura(ped.group, entry.eggTypeIdx);
 
       const spMult = 1 + sp.bonus;
-      const earned = Math.round(b.income * eggType.mult * spMult * getIncomeMultiplier());
+      const earned = !Number.isFinite(b.income) ? Infinity : Math.round(b.income * eggType.mult * spMult * getIncomeMultiplier());
       const prefix = entry.eggTypeIdx > 0 ? `${eggType.emoji} ${eggType.name} ` : `${b.emoji} `;
       ped.label = createFloatingLabelSprite(`${prefix}${b.monsterName} + ${sp.emoji}`, `${sp.name} • ${formatMoney(earned)}/s`, accentColor);
       ped.label.position.set(0, 5.5, 0);
@@ -3994,6 +3998,13 @@
   }
 
   function stealEgg(biomeIdx, eggTypeIdx) {
+    const reqSpd = BIOMES[biomeIdx] && BIOMES[biomeIdx].reqSpeed;
+    if (reqSpd && Math.round(getPlayerSprintSpeed()) < reqSpd) {
+      SFX.locked();
+      flashScreen('rgba(16, 185, 129, 0.35)');
+      showToast(`🔒 Need ${reqSpd.toLocaleString()} Speed for ${BIOMES[biomeIdx].name}! (Current: ${Math.round(getPlayerSprintSpeed())}) — Train & Upgrade!`, '#10b981');
+      return;
+    }
     if (state.carryingEgg !== null) {
       showToast('🥚 Bring your current egg back to Base first!', '#f59e0b');
       return;
@@ -4040,8 +4051,10 @@
     state.collected[biome.id] = true;
 
     // Hatch reward bonus & Level XP multiplied by egg rarity + surprise bonus!
-    const hatchBonus = Math.round(biome.income * et.mult * (1 + sp.bonus) * 8 * getIncomeMultiplier());
-    state.money += hatchBonus;
+    const hatchBonus = !Number.isFinite(biome.income)
+      ? Infinity
+      : Math.round(biome.income * et.mult * (1 + sp.bonus) * 8 * getIncomeMultiplier());
+    state.money = !Number.isFinite(hatchBonus) ? Infinity : state.money + hatchBonus;
     const xpGain = Math.round((30 + bIdx * 20) * Math.sqrt(et.mult));
     addXp(xpGain);
 
@@ -4097,7 +4110,7 @@
 
     // Caught! Drop egg, lose cash penalty, calm ALL chasing monsters, and send player back to Base
     const diff = getDiff();
-    const cashLost = Math.floor(state.money * diff.catchCashLoss);
+    const cashLost = Number.isFinite(state.money) ? Math.floor(state.money * diff.catchCashLoss) : 0;
     if (cashLost > 0) state.money = Math.max(0, state.money - cashLost);
 
     SFX.caught();
@@ -4275,8 +4288,16 @@
     if (bestEgg) {
       const et = EGG_TYPES[bestEgg.eggTypeIdx];
       currentInteractAction = { type: 'steal', biomeIdx: bestEgg.biomeIdx, eggTypeIdx: bestEgg.eggTypeIdx };
-      promptEl.textContent = `${et.emoji} [E] STEAL ${et.name.toUpperCase()} ${bestEgg.biome.monsterName.toUpperCase()} EGG (${et.mult}x)!`;
-      promptEl.className = 'danger-prompt';
+      const reqSpd = bestEgg.biome.reqSpeed;
+      const curSpd = Math.round(getPlayerSprintSpeed());
+      if (reqSpd && curSpd < reqSpd) {
+        promptEl.textContent = `🔒 NEED ${reqSpd.toLocaleString()} SPEED FOR ${bestEgg.biome.name.toUpperCase()}! (${curSpd} / ${reqSpd})`;
+        promptEl.className = 'night-locked-prompt';
+      } else {
+        const multLabel = !Number.isFinite(bestEgg.biome.income) ? 'INF 💰' : `${et.mult}x`;
+        promptEl.textContent = `${et.emoji} [E] STEAL ${et.name.toUpperCase()} ${bestEgg.biome.monsterName.toUpperCase()} EGG (${multLabel})!`;
+        promptEl.className = 'danger-prompt';
+      }
       promptEl.style.display = 'block';
       return;
     }
@@ -4383,8 +4404,8 @@
         <div class="index-name">${b.emoji} ${b.monsterName}</div>
         <span class="index-biome" style="background:${b.uiColor};">${b.name}</span>
         <div class="index-stats">
-          💰 Base ${formatMoney(Math.round(b.income * getIncomeMultiplier()))}/s (up to 25x Galaxy!)<br>
-          🏃 Monster Speed: ${Math.round(b.chaseSpeed * getDiff().monsterSpeedMult)} (${getDiff().label})
+          💰 Base ${!Number.isFinite(b.income) ? '$INF/s (INFINITE!!)' : formatMoney(Math.round(b.income * getIncomeMultiplier())) + '/s (up to 25x Galaxy!)'}<br>
+          🏃 Monster Speed: ${Math.round(b.chaseSpeed * getDiff().monsterSpeedMult)} (${getDiff().label})${b.reqSpeed ? ` • 🔒 Requires ${b.reqSpeed.toLocaleString()} Speed!` : ''}
         </div>
       `;
       grid.appendChild(card);
@@ -4587,8 +4608,8 @@
     lastIncomeTick += dt;
     if (lastIncomeTick >= 0.25) {
       const inc = getTotalIncomePerSec();
-      if (inc > 0) {
-        state.money += inc * lastIncomeTick;
+      if (!Number.isFinite(inc) || inc > 0) {
+        state.money = !Number.isFinite(inc) ? Infinity : (state.money + inc * lastIncomeTick);
         document.getElementById('money-display').textContent = formatMoney(state.money);
         if (state.modalOpen && document.getElementById('shop-modal').classList.contains('open')) {
           document.getElementById('shop-money').textContent = formatMoney(state.money);
@@ -4669,7 +4690,8 @@
           treadmillSfxTick += dt;
           if (treadmillSfxTick >= 0.34) {
             treadmillSfxTick = 0;
-            playTone(300 + state.trainedSpeed * 6, 0.06, 'triangle', 0.06, 420 + state.trainedSpeed * 6);
+            const toneHz = Math.min(920, 300 + state.trainedSpeed * 1.2);
+            playTone(toneHz, 0.06, 'triangle', 0.06, toneHz + 120);
           }
 
           tmBanner.textContent = state.trainedSpeed >= MAX_TRAINED_SPEED
