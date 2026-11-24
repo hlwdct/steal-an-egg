@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Steal An Egg! - 15 Biomes 3D Adventure</title>
+<title>Steal An Egg! - 18 Biomes 3D Adventure</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
@@ -844,7 +844,7 @@
       </div>
       <div class="pill" style="font-size:15px;">
         <span>🥚</span>
-        <span id="collection-display">Collection: 0 / 15</span>
+        <span id="collection-display">Collection: 0 / 18</span>
         <span style="color:#94a3b8;">|</span>
         <span id="base-slots-display">Base: 0 / 16</span>
       </div>
@@ -920,13 +920,13 @@
   <div class="start-card">
     <div class="start-title">🥚 STEAL AN EGG!</div>
     <p class="start-sub">
-      Build your animal sanctuary, venture straight ahead through <b>15 wild biomes</b>, steal eggs from legendary monsters, and <b>OUTRUN THEM</b> back to your Safe Zone!
+      Build your animal sanctuary, venture straight ahead through <b>18 wild biomes</b>, steal eggs from legendary monsters, and <b>OUTRUN THEM</b> back to your Safe Zone!
     </p>
     <div class="start-steps">
       <div class="step-box">
         <span class="emoji">🏃</span>
-        <b>1. Explore 15 Biomes</b><br>
-        Easy, River, Jungle, Snow, Volcano, Abyss Ocean... all the way to Alien Planet!
+        <b>1. Explore 18 Biomes</b><br>
+        Easy, River, Jungle, Volcano, Alien Planet... all the way to Royal, Roy God &amp; Henry Kingdoms!
       </div>
       <div class="step-box">
         <span class="emoji">🥚</span>
@@ -979,13 +979,13 @@
 <div class="modal-backdrop" id="index-modal">
   <div class="modal-box index-box">
     <div class="modal-header">
-      <h2>📖 15 Biomes & 6 Egg Types Index</h2>
+      <h2>📖 18 Biomes & 6 Egg Types Index</h2>
       <button class="close-btn" id="close-index-btn">✕</button>
     </div>
     <div class="egg-legend" id="egg-legend"></div>
     <div class="modal-body index-grid" id="index-grid"></div>
     <div class="modal-footer">
-      <span id="index-summary">Collected 0 / 15 Monsters</span>
+      <span id="index-summary">Collected 0 / 18 Monsters</span>
       <span>Place any stolen egg on a pedestal in your Base!</span>
     </div>
   </div>
@@ -1109,6 +1109,27 @@
       uiColor: '#a855f7', eggPrimary: 0x7e22ce, eggSecondary: 0x84cc16,
       chaseSpeed: 144.0, income: 4000000, scale: 1.5,
       desc: 'Bizarre purple alien world of a creepy purple-skinned beast with razor-sharp teeth!'
+    },
+    {
+      id: 'royal_kingdom', num: 16, name: 'Royal Kingdom', monsterName: 'Royal King', emoji: '👑',
+      groundColor: 0x3b0764, accentColor: 0xfacc15, skyColor: 0x4c1d95, fogColor: 0x5b21b6,
+      uiColor: '#eab308', eggPrimary: 0x991b1b, eggSecondary: 0xfacc15,
+      chaseSpeed: 152.0, income: 10000000, scale: 1.55,
+      desc: 'Grand crimson-and-gold castle ruled by the mighty Royal King!'
+    },
+    {
+      id: 'roy_god_kingdom', num: 17, name: 'Roy God Kingdom', monsterName: 'Roy God', emoji: '⚡',
+      groundColor: 0x0f172a, accentColor: 0x38bdf8, skyColor: 0x0c4a6e, fogColor: 0x0369a1,
+      uiColor: '#38bdf8', eggPrimary: 0xfacc15, eggSecondary: 0x38bdf8,
+      chaseSpeed: 162.0, income: 28000000, scale: 1.65,
+      desc: 'Celestial thunder-gold realm of the all-powerful Roy God!'
+    },
+    {
+      id: 'henry_kingdom', num: 18, name: 'Henry Kingdom', monsterName: 'King Henry', emoji: '🏆',
+      groundColor: 0x064e3b, accentColor: 0x34d399, skyColor: 0x022c22, fogColor: 0x065f46,
+      uiColor: '#10b981', eggPrimary: 0x10b981, eggSecondary: 0xfde047,
+      chaseSpeed: 172.0, income: 75000000, scale: 1.75,
+      desc: 'The ultimate supreme emerald-and-gold empire of King Henry!'
     }
   ];
 
@@ -1493,7 +1514,7 @@
   const DIFF_ORDER = ['hard', 'nightmare', 'impossible'];
 
   const MAX_LEVEL = 20;
-  const MAX_TRAINED_SPEED = 36;
+  const MAX_TRAINED_SPEED = 48;
   const DAY_DURATION = 300;  // 5 minutes (300s) of Day Time
   const NIGHT_DURATION = 30; // 30 seconds of Night Time (eggs locked!)
   const OWNER_KEY = 'steal_an_egg_owner_v1';
@@ -1659,11 +1680,11 @@
     return 0.28 + (state.upgrades.treadmill - 1) * 0.30;
   }
   function getPlayerWalkSpeed() {
-    if (state.isOwner && state.ownerMaxSpeed) return 115;
+    if (state.isOwner && state.ownerMaxSpeed) return 145;
     return 12.5 + (state.upgrades.speed - 1) * 2.0 + (state.level - 1) * 0.85 + Math.min(MAX_TRAINED_SPEED, state.trainedSpeed);
   }
   function getPlayerSprintSpeed() {
-    if (state.isOwner && state.ownerMaxSpeed) return 165;
+    if (state.isOwner && state.ownerMaxSpeed) return 210;
     return getPlayerWalkSpeed() * 1.40;
   }
   function getMaxStamina() {
@@ -1691,6 +1712,7 @@
   }
 
   function formatMoney(n) {
+    if (n >= 1e12) return '$' + (n / 1e12).toFixed(2) + 'T';
     if (n >= 1e9) return '$' + (n / 1e9).toFixed(2) + 'B';
     if (n >= 1e6) return '$' + (n / 1e6).toFixed(2) + 'M';
     if (n >= 1e3) return '$' + (n / 1e3).toFixed(1) + 'K';
@@ -2669,6 +2691,135 @@
       root.add(la, ra, ll, rl);
       limbs.push(ll, rl, la, ra);
     }
+    else if (biomeId === 'royal_kingdom') {
+      // 16. ROYAL KING (Golden armor, crimson royal cape, jeweled crown & ruby scepter!)
+      const gold = matStd(0xfacc15, { metalness: 0.75, roughness: 0.22, emissive: 0x854d0e, emissiveIntensity: 0.25 });
+      const crimson = matStd(0xb91c1c, { roughness: 0.45, emissive: 0x450a0a, emissiveIntensity: 0.2 });
+      const ruby = new THREE.MeshBasicMaterial({ color: 0xff2255 });
+      const skin = matLambert(0xffedd5);
+
+      root.add(box(1.5, 1.85, 1.0, gold, 0, 2.25, 0)); // golden armor chest
+      root.add(box(1.55, 0.4, 1.06, crimson, 0, 1.55, 0)); // royal sash belt
+      root.add(box(1.75, 2.55, 0.22, crimson, 0, 1.9, -0.62)); // flowing royal crimson cape
+      root.add(sph(0.48, gold, -1.05, 3.05, 0)); // golden pauldrons
+      root.add(sph(0.48, gold, 1.05, 3.05, 0));
+      // Head & white royal beard
+      root.add(box(0.95, 0.95, 0.95, skin, 0, 3.7, 0.05));
+      root.add(box(0.85, 0.45, 0.35, matLambert(0xf8fafc), 0, 3.25, 0.45));
+      addEyes(root, 3.82, 0.54, 0.22, 0.10, 0xfacc15, true);
+      // Giant Golden Crown with ruby jewels!
+      root.add(cyl(0.62, 0.56, 0.45, gold, 0, 4.35, 0.05));
+      for (let i = 0; i < 5; i++) {
+        const a = (i / 5) * Math.PI * 2;
+        root.add(cone(0.14, 0.46, gold, Math.cos(a) * 0.48, 4.76, 0.05 + Math.sin(a) * 0.48));
+      }
+      root.add(sph(0.15, ruby, 0, 4.42, 0.62));
+      // Arms + Royal Ruby Scepter
+      const la = box(0.46, 1.55, 0.46, gold, -1.08, 2.15, 0.15);
+      const ra = box(0.46, 1.55, 0.46, gold, 1.08, 2.15, 0.25);
+      const scepter = cyl(0.09, 0.09, 3.0, gold, 0, 0.3, 0.48);
+      scepter.rotation.x = 0.32;
+      const orb = sph(0.32, ruby, 0, 1.85, 0.48);
+      ra.add(scepter, orb);
+      const ll = box(0.52, 1.38, 0.54, gold, -0.42, 0.69, 0);
+      const rl = box(0.52, 1.38, 0.54, gold, 0.42, 0.69, 0);
+      root.add(la, ra, ll, rl);
+      limbs.push(ll, rl, la, ra);
+    }
+    else if (biomeId === 'roy_god_kingdom') {
+      // 17. ROY GOD (Hovering celestial thunder-gold god with 4 radiant wings, double halo & lightning staff!)
+      const godGold = matStd(0xfde047, { metalness: 0.85, roughness: 0.15, emissive: 0xd97706, emissiveIntensity: 0.45 });
+      const whiteArmor = matStd(0xf8fafc, { metalness: 0.4, roughness: 0.2, emissive: 0x38bdf8, emissiveIntensity: 0.25 });
+      const lightning = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
+      const auraCyan = new THREE.MeshBasicMaterial({ color: 0x7dd3fc, transparent: true, opacity: 0.82 });
+
+      const bodyG = new THREE.Group();
+      bodyG.position.y = 0.65;
+      bodyG.add(cone(1.15, 2.5, whiteArmor, 0, 1.65, 0)); // radiant divine robe
+      bodyG.add(box(1.45, 1.25, 0.95, godGold, 0, 2.65, 0)); // golden chestplate
+      bodyG.add(sph(0.38, lightning, 0, 2.65, 0.52)); // blazing thunder core
+      bodyG.add(sph(0.62, whiteArmor, 0, 3.85, 0)); // celestial god head
+      addEyes(bodyG, 3.92, 0.56, 0.22, 0.11, 0x38bdf8, true);
+      // Crown + Spinning Double Divine Halos!
+      bodyG.add(cyl(0.58, 0.5, 0.38, godGold, 0, 4.45, 0));
+      const halo1 = new THREE.Mesh(new THREE.TorusGeometry(0.95, 0.11, 10, 24), godGold);
+      halo1.rotation.x = Math.PI / 2;
+      halo1.position.set(0, 4.95, 0);
+      const halo2 = new THREE.Mesh(new THREE.TorusGeometry(1.55, 0.08, 8, 28), lightning);
+      halo2.position.set(0, 3.0, -0.68);
+      bodyG.add(halo1, halo2);
+      // 4 Giant Radiant God Wings!
+      const lw1 = box(2.6, 1.2, 0.16, auraCyan, -1.9, 3.2, -0.5);
+      const rw1 = box(2.6, 1.2, 0.16, auraCyan, 1.9, 3.2, -0.5);
+      const lw2 = box(2.1, 0.9, 0.14, godGold, -1.65, 2.1, -0.55);
+      const rw2 = box(2.1, 0.9, 0.14, godGold, 1.65, 2.1, -0.55);
+      bodyG.add(lw1, rw1, lw2, rw2);
+      // God Lightning Trident Staff!
+      const staffG = new THREE.Group();
+      staffG.position.set(1.25, 2.4, 0.55);
+      staffG.add(cyl(0.09, 0.09, 3.8, godGold, 0, 0, 0));
+      staffG.add(cone(0.24, 0.9, lightning, 0, 2.25, 0));
+      staffG.add(cone(0.15, 0.65, lightning, -0.35, 2.05, 0));
+      staffG.add(cone(0.15, 0.65, lightning, 0.35, 2.05, 0));
+      bodyG.add(staffG);
+      root.add(bodyG);
+      extras.push(
+        { obj: bodyG, type: 'float' },
+        { obj: halo1, type: 'spin' },
+        { obj: halo2, type: 'spin' },
+        { obj: lw1, type: 'wingL' },
+        { obj: rw1, type: 'wingR' },
+        { obj: lw2, type: 'wingL' },
+        { obj: rw2, type: 'wingR' }
+      );
+    }
+    else if (biomeId === 'henry_kingdom') {
+      // 18. KING HENRY (Supreme Emerald-Diamond & Solid-Gold Emperor with Legendary Greatsword & Imperial Aura!)
+      const emerald = matStd(0x10b981, { metalness: 0.55, roughness: 0.2, emissive: 0x059669, emissiveIntensity: 0.45 });
+      const gold = matStd(0xfacc15, { metalness: 0.85, roughness: 0.16, emissive: 0xb45309, emissiveIntensity: 0.35 });
+      const diamond = new THREE.MeshBasicMaterial({ color: 0x6ee7b7 });
+      const darkEm = matStd(0x022c22, { roughness: 0.35 });
+      const skin = matLambert(0xfdba74);
+
+      root.add(box(1.65, 1.95, 1.08, emerald, 0, 2.3, 0)); // imperial emerald armor
+      root.add(box(1.72, 0.36, 1.14, gold, 0, 2.9, 0)); // golden chest trim
+      root.add(box(1.72, 0.38, 1.14, gold, 0, 1.5, 0)); // golden belt
+      root.add(sph(0.36, diamond, 0, 2.4, 0.58)); // supreme diamond emblem
+      root.add(box(1.95, 2.75, 0.24, darkEm, 0, 1.95, -0.66)); // royal emerald-gold cape
+      root.add(box(2.05, 0.25, 0.28, gold, 0, 0.65, -0.66)); // cape gold hem
+      root.add(sph(0.55, gold, -1.18, 3.15, 0)); // giant golden shoulder guards
+      root.add(sph(0.55, gold, 1.18, 3.15, 0));
+      // Imperial Spinning Aura Ring behind back
+      const auraRing = new THREE.Mesh(new THREE.TorusGeometry(1.7, 0.11, 10, 28), diamond);
+      auraRing.position.set(0, 2.7, -0.82);
+      root.add(auraRing);
+      // Head + Supreme Emperor Crown
+      root.add(box(1.0, 1.0, 1.0, skin, 0, 3.8, 0.05));
+      addEyes(root, 3.9, 0.56, 0.24, 0.11, 0x34d399, true);
+      root.add(cyl(0.7, 0.62, 0.5, gold, 0, 4.5, 0.05));
+      for (let i = 0; i < 6; i++) {
+        const a = (i / 6) * Math.PI * 2;
+        root.add(cone(0.16, 0.62, gold, Math.cos(a) * 0.54, 5.02, 0.05 + Math.sin(a) * 0.54));
+      }
+      root.add(new THREE.Mesh(new THREE.OctahedronGeometry(0.28, 0), diamond));
+      root.children[root.children.length - 1].position.set(0, 4.78, 0.66);
+      // Arms + Legendary Emerald-Gold Greatsword!
+      const la = box(0.5, 1.65, 0.5, emerald, -1.16, 2.2, 0.15);
+      const ra = box(0.5, 1.65, 0.5, emerald, 1.16, 2.2, 0.25);
+      const sword = new THREE.Group();
+      sword.position.set(0, 0.1, 0.55);
+      sword.rotation.x = 0.45;
+      sword.add(cyl(0.08, 0.08, 0.8, gold, 0, -0.3, 0)); // hilt
+      sword.add(box(0.85, 0.18, 0.22, gold, 0, 0.15, 0)); // crossguard
+      sword.add(box(0.28, 2.8, 0.12, diamond, 0, 1.6, 0)); // glowing emerald blade
+      sword.add(cone(0.2, 0.55, gold, 0, 3.25, 0)); // sword tip
+      ra.add(sword);
+      const ll = box(0.56, 1.45, 0.56, emerald, -0.45, 0.72, 0);
+      const rl = box(0.56, 1.45, 0.56, emerald, 0.45, 0.72, 0);
+      root.add(la, ra, ll, rl);
+      limbs.push(ll, rl, la, ra);
+      extras.push({ obj: auraRing, type: 'spin' });
+    }
 
     // Angry indicator sprite (hidden until chasing!)
     const angrySprite = createFloatingLabelSprite('💢 ANGRY!', 'CHASING YOU!', '#ef4444');
@@ -2756,7 +2907,7 @@
   addWall(-20, 0, 16, 2.4, 1.2, fenceMat);
   addWall(20, 0, 16, 2.4, 1.2, fenceMat);
 
-  const safeSignTex = createSignTexture('SAFE ZONE — MY ANIMAL BASE', '15 BIOMES STRAIGHT AHEAD ⬆', '#064e3b', '#34d399');
+  const safeSignTex = createSignTexture('SAFE ZONE — MY ANIMAL BASE', '18 BIOMES STRAIGHT AHEAD ⬆', '#064e3b', '#34d399');
   const safeBanner = new THREE.Mesh(
     new THREE.BoxGeometry(24, 4.2, 0.7),
     new THREE.MeshBasicMaterial({ map: safeSignTex })
@@ -3130,10 +3281,39 @@
         ring.rotation.x = Math.PI / 2;
         ring.position.set(px, 0.18, pz);
         group.add(crys, ring);
+      } else if (id === 'royal_kingdom') {
+        // Royal golden castle towers & crimson velvet banners!
+        const tower = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.7, 10.5, 10), matStd(0xe2e8f0, { roughness: 0.35 }));
+        tower.position.set(px, 5.25, pz);
+        const roof = new THREE.Mesh(new THREE.ConeGeometry(2.1, 4.2, 10), matStd(0xb91c1c, { roughness: 0.4 }));
+        roof.position.set(px, 12.6, pz);
+        const goldRing = new THREE.Mesh(new THREE.TorusGeometry(1.65, 0.2, 8, 18), matStd(0xfacc15, { metalness: 0.8, roughness: 0.2 }));
+        goldRing.rotation.x = Math.PI / 2;
+        goldRing.position.set(px, 10.3, pz);
+        group.add(tower, roof, goldRing);
+      } else if (id === 'roy_god_kingdom') {
+        // Celestial thunder-gold obelisks & floating lightning crystals!
+        const obelisk = new THREE.Mesh(new THREE.CylinderGeometry(0.95, 1.6, 11.5, 6), matStd(0xfacc15, { metalness: 0.8, roughness: 0.2, emissive: 0x854d0e, emissiveIntensity: 0.3 }));
+        obelisk.position.set(px, 5.75, pz);
+        const crystal = new THREE.Mesh(new THREE.OctahedronGeometry(1.6, 0), new THREE.MeshBasicMaterial({ color: 0x38bdf8 }));
+        crystal.position.set(px, 13.3, pz);
+        const halo = new THREE.Mesh(new THREE.TorusGeometry(2.1, 0.16, 8, 20), new THREE.MeshBasicMaterial({ color: 0x7dd3fc }));
+        halo.rotation.x = Math.PI / 2;
+        halo.position.set(px, 13.3, pz);
+        group.add(obelisk, crystal, halo);
+      } else if (id === 'henry_kingdom') {
+        // Supreme imperial emerald-diamond palace towers topped with golden crowns!
+        const tower = new THREE.Mesh(new THREE.BoxGeometry(2.8, 12.0, 2.8), matStd(0x065f46, { metalness: 0.45, roughness: 0.25, emissive: 0x047857, emissiveIntensity: 0.35 }));
+        tower.position.set(px, 6.0, pz);
+        const crownBase = new THREE.Mesh(new THREE.CylinderGeometry(1.85, 1.55, 1.4, 8), matStd(0xfacc15, { metalness: 0.85, roughness: 0.15, emissive: 0xb45309, emissiveIntensity: 0.35 }));
+        crownBase.position.set(px, 12.7, pz);
+        const gem = new THREE.Mesh(new THREE.OctahedronGeometry(1.4, 0), new THREE.MeshBasicMaterial({ color: 0x34d399 }));
+        gem.position.set(px, 14.9, pz);
+        group.add(tower, crownBase, gem);
       }
     }
 
-    // Special extra landmarks for River (wooden bridge strip) & Alien Planet (hovering UFO!)
+    // Special extra landmarks for iconic biomes!
     if (id === 'river') {
       const bridge = new THREE.Mesh(new THREE.BoxGeometry(10, 0.18, BIOME_LENGTH), matLambert(0xb45309));
       bridge.position.set(0, 0.09, zMid);
@@ -3147,6 +3327,49 @@
       dome.position.y = 1.2;
       ufo.add(disc, dome);
       group.add(ufo);
+    }
+    if (id === 'royal_kingdom') {
+      // Grand Crimson Royal Carpet with gold edges down the road!
+      const carpet = new THREE.Mesh(new THREE.BoxGeometry(10.5, 0.14, BIOME_LENGTH), matLambert(0xb91c1c));
+      carpet.position.set(0, 0.07, zMid);
+      const trimL = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.16, BIOME_LENGTH), matStd(0xfacc15, { metalness: 0.8 }));
+      trimL.position.set(-5.4, 0.08, zMid);
+      const trimR = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.16, BIOME_LENGTH), matStd(0xfacc15, { metalness: 0.8 }));
+      trimR.position.set(5.4, 0.08, zMid);
+      group.add(carpet, trimL, trimR);
+    }
+    if (id === 'roy_god_kingdom') {
+      // Colossal Floating Divine Sun-Halo Monument overhead!
+      const sunGate = new THREE.Group();
+      sunGate.position.set(0, 21, zMid);
+      const outerHalo = new THREE.Mesh(new THREE.TorusGeometry(9.5, 0.55, 10, 32), new THREE.MeshBasicMaterial({ color: 0xfacc15 }));
+      const innerHalo = new THREE.Mesh(new THREE.TorusGeometry(6.5, 0.35, 10, 28), new THREE.MeshBasicMaterial({ color: 0x38bdf8 }));
+      const core = new THREE.Mesh(new THREE.OctahedronGeometry(2.8, 0), new THREE.MeshBasicMaterial({ color: 0xe0f2fe }));
+      sunGate.add(outerHalo, innerHalo, core);
+      group.add(sunGate);
+    }
+    if (id === 'henry_kingdom') {
+      // Grand Imperial Emerald-Gold Road + Giant Floating Supreme Crown!
+      const road = new THREE.Mesh(new THREE.BoxGeometry(11.5, 0.14, BIOME_LENGTH), matStd(0x10b981, { emissive: 0x047857, emissiveIntensity: 0.35 }));
+      road.position.set(0, 0.07, zMid);
+      const goldL = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.16, BIOME_LENGTH), matStd(0xfacc15, { metalness: 0.85 }));
+      goldL.position.set(-6.0, 0.08, zMid);
+      const goldR = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.16, BIOME_LENGTH), matStd(0xfacc15, { metalness: 0.85 }));
+      goldR.position.set(6.0, 0.08, zMid);
+      const giantCrown = new THREE.Group();
+      giantCrown.position.set(0, 21, zMid);
+      const band = new THREE.Mesh(new THREE.CylinderGeometry(7.0, 5.8, 3.0, 12), matStd(0xfacc15, { metalness: 0.85, roughness: 0.15, emissive: 0xb45309, emissiveIntensity: 0.4 }));
+      giantCrown.add(band);
+      for (let c = 0; c < 6; c++) {
+        const a = (c / 6) * Math.PI * 2;
+        const spike = new THREE.Mesh(new THREE.ConeGeometry(1.4, 4.2, 6), matStd(0xfde047, { metalness: 0.85, emissive: 0xd97706, emissiveIntensity: 0.4 }));
+        spike.position.set(Math.cos(a) * 5.8, 3.4, Math.sin(a) * 5.8);
+        giantCrown.add(spike);
+      }
+      const topGem = new THREE.Mesh(new THREE.OctahedronGeometry(2.6, 0), new THREE.MeshBasicMaterial({ color: 0x34d399 }));
+      topGem.position.y = 4.0;
+      giantCrown.add(topGem);
+      group.add(road, goldL, goldR, giantCrown);
     }
   }
 
@@ -3263,11 +3486,11 @@
     });
   });
 
-  // Back wall at the very end of Biome 15 (Alien Planet)
+  // Back wall at the very end of Biome 18 (Henry Kingdom)
   const endWallZ = -BIOMES.length * BIOME_LENGTH;
   const endWall = new THREE.Mesh(
-    new THREE.BoxGeometry(ROAD_HALF_WIDTH * 2 + 5, 12, 2),
-    matStd(0x4c1d95, { emissive: 0x3b0764, emissiveIntensity: 0.4 })
+    new THREE.BoxGeometry(ROAD_HALF_WIDTH * 2 + 5, 14, 2),
+    matStd(0x065f46, { emissive: 0x10b981, emissiveIntensity: 0.4 })
   );
   endWall.position.set(0, 6, endWallZ - 1);
   scene.add(endWall);
