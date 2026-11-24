@@ -861,7 +861,7 @@
       <button class="btn btn-index" id="open-index-btn">📖 Index (I)</button>
       <button class="btn btn-base" id="return-base-btn">🏠 Base (R)</button>
       <button class="btn btn-cam" id="toggle-cam-btn">👁️ 3rd Person (V)</button>
-      <button class="btn btn-music" id="toggle-music-btn" title="Toggle Background Music">🎵</button>
+      <button class="btn btn-music" id="toggle-music-btn" title="Toggle Music (Chess Joyful Beat)">🎵</button>
       <button class="btn btn-sound" id="toggle-sound-btn" title="Mute All Sound">🔊</button>
     </div>
   </div>
@@ -1170,57 +1170,65 @@
     return 440 * Math.pow(2, (m - 69) / 12);
   }
 
-  // Dynamic Procedural Soundtrack: Day Adventure, Chase Mode, & Night Mystery!
+  // Dynamic Procedural Soundtrack: "Chess" (Joyful Style) Plucked Guitar/Piano Type Beat!
+  // 134 BPM in C# minor (C#m -> F#m -> G# -> G#7) with upbeat Chase Mode boost (156 BPM)!
   const BGM = (() => {
-    // 8-bar (128 sixteenth-note) cheerful upbeat Adventure Melody (C major)
-    const DAY_LEAD = [
-      // Bar 1 (C)
-      76,0,79,0, 84,0,83,0, 79,0,76,0, 79,0,0,0,
-      // Bar 2 (G)
-      74,0,79,0, 83,0,81,0, 79,0,74,0, 71,0,0,0,
-      // Bar 3 (Am)
-      72,0,76,0, 81,0,79,0, 76,0,72,0, 76,0,0,0,
-      // Bar 4 (F -> G)
-      77,0,81,0, 84,0,81,0, 83,0,79,0, 74,0,0,0,
-      // Bar 5 (C)
-      76,0,79,0, 84,0,86,0, 88,0,84,0, 79,0,0,0,
-      // Bar 6 (Em)
-      83,0,79,0, 76,0,79,0, 83,0,81,0, 79,0,0,0,
-      // Bar 7 (F)
-      81,0,84,0, 89,0,88,0, 86,0,84,0, 81,0,0,0,
-      // Bar 8 (G turnaround)
-      83,0,86,0, 91,0,86,0, 83,0,79,0, 74,0,76,0
+    // 8-bar (128 sixteenth-note) playful bouncy plucked Chess-style melody (C# harmonic minor)
+    const CHESS_LEAD = [
+      // Bar 1 (C#m): snappy syncopated bounce
+      73,0,76,0, 80,0,76,73, 0,76,80,0, 76,0,75,0,
+      // Bar 2 (F#m): playful climb & drop
+      78,0,81,0, 78,0,76,73, 0,78,81,0, 80,0,78,0,
+      // Bar 3 (G#): crisp classical-dance turn
+      80,0,75,0, 72,0,75,80, 0,80,78,0, 75,0,72,0,
+      // Bar 4 (G#7 -> resolve): catchy turnaround riff
+      75,0,78,0, 80,0,84,0, 80,0,78,75, 72,0,75,0,
+      // Bar 5 (C#m high): octave lift bouncy hook!
+      85,0,80,0, 76,0,80,85, 0,83,80,0, 76,0,73,0,
+      // Bar 6 (F#m high): sparkling staccato run
+      81,0,78,0, 73,0,78,81, 0,85,81,0, 80,0,78,0,
+      // Bar 7 (G# high): bright playful flourish
+      80,0,84,0, 87,0,84,80, 0,84,80,0, 75,0,72,0,
+      // Bar 8 (G#7 turnaround): joyful cadence back to C#m
+      75,0,80,0, 84,0,80,78, 75,0,72,0, 75,78,80,0
     ];
-    const DAY_CHORDS = [
-      [60,64,67], [55,59,62], [57,60,64], [53,57,60],
-      [60,64,67], [52,55,59], [53,57,60], [55,59,62]
+    const CHESS_CHORDS = [
+      [61,64,68], [54,57,61], [56,60,63], [56,60,63,66],
+      [61,64,68], [54,57,61], [56,60,63], [56,60,63,66]
     ];
-    const DAY_BASS = [48, 43, 45, 41, 48, 40, 41, 43];
-
-    // 4-bar (64 sixteenth-note) high-energy Chase Theme (D minor)
-    const CHASE_LEAD = [
-      74,0,77,0, 81,0,82,0, 81,0,79,0, 77,0,76,0,
-      74,0,70,0, 74,0,77,0, 82,0,81,0, 79,0,0,0,
-      72,0,76,0, 79,0,81,0, 79,0,77,0, 76,0,72,0,
-      73,0,76,0, 81,0,85,0, 88,0,85,0, 81,0,79,0
-    ];
-    const CHASE_BASS = [38, 34, 36, 33]; // D2, Bb1, C2, A1
-    const CHASE_CHORDS = [[62,65,69], [58,62,65], [60,64,67], [57,61,64]];
-
-    // 4-bar (64 sixteenth-note) dreamy Night Mystery Theme (A minor)
-    const NIGHT_LEAD = [
-      81,0,0,0, 76,0,84,0, 83,0,0,0, 79,0,0,0,
-      77,0,0,0, 72,0,81,0, 79,0,0,0, 76,0,0,0,
-      74,0,0,0, 77,0,81,0, 84,0,0,0, 83,0,79,0,
-      76,0,0,0, 79,0,83,0, 81,0,0,0, 0,0,0,0
-    ];
-    const NIGHT_BASS = [45, 41, 38, 40]; // A2, F2, D2, E2
-    const NIGHT_CHORDS = [[57,60,64,67], [53,57,60,64], [50,53,57,60], [52,55,59,64]];
+    const CHESS_BASS = [37, 42, 44, 44, 37, 42, 44, 44]; // C#2, F#2, G#2, G#2
 
     let timerId = null;
     let step = 0;
     let nextTime = 0;
     let currentMood = 'day';
+
+    // Crisp plucked guitar / electric-piano voice with decaying filter envelope!
+    function playPluck(ctx, time, freq, dur, vol, bright = 3400) {
+      if (!musicFilter) return;
+      const osc1 = ctx.createOscillator();
+      const osc2 = ctx.createOscillator();
+      const filt = ctx.createBiquadFilter();
+      const g = ctx.createGain();
+      osc1.type = 'triangle';
+      osc2.type = 'sawtooth';
+      osc1.frequency.setValueAtTime(freq, time);
+      osc2.frequency.setValueAtTime(freq * 1.003, time); // subtle warm chorus detune
+      filt.type = 'lowpass';
+      filt.frequency.setValueAtTime(bright, time);
+      filt.frequency.exponentialRampToValueAtTime(520, time + dur);
+      g.gain.setValueAtTime(0.0001, time);
+      g.gain.linearRampToValueAtTime(vol, time + 0.006);
+      g.gain.exponentialRampToValueAtTime(0.0008, time + dur);
+      osc1.connect(filt);
+      osc2.connect(filt);
+      filt.connect(g);
+      g.connect(musicFilter);
+      osc1.start(time);
+      osc2.start(time);
+      osc1.stop(time + dur + 0.02);
+      osc2.stop(time + dur + 0.02);
+    }
 
     function playVoice(ctx, time, freq, dur, type, vol, slideFreq = null) {
       if (!musicFilter) return;
@@ -1230,7 +1238,7 @@
       osc.frequency.setValueAtTime(freq, time);
       if (slideFreq) osc.frequency.exponentialRampToValueAtTime(Math.max(20, slideFreq), time + dur);
       g.gain.setValueAtTime(0.0001, time);
-      g.gain.linearRampToValueAtTime(vol, time + 0.012);
+      g.gain.linearRampToValueAtTime(vol, time + 0.01);
       g.gain.exponentialRampToValueAtTime(0.0008, time + dur);
       osc.connect(g);
       g.connect(musicFilter);
@@ -1264,99 +1272,55 @@
       const mood = getMood();
       if (mood !== currentMood) {
         currentMood = mood;
-        step = step % 16; // seamless beat-aligned mood switch!
       }
 
-      if (mood === 'day') {
-        const s = step % 128;
-        const bar = Math.floor(s / 16);
-        const beatStep = s % 16;
-        const chord = DAY_CHORDS[bar];
-        const bassRoot = DAY_BASS[bar];
+      const isChase = mood === 'chase';
+      const s = step % 128;
+      const bar = Math.floor(s / 16);
+      const beatStep = s % 16;
+      const chord = CHESS_CHORDS[bar];
+      const bassRoot = CHESS_BASS[bar];
 
-        // Catchy bouncy lead (triangle + soft octave shimmer)
-        const leadNote = DAY_LEAD[s];
-        if (leadNote > 0) {
-          playVoice(ctx, time, midiToFreq(leadNote), 0.21, 'triangle', 0.26);
-          playVoice(ctx, time, midiToFreq(leadNote - 12), 0.16, 'sine', 0.10);
-        }
-        // Sparkly marimba arpeggio on 8th notes
-        if (beatStep % 2 === 0) {
-          const arpNote = chord[(beatStep / 2) % chord.length];
-          playVoice(ctx, time, midiToFreq(arpNote), 0.13, 'sine', 0.11);
-        }
-        // Warm bouncy bassline
-        if (beatStep === 0 || beatStep === 6 || beatStep === 8 || beatStep === 14) {
-          const bNote = (beatStep === 6 || beatStep === 14) ? bassRoot + 7 : (beatStep === 8 ? bassRoot + 12 : bassRoot);
-          playVoice(ctx, time, midiToFreq(bNote), 0.22, 'triangle', 0.28);
-        }
-        // Light upbeat drums
-        if (beatStep === 0 || beatStep === 8 || beatStep === 10) {
-          playVoice(ctx, time, 125, 0.12, 'sine', 0.36, 42);
-        }
-        if (beatStep === 4 || beatStep === 12) {
-          playNoiseHit(ctx, time, 0.09, 0.14, 1400);
-          playVoice(ctx, time, 210, 0.06, 'triangle', 0.12, 110);
-        }
-        if (beatStep % 2 === 0) {
-          playNoiseHit(ctx, time, 0.035, beatStep % 4 === 2 ? 0.075 : 0.035, 5800);
-        }
-      } else if (mood === 'chase') {
-        const s = step % 64;
-        const bar = Math.floor(s / 16);
-        const beatStep = s % 16;
-        const chord = CHASE_CHORDS[bar];
-        const bassRoot = CHASE_BASS[bar];
-
-        // Urgent synth lead
-        const leadNote = CHASE_LEAD[s];
-        if (leadNote > 0) {
-          playVoice(ctx, time, midiToFreq(leadNote), 0.16, 'sawtooth', 0.17);
-          playVoice(ctx, time, midiToFreq(leadNote), 0.17, 'triangle', 0.18);
-        }
-        // Driving 8th-note bassline
-        if (beatStep % 2 === 0) {
-          const bNote = (beatStep % 4 === 2) ? bassRoot + 12 : bassRoot;
-          playVoice(ctx, time, midiToFreq(bNote), 0.14, 'sawtooth', 0.20);
-        }
-        // Tension chord stabs
-        if (beatStep === 0 || beatStep === 6 || beatStep === 12) {
-          for (const cn of chord) playVoice(ctx, time, midiToFreq(cn), 0.14, 'triangle', 0.075);
-        }
-        // Energetic chase drums
-        if (beatStep === 0 || beatStep === 6 || beatStep === 8 || beatStep === 14) {
-          playVoice(ctx, time, 145, 0.11, 'sine', 0.42, 40);
-        }
-        if (beatStep === 4 || beatStep === 12) {
-          playNoiseHit(ctx, time, 0.10, 0.19, 1200);
-        }
-        playNoiseHit(ctx, time, 0.03, beatStep % 2 === 1 ? 0.07 : 0.035, 6500);
-      } else {
-        // Night Mystery (gentle celesta bells + deep pad bass)
-        const s = step % 64;
-        const bar = Math.floor(s / 16);
-        const beatStep = s % 16;
-        const chord = NIGHT_CHORDS[bar];
-        const bassRoot = NIGHT_BASS[bar];
-
-        const leadNote = NIGHT_LEAD[s];
-        if (leadNote > 0) {
-          playVoice(ctx, time, midiToFreq(leadNote), 0.55, 'sine', 0.20);
-          playVoice(ctx, time, midiToFreq(leadNote + 12), 0.30, 'sine', 0.06);
-        }
-        if (beatStep % 4 === 0) {
-          const arpNote = chord[(beatStep / 4) % chord.length];
-          playVoice(ctx, time, midiToFreq(arpNote), 0.45, 'triangle', 0.10);
-        }
-        if (beatStep === 0) {
-          playVoice(ctx, time, midiToFreq(bassRoot), 1.25, 'sine', 0.24);
-        }
+      // 1. Signature snappy plucked guitar/piano lead melody!
+      const leadNote = CHESS_LEAD[s];
+      if (leadNote > 0) {
+        playPluck(ctx, time, midiToFreq(leadNote), isChase ? 0.17 : 0.21, isChase ? 0.26 : 0.23, isChase ? 4200 : 3400);
+        // Subtle crisp piano top bell overtone
+        playVoice(ctx, time, midiToFreq(leadNote), 0.14, 'sine', 0.09);
       }
+
+      // 2. Bouncy off-beat guitar chord chops ("skank" rhythm on 2, 6, 10, 14!)
+      if (beatStep === 2 || beatStep === 6 || beatStep === 10 || beatStep === 14) {
+        chord.forEach((cn, idx) => {
+          playPluck(ctx, time + idx * 0.009, midiToFreq(cn), 0.12, 0.068, 2200);
+        });
+      }
+
+      // 3. Deep bouncy 808/sub bassline with playful octave jumps!
+      if (beatStep === 0 || beatStep === 6 || beatStep === 10 || (isChase && beatStep === 14)) {
+        const bNote = (beatStep === 10 || beatStep === 14) ? bassRoot + 12 : bassRoot;
+        playVoice(ctx, time, midiToFreq(bNote), 0.24, 'sine', 0.34);
+        playVoice(ctx, time, midiToFreq(bNote + 12), 0.16, 'triangle', 0.13);
+      }
+
+      // 4. Punchy bouncy dance drums (kick + crisp clap/rimshot + swinging hi-hats)
+      if (beatStep === 0 || beatStep === 6 || beatStep === 10 || (isChase && beatStep === 8)) {
+        playVoice(ctx, time, 140, 0.11, 'sine', isChase ? 0.44 : 0.38, 42);
+      }
+      if (beatStep === 4 || beatStep === 12) {
+        playNoiseHit(ctx, time, 0.085, isChase ? 0.20 : 0.15, 1500);
+        playVoice(ctx, time, 260, 0.045, 'triangle', 0.12, 130);
+      }
+      if (beatStep % 2 === 0 || beatStep === 15 || isChase) {
+        const hatVol = (beatStep % 4 === 2) ? 0.085 : 0.04;
+        playNoiseHit(ctx, time, 0.032, hatVol, 6200);
+      }
+
       step++;
     }
 
     function stepDurSeconds() {
-      const bpm = currentMood === 'chase' ? 156 : (currentMood === 'night' ? 92 : 126);
+      const bpm = currentMood === 'chase' ? 156 : 134;
       return 60 / bpm / 4; // sixteenth note
     }
 
