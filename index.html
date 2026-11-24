@@ -839,9 +839,6 @@
         <span class="biome-dot" id="biome-dot"></span>
         <span id="biome-display">🏠 Home Base (Safe Zone)</span>
       </div>
-      <div class="pill time-pill" id="time-pill">
-        <span id="time-display">☀️ Day Time • 5:00</span>
-      </div>
       <div class="pill" style="font-size:15px;">
         <span>🥚</span>
         <span id="collection-display">Collection: 0 / 18</span>
@@ -1260,7 +1257,6 @@
 
     function getMood() {
       if (typeof isBeingChased === 'function' && isBeingChased()) return 'chase';
-      if (typeof state !== 'undefined' && state.isNight) return 'night';
       return 'day';
     }
 
@@ -1477,6 +1473,20 @@
     { id: 'lava',    name: 'Lava',    emoji: '🔥', mult: 7,  chaseMult: 1.30, weightSlow: 0.77, color: '#f97316', hex: 0xff4500, desc: 'Cracked Molten Magma (7x)' },
     { id: 'rainbow', name: 'Rainbow', emoji: '🌈', mult: 12, chaseMult: 1.41, weightSlow: 0.74, color: '#ec4899', hex: 0xf472b6, desc: 'Prismatic Rainbow Aura (12x)' },
     { id: 'galaxy',  name: 'Galaxy',  emoji: '🌌', mult: 25, chaseMult: 1.52, weightSlow: 0.70, color: '#a855f7', hex: 0xa855f7, desc: 'Cosmic Ringed Star Egg (25x)' }
+  ];
+
+  // 10 DIFFERENT SURPRISE THINGS THAT HATCH INSIDE EVERY EGG!
+  const SURPRISE_HATCHES = [
+    { id: 'robot',   name: 'Mini Robot',     emoji: '🤖', bonus: 0.20, color: '#38bdf8', hex: 0x38bdf8 },
+    { id: 'dragon',  name: 'Baby Dragon',    emoji: '🐉', bonus: 0.35, color: '#f97316', hex: 0xf97316 },
+    { id: 'unicorn', name: 'Mini Unicorn',   emoji: '🦄', bonus: 0.30, color: '#f472b6', hex: 0xf472b6 },
+    { id: 'alien',   name: 'Space Pet',      emoji: '👾', bonus: 0.25, color: '#84cc16', hex: 0x84cc16 },
+    { id: 'chest',   name: 'Treasure Chest', emoji: '💎', bonus: 0.40, color: '#facc15', hex: 0xfacc15 },
+    { id: 'ufo',     name: 'Mini UFO',       emoji: '🛸', bonus: 0.30, color: '#22d3ee', hex: 0x22d3ee },
+    { id: 'ghost',   name: 'Cute Ghost',     emoji: '👻', bonus: 0.15, color: '#e2e8f0', hex: 0xe2e8f0 },
+    { id: 'cat',     name: 'Golden Cat',     emoji: '🐱', bonus: 0.35, color: '#fbbf24', hex: 0xfbbf24 },
+    { id: 'slime',   name: 'Star Slime',     emoji: '🌟', bonus: 0.25, color: '#a855f7', hex: 0xa855f7 },
+    { id: 'crown',   name: 'Crown Relic',    emoji: '👑', bonus: 0.50, color: '#fde047', hex: 0xfde047 }
   ];
 
   const DIFFICULTIES = {
@@ -1705,7 +1715,9 @@
     for (const entry of state.pedestals) {
       if (entry && BIOMES[entry.biomeIdx]) {
         const eggType = EGG_TYPES[entry.eggTypeIdx] || EGG_TYPES[0];
-        total += BIOMES[entry.biomeIdx].income * eggType.mult;
+        const sp = SURPRISE_HATCHES[entry.surpriseIdx];
+        const spMult = sp ? (1 + sp.bonus) : 1;
+        total += BIOMES[entry.biomeIdx].income * eggType.mult * spMult;
       }
     }
     return Math.round(total * getIncomeMultiplier());
@@ -1752,13 +1764,16 @@
         }
       }
       if (Array.isArray(data.pedestals) && data.pedestals.length === 16) {
-        state.pedestals = data.pedestals.map(v => {
+        state.pedestals = data.pedestals.map((v, pIdx) => {
           if (typeof v === 'number' && v >= 0 && v < BIOMES.length) {
-            return { biomeIdx: v, eggTypeIdx: 0 };
+            return { biomeIdx: v, eggTypeIdx: 0, surpriseIdx: (v + pIdx) % SURPRISE_HATCHES.length };
           }
           if (v && typeof v.biomeIdx === 'number' && v.biomeIdx >= 0 && v.biomeIdx < BIOMES.length) {
             const eIdx = (typeof v.eggTypeIdx === 'number' && v.eggTypeIdx >= 0 && v.eggTypeIdx < EGG_TYPES.length) ? v.eggTypeIdx : 0;
-            return { biomeIdx: v.biomeIdx, eggTypeIdx: eIdx };
+            const sIdx = (typeof v.surpriseIdx === 'number' && v.surpriseIdx >= 0 && v.surpriseIdx < SURPRISE_HATCHES.length)
+              ? v.surpriseIdx
+              : (v.biomeIdx + eIdx + pIdx) % SURPRISE_HATCHES.length;
+            return { biomeIdx: v.biomeIdx, eggTypeIdx: eIdx, surpriseIdx: sIdx };
           }
           return null;
         });
@@ -2229,7 +2244,32 @@
     r.rotation.x = Math.PI / 2;
     r.position.y = 1.3;
     aura.add(r);
-    if (eggTypeIdx >= 4) {
+    if (eggTypeIdx === 1) {
+      // Orbiting gold coins!
+      for (let i = 0; i < 4; i++) {
+        const a = (i / 4) * Math.PI * 2;
+        const coin = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 0.08, 12), matStd(0xfacc15, { metalness: 0.9, roughness: 0.15, emissive: 0xca8a04, emissiveIntensity: 0.35 }));
+        coin.rotation.x = Math.PI / 2;
+        coin.position.set(Math.cos(a) * 2.2, 2.2 + (i % 2) * 0.4, Math.sin(a) * 2.2);
+        aura.add(coin);
+      }
+    } else if (eggTypeIdx === 2) {
+      // Orbiting crystal diamond shards!
+      for (let i = 0; i < 5; i++) {
+        const a = (i / 5) * Math.PI * 2;
+        const gem = new THREE.Mesh(new THREE.OctahedronGeometry(0.32, 0), new THREE.MeshBasicMaterial({ color: 0x7dd3fc }));
+        gem.position.set(Math.cos(a) * 2.35, 2.1 + (i % 2) * 0.6, Math.sin(a) * 2.35);
+        aura.add(gem);
+      }
+    } else if (eggTypeIdx === 3) {
+      // Orbiting blazing volcanic fireballs!
+      for (let i = 0; i < 4; i++) {
+        const a = (i / 4) * Math.PI * 2;
+        const fb = new THREE.Mesh(new THREE.SphereGeometry(0.28, 8, 8), new THREE.MeshBasicMaterial({ color: i % 2 === 0 ? 0xff4500 : 0xfde047 }));
+        fb.position.set(Math.cos(a) * 2.3, 1.8 + (i % 2) * 0.7, Math.sin(a) * 2.3);
+        aura.add(fb);
+      }
+    } else if (eggTypeIdx >= 4) {
       const r2 = new THREE.Mesh(
         new THREE.TorusGeometry(2.6, 0.09, 8, 28),
         new THREE.MeshBasicMaterial({ color: eggTypeIdx === 5 ? 0x38bdf8 : 0xfde047, transparent: true, opacity: 0.75 })
@@ -2237,9 +2277,199 @@
       r2.rotation.x = 1.2;
       r2.position.y = 2.0;
       aura.add(r2);
+      if (eggTypeIdx === 5) {
+        // Orbiting Mini-Planet Buddy for Galaxy Hatches!
+        const miniPlanet = new THREE.Mesh(new THREE.SphereGeometry(0.38, 10, 10), new THREE.MeshStandardMaterial({ map: GALAXY_TEX, emissive: 0x7c3aed, emissiveIntensity: 0.6 }));
+        const miniRing = new THREE.Mesh(new THREE.TorusGeometry(0.58, 0.05, 6, 16), new THREE.MeshBasicMaterial({ color: 0x38bdf8 }));
+        miniRing.rotation.x = 1.1;
+        miniPlanet.add(miniRing);
+        miniPlanet.position.set(2.55, 2.7, 0);
+        aura.add(miniPlanet);
+      }
     }
     group.add(aura);
     return aura;
+  }
+
+  // Transform hatched monster visually based on Egg Type (Golden, Diamond, Lava, Rainbow, Galaxy!)
+  function applyEggVariantToMesh(mesh, eggTypeIdx) {
+    if (eggTypeIdx <= 0) return;
+    const rainbowMats = [];
+    let variantMat = null;
+    if (eggTypeIdx === 1) {
+      variantMat = matStd(0xfacc15, { metalness: 0.88, roughness: 0.16, emissive: 0x854d0e, emissiveIntensity: 0.28 });
+    } else if (eggTypeIdx === 2) {
+      variantMat = matStd(0x38bdf8, { metalness: 0.35, roughness: 0.08, emissive: 0x0284c7, emissiveIntensity: 0.45, transparent: true, opacity: 0.86 });
+    } else if (eggTypeIdx === 3) {
+      variantMat = new THREE.MeshStandardMaterial({ map: LAVA_TEX, roughness: 0.3, metalness: 0.2, emissive: 0xdc2626, emissiveIntensity: 0.55 });
+    } else if (eggTypeIdx === 4) {
+      variantMat = new THREE.MeshStandardMaterial({ color: 0xf472b6, roughness: 0.25, metalness: 0.35, emissive: 0xec4899, emissiveIntensity: 0.45 });
+      rainbowMats.push(variantMat);
+    } else if (eggTypeIdx === 5) {
+      variantMat = new THREE.MeshStandardMaterial({ map: GALAXY_TEX, roughness: 0.25, metalness: 0.4, emissive: 0x6d28d9, emissiveIntensity: 0.6 });
+    }
+
+    if (variantMat) {
+      let meshIdx = 0;
+      mesh.traverse(obj => {
+        if (obj.isMesh && obj.geometry) {
+          // Keep tiny eye spheres distinct so creatures keep their cute/fierce eyes!
+          const isTinyEye = obj.geometry.type === 'SphereGeometry' && obj.geometry.parameters && obj.geometry.parameters.radius <= 0.18;
+          if (!isTinyEye) {
+            if (eggTypeIdx === 4) {
+              const rm = variantMat.clone();
+              rm.userData.hueOffset = (meshIdx * 0.13) % 1;
+              rainbowMats.push(rm);
+              obj.material = rm;
+            } else {
+              obj.material = variantMat;
+            }
+          }
+          meshIdx++;
+        }
+      });
+    }
+
+    // Add signature accessories on top for each Egg Type!
+    const topBox = new THREE.Box3().setFromObject(mesh);
+    const topY = Math.max(2.6, topBox.max.y + 0.15);
+    if (eggTypeIdx === 1) {
+      // Golden Crown!
+      const crown = new THREE.Mesh(new THREE.CylinderGeometry(0.52, 0.44, 0.38, 8), matStd(0xfde047, { metalness: 0.9, roughness: 0.15, emissive: 0xb45309, emissiveIntensity: 0.4 }));
+      crown.position.set(0, topY, 0);
+      mesh.add(crown);
+    } else if (eggTypeIdx === 2) {
+      // Diamond Crystal Spikes!
+      for (let i = -1; i <= 1; i++) {
+        const sp = new THREE.Mesh(new THREE.OctahedronGeometry(0.32, 0), new THREE.MeshBasicMaterial({ color: 0xbae6fd }));
+        sp.scale.set(0.7, 1.8, 0.7);
+        sp.position.set(i * 0.35, topY + (i === 0 ? 0.2 : 0), 0);
+        mesh.add(sp);
+      }
+    } else if (eggTypeIdx === 3) {
+      // Blazing Fiery Horns!
+      const hornMat = new THREE.MeshBasicMaterial({ color: 0xff4500 });
+      const hl = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.85, 6), hornMat);
+      hl.position.set(-0.42, topY + 0.15, 0.1); hl.rotation.z = 0.38;
+      const hr = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.85, 6), hornMat);
+      hr.position.set(0.42, topY + 0.15, 0.1); hr.rotation.z = -0.38;
+      mesh.add(hl, hr);
+    } else if (eggTypeIdx === 4) {
+      // Rainbow Unicorn Horn + Prism Halo!
+      const horn = new THREE.Mesh(new THREE.ConeGeometry(0.15, 0.95, 8), new THREE.MeshBasicMaterial({ color: 0xfde047 }));
+      horn.position.set(0, topY + 0.3, 0.25);
+      horn.rotation.x = 0.25;
+      mesh.add(horn);
+      mesh.userData.rainbowMats = rainbowMats;
+    } else if (eggTypeIdx === 5) {
+      // Cosmic Galaxy Halo!
+      const halo = new THREE.Mesh(new THREE.TorusGeometry(0.85, 0.1, 8, 24), new THREE.MeshBasicMaterial({ color: 0x38bdf8 }));
+      halo.rotation.x = Math.PI / 2;
+      halo.position.set(0, topY + 0.35, 0);
+      mesh.add(halo);
+    }
+  }
+
+  // Build 10 totally different 3D Surprise Things that pop out inside every Egg!
+  function createSurprisePetMesh(surpriseIdx) {
+    const sp = SURPRISE_HATCHES[surpriseIdx] || SURPRISE_HATCHES[0];
+    const g = new THREE.Group();
+    const id = sp.id;
+    const mBasic = (c) => new THREE.MeshBasicMaterial({ color: c });
+
+    if (id === 'robot') {
+      // 🤖 Mini Robot
+      const metal = matStd(0x94a3b8, { metalness: 0.75, roughness: 0.25 });
+      const body = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.85, 0.65), metal); body.position.y = 0.7;
+      const head = new THREE.Mesh(new THREE.BoxGeometry(0.68, 0.55, 0.58), metal); head.position.y = 1.45;
+      const visor = new THREE.Mesh(new THREE.BoxGeometry(0.54, 0.18, 0.1), mBasic(0x38bdf8)); visor.position.set(0, 1.48, 0.28);
+      const ant = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.35, 6), metal); ant.position.y = 1.9;
+      const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), mBasic(0xfacc15)); bulb.position.y = 2.1;
+      g.add(body, head, visor, ant, bulb);
+    } else if (id === 'dragon') {
+      // 🐉 Baby Dragon
+      const red = matStd(0xea580c, { emissive: 0x7c2d12, emissiveIntensity: 0.35 });
+      const body = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.65, 1.0), red); body.position.y = 0.75;
+      const head = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.5, 0.62), red); head.position.set(0, 1.25, 0.55);
+      const wl = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.08, 0.5), mBasic(0xfacc15)); wl.position.set(-0.68, 1.0, -0.05); wl.rotation.z = 0.35;
+      const wr = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.08, 0.5), mBasic(0xfacc15)); wr.position.set(0.68, 1.0, -0.05); wr.rotation.z = -0.35;
+      const flame = new THREE.Mesh(new THREE.ConeGeometry(0.14, 0.42, 6), mBasic(0xfde047)); flame.rotation.x = Math.PI / 2; flame.position.set(0, 1.18, 1.05);
+      g.add(body, head, wl, wr, flame);
+    } else if (id === 'unicorn') {
+      // 🦄 Mini Unicorn
+      const white = matLambert(0xffffff);
+      const pink = matLambert(0xf472b6);
+      const body = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.6, 1.05), white); body.position.y = 0.75;
+      const head = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.48, 0.62), white); head.position.set(0, 1.32, 0.5);
+      const mane = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.45, 0.55), pink); mane.position.set(0, 1.42, 0.25);
+      const horn = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.52, 8), mBasic(0xfacc15)); horn.position.set(0, 1.78, 0.68); horn.rotation.x = 0.3;
+      g.add(body, head, mane, horn);
+    } else if (id === 'alien') {
+      // 👾 Space Alien Pet
+      const green = matStd(0x84cc16, { emissive: 0x365314, emissiveIntensity: 0.35 });
+      const body = new THREE.Mesh(new THREE.SphereGeometry(0.55, 10, 10), green); body.position.y = 0.85;
+      for (let i = -1; i <= 1; i++) {
+        const eye = new THREE.Mesh(new THREE.SphereGeometry(0.11, 8, 8), mBasic(0x111111));
+        eye.position.set(i * 0.2, 1.0 + (i === 0 ? 0.1 : 0), 0.48);
+        g.add(eye);
+      }
+      const a1 = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.4, 6), green); a1.position.set(-0.22, 1.5, 0); a1.rotation.z = 0.3;
+      const a2 = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.4, 6), green); a2.position.set(0.22, 1.5, 0); a2.rotation.z = -0.3;
+      g.add(body, a1, a2);
+    } else if (id === 'chest') {
+      // 💎 Treasure Chest
+      const wood = matLambert(0x92400e);
+      const gold = matStd(0xfacc15, { metalness: 0.85, roughness: 0.2 });
+      const boxM = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.65, 0.72), wood); boxM.position.y = 0.55;
+      const trim = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.14, 0.76), gold); trim.position.y = 0.82;
+      const pile = new THREE.Mesh(new THREE.SphereGeometry(0.4, 8, 8), gold); pile.scale.set(1.2, 0.55, 0.8); pile.position.y = 0.95;
+      const gem = new THREE.Mesh(new THREE.OctahedronGeometry(0.26, 0), mBasic(0x38bdf8)); gem.position.y = 1.25;
+      g.add(boxM, trim, pile, gem);
+    } else if (id === 'ufo') {
+      // 🛸 Mini UFO
+      const saucer = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.92, 0.28, 14), matStd(0x94a3b8, { metalness: 0.8 })); saucer.position.y = 1.0;
+      const dome = new THREE.Mesh(new THREE.SphereGeometry(0.45, 10, 8), mBasic(0x22d3ee)); dome.position.y = 1.18;
+      const beam = new THREE.Mesh(new THREE.ConeGeometry(0.6, 0.9, 10), new THREE.MeshBasicMaterial({ color: 0x84cc16, transparent: true, opacity: 0.35 })); beam.position.y = 0.45;
+      g.add(saucer, dome, beam);
+    } else if (id === 'ghost') {
+      // 👻 Cute Ghost
+      const gh = new THREE.MeshStandardMaterial({ color: 0xf8fafc, emissive: 0xcbd5e1, emissiveIntensity: 0.35, transparent: true, opacity: 0.9 });
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.52, 10, 10), gh); head.position.y = 1.15;
+      const skirt = new THREE.Mesh(new THREE.CylinderGeometry(0.52, 0.62, 0.75, 10), gh); skirt.position.y = 0.75;
+      const el = new THREE.Mesh(new THREE.SphereGeometry(0.09, 8, 8), mBasic(0x111111)); el.position.set(-0.18, 1.22, 0.46);
+      const er = new THREE.Mesh(new THREE.SphereGeometry(0.09, 8, 8), mBasic(0x111111)); er.position.set(0.18, 1.22, 0.46);
+      g.add(head, skirt, el, er);
+    } else if (id === 'cat') {
+      // 🐱 Golden Lucky Cat
+      const gold = matStd(0xfbbf24, { metalness: 0.75, roughness: 0.22 });
+      const body = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.68, 0.75), gold); body.position.y = 0.65;
+      const head = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.56, 0.58), gold); head.position.set(0, 1.25, 0.15);
+      const earL = new THREE.Mesh(new THREE.ConeGeometry(0.14, 0.3, 4), gold); earL.position.set(-0.22, 1.65, 0.15);
+      const earR = new THREE.Mesh(new THREE.ConeGeometry(0.14, 0.3, 4), gold); earR.position.set(0.22, 1.65, 0.15);
+      const paw = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.48, 0.2), gold); paw.position.set(0.4, 1.05, 0.28); paw.rotation.z = -0.25;
+      g.add(body, head, earL, earR, paw);
+    } else if (id === 'slime') {
+      // 🌟 Star Slime
+      const sl = matStd(0xa855f7, { emissive: 0x7e22ce, emissiveIntensity: 0.45, transparent: true, opacity: 0.88 });
+      const blob = new THREE.Mesh(new THREE.SphereGeometry(0.62, 12, 10), sl); blob.scale.set(1.15, 0.82, 1.15); blob.position.y = 0.65;
+      const star = new THREE.Mesh(new THREE.OctahedronGeometry(0.28, 0), mBasic(0xfde047)); star.position.y = 1.45;
+      const el = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), mBasic(0xffffff)); el.position.set(-0.2, 0.78, 0.58);
+      const er = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), mBasic(0xffffff)); er.position.set(0.2, 0.78, 0.58);
+      g.add(blob, star, el, er);
+    } else {
+      // 👑 Floating Crown Relic
+      const gold = matStd(0xfacc15, { metalness: 0.9, roughness: 0.15, emissive: 0xb45309, emissiveIntensity: 0.4 });
+      const band = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.5, 0.42, 10), gold); band.position.y = 0.95;
+      for (let i = 0; i < 5; i++) {
+        const a = (i / 5) * Math.PI * 2;
+        const p = new THREE.Mesh(new THREE.ConeGeometry(0.14, 0.42, 6), gold);
+        p.position.set(Math.cos(a) * 0.48, 1.32, Math.sin(a) * 0.48);
+        g.add(p);
+      }
+      const gem = new THREE.Mesh(new THREE.OctahedronGeometry(0.3, 0), mBasic(0x34d399)); gem.position.y = 1.45;
+      g.add(band, gem);
+    }
+    return g;
   }
 
   function createMonsterMesh(biomeId) {
@@ -3068,6 +3298,7 @@
       ring,
       label,
       animalMesh: null,
+      surpriseMesh: null,
       auraMesh: null
     });
   });
@@ -3079,6 +3310,10 @@
     if (ped.animalMesh) {
       ped.group.remove(ped.animalMesh);
       ped.animalMesh = null;
+    }
+    if (ped.surpriseMesh) {
+      ped.group.remove(ped.surpriseMesh);
+      ped.surpriseMesh = null;
     }
     if (ped.auraMesh) {
       ped.group.remove(ped.auraMesh);
@@ -3096,9 +3331,11 @@
     } else {
       const b = BIOMES[entry.biomeIdx];
       const eggType = EGG_TYPES[entry.eggTypeIdx] || EGG_TYPES[0];
+      const sp = SURPRISE_HATCHES[entry.surpriseIdx] || SURPRISE_HATCHES[0];
       const accentColor = entry.eggTypeIdx > 0 ? eggType.color : b.uiColor;
       ped.ring.material.color.set(accentColor);
       const mesh = createMonsterMesh(b.id);
+      applyEggVariantToMesh(mesh, entry.eggTypeIdx);
       const fitScale = Math.min(1.05, 1.15 / Math.max(0.95, b.scale * 0.85));
       mesh.scale.setScalar(fitScale);
       mesh.position.set(0, 0.58, 0);
@@ -3108,12 +3345,19 @@
       ped.group.add(mesh);
       ped.animalMesh = mesh;
 
+      // Place the unique Surprise Thing hatched inside the egg right beside the monster!
+      const sMesh = createSurprisePetMesh(entry.surpriseIdx ?? 0);
+      sMesh.position.set(ped.pos.x < 0 ? 1.55 : -1.55, 0.65, 1.55);
+      ped.group.add(sMesh);
+      ped.surpriseMesh = sMesh;
+
       ped.auraMesh = addPedestalEggAura(ped.group, entry.eggTypeIdx);
 
-      const earned = Math.round(b.income * eggType.mult * getIncomeMultiplier());
+      const spMult = 1 + sp.bonus;
+      const earned = Math.round(b.income * eggType.mult * spMult * getIncomeMultiplier());
       const prefix = entry.eggTypeIdx > 0 ? `${eggType.emoji} ${eggType.name} ` : `${b.emoji} `;
-      ped.label = createFloatingLabelSprite(`${prefix}${b.monsterName}`, `${formatMoney(earned)}/s`, accentColor);
-      ped.label.position.set(0, 5.4, 0);
+      ped.label = createFloatingLabelSprite(`${prefix}${b.monsterName} + ${sp.emoji}`, `${sp.name} • ${formatMoney(earned)}/s`, accentColor);
+      ped.label.position.set(0, 5.5, 0);
       ped.group.add(ped.label);
     }
   }
@@ -3750,12 +3994,6 @@
   }
 
   function stealEgg(biomeIdx, eggTypeIdx) {
-    if (state.isNight) {
-      SFX.locked();
-      flashScreen('rgba(99, 102, 241, 0.28)');
-      showToast(`🌙 NIGHT TIME! Eggs are LOCKED for ${Math.ceil(state.phaseTimer)}s — wait for Sunrise!`, '#818cf8');
-      return;
-    }
     if (state.carryingEgg !== null) {
       showToast('🥚 Bring your current egg back to Base first!', '#f59e0b');
       return;
@@ -3795,12 +4033,14 @@
     const { biomeIdx: bIdx, eggTypeIdx } = state.carryingEgg;
     const biome = BIOMES[bIdx];
     const et = EGG_TYPES[eggTypeIdx] || EGG_TYPES[0];
+    const surpriseIdx = Math.floor(Math.random() * SURPRISE_HATCHES.length);
+    const sp = SURPRISE_HATCHES[surpriseIdx];
 
-    state.pedestals[pedIdx] = { biomeIdx: bIdx, eggTypeIdx };
+    state.pedestals[pedIdx] = { biomeIdx: bIdx, eggTypeIdx, surpriseIdx };
     state.collected[biome.id] = true;
 
-    // Hatch reward bonus & Level XP multiplied by egg rarity!
-    const hatchBonus = Math.round(biome.income * et.mult * 8 * getIncomeMultiplier());
+    // Hatch reward bonus & Level XP multiplied by egg rarity + surprise bonus!
+    const hatchBonus = Math.round(biome.income * et.mult * (1 + sp.bonus) * 8 * getIncomeMultiplier());
     state.money += hatchBonus;
     const xpGain = Math.round((30 + bIdx * 20) * Math.sqrt(et.mult));
     addXp(xpGain);
@@ -3814,14 +4054,14 @@
     if (slot) {
       slot.available = true;
       slot.eggMesh.visible = true;
-      slot.beacon.visible = !state.isNight;
-      slot.lockDome.visible = state.isNight;
+      slot.beacon.visible = true;
+      slot.lockDome.visible = false;
     }
 
     setCarriedEgg(null);
     SFX.hatch();
     flashScreen('rgba(74, 222, 128, 0.32)');
-    showToast(`🎉 Hatched ${et.emoji} ${et.name} ${biome.monsterName}! +${formatMoney(hatchBonus)} Bonus!`, et.color);
+    showToast(`🎉 Hatched ${et.emoji} ${et.name} ${biome.monsterName} + ${sp.emoji} ${sp.name} (+${Math.round(sp.bonus * 100)}%)! +${formatMoney(hatchBonus)}!`, et.color);
     saveGame();
     updateHUD();
   }
@@ -4035,13 +4275,8 @@
     if (bestEgg) {
       const et = EGG_TYPES[bestEgg.eggTypeIdx];
       currentInteractAction = { type: 'steal', biomeIdx: bestEgg.biomeIdx, eggTypeIdx: bestEgg.eggTypeIdx };
-      if (state.isNight) {
-        promptEl.textContent = `🌙 EGGS LOCKED AT NIGHT! Wait ${Math.ceil(state.phaseTimer)}s for Sunrise`;
-        promptEl.className = 'night-locked-prompt';
-      } else {
-        promptEl.textContent = `${et.emoji} [E] STEAL ${et.name.toUpperCase()} ${bestEgg.biome.monsterName.toUpperCase()} EGG (${et.mult}x)!`;
-        promptEl.className = 'danger-prompt';
-      }
+      promptEl.textContent = `${et.emoji} [E] STEAL ${et.name.toUpperCase()} ${bestEgg.biome.monsterName.toUpperCase()} EGG (${et.mult}x)!`;
+      promptEl.className = 'danger-prompt';
       promptEl.style.display = 'block';
       return;
     }
@@ -4375,49 +4610,9 @@
     if (state.dashCooldown > 0) state.dashCooldown = Math.max(0, state.dashCooldown - dt);
     if (state.staminaExhaustedTimer > 0) state.staminaExhaustedTimer = Math.max(0, state.staminaExhaustedTimer - dt);
 
-    // -----------------------------------------------------------------------
-    // Day / Night Cycle (30-second Night Time: Eggs Locked!)
-    // -----------------------------------------------------------------------
-    if (state.started) {
-      state.phaseTimer -= dt;
-      if (state.phaseTimer <= 0) {
-        state.isNight = !state.isNight;
-        state.phaseTimer = state.isNight ? NIGHT_DURATION : DAY_DURATION;
-        if (state.isNight) {
-          SFX.nightfall();
-          flashScreen('rgba(30, 27, 75, 0.48)');
-          showToast(`🌙 NIGHT TIME (${NIGHT_DURATION}s)! All eggs are LOCKED until Sunrise!`, '#818cf8');
-        } else {
-          SFX.sunrise();
-          flashScreen('rgba(253, 224, 71, 0.28)');
-          showToast('☀️ SUNRISE! All eggs are UNLOCKED — go steal them!', '#facc15');
-        }
-      }
-    }
-    const targetNight = state.isNight ? 1 : 0;
-    state.nightBlend += (targetNight - state.nightBlend) * Math.min(1, dt * 2.2);
-
-    // Update Time-of-Day Pill, Night Banner & Night Vignette
-    const secsLeft = Math.max(0, Math.ceil(state.phaseTimer));
-    const minsLeft = Math.floor(secsLeft / 60);
-    const remSecs = secsLeft % 60;
-    const dayClockStr = minsLeft > 0 ? `${minsLeft}:${String(remSecs).padStart(2, '0')}` : `${remSecs}s`;
-    const timePill = document.getElementById('time-pill');
-    const timeDisplay = document.getElementById('time-display');
-    const nightBanner = document.getElementById('night-banner');
-    const nightVig = document.getElementById('night-vignette');
-    if (state.isNight) {
-      timePill.classList.add('night-mode');
-      timeDisplay.textContent = `🌙 Night Time • ${secsLeft}s (No Stealing!)`;
-      nightBanner.textContent = `🌙 NIGHT TIME (${secsLeft}s) — EGGS LOCKED! Cannot steal until Sunrise!`;
-      nightBanner.style.display = 'block';
-      nightVig.classList.add('active');
-    } else {
-      timePill.classList.remove('night-mode');
-      timeDisplay.textContent = `☀️ Day Time • ${dayClockStr}`;
-      nightBanner.style.display = 'none';
-      nightVig.classList.remove('active');
-    }
+    // Permanent bright Day Time (No Night Time!)
+    state.isNight = false;
+    state.nightBlend = 0;
 
     // -----------------------------------------------------------------------
     // Player Movement + Speed Treadmill Training
@@ -4619,34 +4814,20 @@
       targetFogColor.setHex(0xa5e4ff);
     } else {
       const b = BIOMES[bIdx];
-      biomeLabel.textContent = `${b.emoji} Biome ${b.num}/15: ${b.name}`;
+      biomeLabel.textContent = `${b.emoji} Biome ${b.num}/${BIOMES.length}: ${b.name}`;
       biomeDot.style.background = b.uiColor;
       targetSkyColor.setHex(b.skyColor);
       targetFogColor.setHex(b.fogColor);
     }
 
-    // Apply Night Time sky, fog, lighting, moon, stars & player lantern!
-    if (state.nightBlend > 0.001) {
-      targetSkyColor.lerp(NIGHT_SKY_COLOR, state.nightBlend * 0.9);
-      targetFogColor.lerp(NIGHT_FOG_COLOR, state.nightBlend * 0.86);
-    }
-    hemiLight.intensity = 0.95 - state.nightBlend * 0.62;
-    hemiLight.color.lerpColors(DAY_HEMI_COLOR, NIGHT_HEMI_COLOR, state.nightBlend);
-    dirLight.intensity = 0.90 - state.nightBlend * 0.62;
-    dirLight.color.lerpColors(DAY_DIR_COLOR, NIGHT_DIR_COLOR, state.nightBlend);
-    playerNightLight.intensity = state.nightBlend * 1.25;
-
-    nightSkyGroup.position.set(player.pos.x, 0, player.pos.z);
-    moonGroup.visible = state.nightBlend > 0.02;
-    if (moonGroup.visible) {
-      moonGroup.position.y = -25 + state.nightBlend * 98;
-      moonHalo.scale.setScalar(1 + Math.sin(elapsed * 2.0) * 0.05);
-    }
-    starField.visible = state.nightBlend > 0.02;
-    if (starField.visible) {
-      starMat.opacity = state.nightBlend * (0.78 + Math.sin(elapsed * 3.1) * 0.14);
-      starField.rotation.y = elapsed * 0.012;
-    }
+    // Permanent sunny Day lighting (no night!)
+    hemiLight.intensity = 0.95;
+    hemiLight.color.copy(DAY_HEMI_COLOR);
+    dirLight.intensity = 0.90;
+    dirLight.color.copy(DAY_DIR_COLOR);
+    playerNightLight.intensity = 0;
+    moonGroup.visible = false;
+    starField.visible = false;
 
     // Subtle lightning flash in Storm Land!
     if (bIdx === 7 && Math.random() < 0.008) {
@@ -4656,11 +4837,22 @@
     }
     scene.fog.color.lerp(targetFogColor, dt * 3.5);
 
-    // Update placed animals & auras in base
+    // Update placed animals, surprise egg pets, rainbow animations & auras in base
     if (player.pos.z > -80) {
       for (const ped of pedestalObjects) {
         if (ped.animalMesh) {
           animateMonster(ped.animalMesh, elapsed + ped.idx * 0.5, 0.55);
+          if (ped.animalMesh.userData.rainbowMats) {
+            for (const rm of ped.animalMesh.userData.rainbowMats) {
+              const hue = (elapsed * 0.45 + (rm.userData.hueOffset || 0)) % 1;
+              rm.color.setHSL(hue, 0.92, 0.58);
+              rm.emissive.setHSL(hue, 0.9, 0.38);
+            }
+          }
+        }
+        if (ped.surpriseMesh) {
+          ped.surpriseMesh.position.y = 0.65 + Math.sin(elapsed * 3.2 + ped.idx * 1.1) * 0.22;
+          ped.surpriseMesh.rotation.y = elapsed * 1.5 + ped.idx;
         }
         if (ped.auraMesh) {
           ped.auraMesh.rotation.y = elapsed * 1.4;
