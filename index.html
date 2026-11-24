@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Steal An Egg! - 18 Biomes 3D Adventure</title>
+<title>Steal An Egg! - 21 Biomes 3D Adventure</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
@@ -272,6 +272,8 @@
   .btn-music.muted { background: linear-gradient(180deg, #475569, #334155); opacity: 0.85; }
   .btn-sound  { background: linear-gradient(180deg, #475569, #334155); }
   .btn-owner  { background: linear-gradient(180deg, #facc15, #ea580c); border-color: #fef08a; }
+  .btn-slow   { background: linear-gradient(180deg, #0f766e, #115e59); border-color: rgba(153,246,228,0.45); }
+  .btn-slow.active { background: linear-gradient(180deg, #2dd4bf, #0d9488); border-color: #ccfbf1; box-shadow: 0 5px 0 rgba(0,0,0,0.35), 0 0 18px rgba(45, 212, 191, 0.55); }
   .btn-diff   { background: linear-gradient(180deg, #ea580c, #9a3412); border-color: #fed7aa; }
   .btn-diff.diff-nightmare  { background: linear-gradient(180deg, #dc2626, #7f1d1d); border-color: #fca5a5; }
   .btn-diff.diff-impossible { background: linear-gradient(180deg, #9333ea, #4c1d95); border-color: #e9d5ff; }
@@ -841,7 +843,7 @@
       </div>
       <div class="pill" style="font-size:15px;">
         <span>🥚</span>
-        <span id="collection-display">Collection: 0 / 18</span>
+        <span id="collection-display">Collection: 0 / 21</span>
         <span style="color:#94a3b8;">|</span>
         <span id="base-slots-display">Base: 0 / 16</span>
       </div>
@@ -857,6 +859,7 @@
     <div class="hud-actions">
       <button class="btn btn-diff" id="diff-btn" title="Switch Difficulty in Home Base">🔥 Hard</button>
       <button class="btn btn-owner" id="owner-speed-btn" style="display:none;">👑 Max Speed: OFF</button>
+      <button class="btn btn-slow" id="slow-mode-btn" title="Toggle Slow Mode (C) — Move slowly for easy control">🐢 Slow Mode: OFF</button>
       <button class="btn btn-shop" id="open-shop-btn">🛒 Shop (B)</button>
       <button class="btn btn-index" id="open-index-btn">📖 Index (I)</button>
       <button class="btn btn-base" id="return-base-btn">🏠 Base (R)</button>
@@ -876,6 +879,7 @@
         <kbd>Space</kbd> Jump &nbsp;|&nbsp;
         <kbd>Q</kbd> Dash<br>
         <kbd>E</kbd> Steal / Place Egg &nbsp;|&nbsp;
+        <kbd>C</kbd> Slow Mode &nbsp;|&nbsp;
         <b>Click or Drag</b> Mouse to Look &nbsp;|&nbsp;
         <kbd>Esc</kbd> Unlock Mouse
       </div>
@@ -898,8 +902,8 @@
           </div>
           <div class="road-labels">
             <span>🏠 Base</span>
-            <span>🐔 Easy → 🌋 Volcano → 🌌 Cosmic → 🦁 Enchanted</span>
-            <span>👽 Alien</span>
+            <span>🐔 Easy → 🌋 Volcano → 👑 Kingdoms → 🚀 Space → 💎 Limited</span>
+            <span>🌈 Exotic</span>
           </div>
         </div>
       </div>
@@ -917,13 +921,13 @@
   <div class="start-card">
     <div class="start-title">🥚 STEAL AN EGG!</div>
     <p class="start-sub">
-      Build your animal sanctuary, venture straight ahead through <b>18 wild biomes</b>, steal eggs from legendary monsters, and <b>OUTRUN THEM</b> back to your Safe Zone!
+      Build your animal sanctuary, venture straight ahead through <b>21 wild biomes</b>, steal eggs from legendary monsters, and <b>OUTRUN THEM</b> back to your Safe Zone!
     </p>
     <div class="start-steps">
       <div class="step-box">
         <span class="emoji">🏃</span>
-        <b>1. Explore 18 Biomes</b><br>
-        Easy, River, Jungle, Volcano, Alien Planet... all the way to Royal, Roy God &amp; Henry Kingdoms!
+        <b>1. Explore 21 Biomes</b><br>
+        Easy, Volcano, Kingdoms... all the way to Space, Limited &amp; Exotic!
       </div>
       <div class="step-box">
         <span class="emoji">🥚</span>
@@ -976,13 +980,13 @@
 <div class="modal-backdrop" id="index-modal">
   <div class="modal-box index-box">
     <div class="modal-header">
-      <h2>📖 18 Biomes & 6 Egg Types Index</h2>
+      <h2>📖 21 Biomes & 6 Egg Types Index</h2>
       <button class="close-btn" id="close-index-btn">✕</button>
     </div>
     <div class="egg-legend" id="egg-legend"></div>
     <div class="modal-body index-grid" id="index-grid"></div>
     <div class="modal-footer">
-      <span id="index-summary">Collected 0 / 18 Monsters</span>
+      <span id="index-summary">Collected 0 / 21 Monsters</span>
       <span>Place any stolen egg on a pedestal in your Base!</span>
     </div>
   </div>
@@ -1127,6 +1131,27 @@
       uiColor: '#10b981', eggPrimary: 0x10b981, eggSecondary: 0xfde047,
       chaseSpeed: 880.0, income: Infinity, reqSpeed: 1000, scale: 1.75,
       desc: 'Requires 1,000 Speed! The ultimate supreme empire of King Henry (gives INF 💰/s)!'
+    },
+    {
+      id: 'space', num: 19, name: 'Space', monsterName: 'Astro Titan', emoji: '🚀',
+      groundColor: 0x0b1026, accentColor: 0x38bdf8, skyColor: 0x020617, fogColor: 0x0f172a,
+      uiColor: '#60a5fa', eggPrimary: 0x0f172a, eggSecondary: 0x38bdf8,
+      chaseSpeed: 185.0, income: 100000000, scale: 1.65,
+      desc: 'Zero-gravity outer space launchpad patrolled by the jetpack-powered Astro Titan!'
+    },
+    {
+      id: 'limited', num: 20, name: 'Limited', monsterName: 'Limited Phantom', emoji: '💎',
+      groundColor: 0x140b18, accentColor: 0xf43f5e, skyColor: 0x1a0612, fogColor: 0x3b0a28,
+      uiColor: '#fb7185', eggPrimary: 0x18181b, eggSecondary: 0xf43f5e,
+      chaseSpeed: 215.0, income: 500000000, scale: 1.72,
+      desc: 'Exclusive black-and-rose-gold VIP vault guarded by the ultra-rare Limited Phantom!'
+    },
+    {
+      id: 'exotic', num: 21, name: 'Exotic', monsterName: 'Exotic Phoenix', emoji: '🌈',
+      groundColor: 0x0c2436, accentColor: 0xec4899, skyColor: 0x130738, fogColor: 0x2d1054,
+      uiColor: '#f472b6', eggPrimary: 0xec4899, eggSecondary: 0x2dd4bf,
+      chaseSpeed: 250.0, income: 2500000000, scale: 1.80,
+      desc: 'Dazzling prismatic paradise ruled by the mythical 4-winged Exotic Phoenix!'
     }
   ];
 
@@ -1556,6 +1581,7 @@
     trainedSpeed: 0,
     isOwner: false,
     ownerMaxSpeed: false,
+    slowMode: false,
     difficulty: 'hard',
     upgrades: { speed: 1, treadmill: 1, stamina: 1, jump: 1, shield: 0, income: 1 },
     pedestals: new Array(16).fill(null), // stores { biomeIdx, eggTypeIdx } or null
@@ -3018,6 +3044,148 @@
       limbs.push(ll, rl, la, ra);
       extras.push({ obj: auraRing, type: 'spin' });
     }
+    else if (biomeId === 'space') {
+      // 19. ASTRO TITAN (Armored Space Suit, Gold Reflective Visor, Twin Plasma Jetpack & Orbiting Star Ring!)
+      const suitWhite = matStd(0xe2e8f0, { metalness: 0.35, roughness: 0.25 });
+      const spaceBlue = matStd(0x1d4ed8, { metalness: 0.5, roughness: 0.25, emissive: 0x1e3a8a, emissiveIntensity: 0.35 });
+      const visorGold = matStd(0xfacc15, { metalness: 0.92, roughness: 0.1, emissive: 0xd97706, emissiveIntensity: 0.4 });
+      const plasmaCyan = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
+
+      const bodyG = new THREE.Group();
+      bodyG.position.y = 0.55;
+      bodyG.add(box(1.55, 1.85, 1.05, suitWhite, 0, 2.25, 0)); // space suit torso
+      bodyG.add(box(1.15, 0.72, 1.12, spaceBlue, 0, 2.38, 0)); // chest control pack
+      bodyG.add(sph(0.28, plasmaCyan, 0, 2.38, 0.58)); // plasma chest core
+      // Twin Jetpack Thrusters on back
+      bodyG.add(cyl(0.32, 0.36, 1.45, spaceBlue, -0.45, 2.35, -0.78));
+      bodyG.add(cyl(0.32, 0.36, 1.45, spaceBlue, 0.45, 2.35, -0.78));
+      bodyG.add(cone(0.28, 1.1, plasmaCyan, -0.45, 1.15, -0.78)); // plasma exhaust flames
+      bodyG.add(cone(0.28, 1.1, plasmaCyan, 0.45, 1.15, -0.78));
+      // Astronaut Helmet + Golden Visor + Antenna
+      bodyG.add(sph(0.78, suitWhite, 0, 3.85, 0));
+      bodyG.add(box(0.95, 0.56, 0.48, visorGold, 0, 3.88, 0.56));
+      bodyG.add(cyl(0.05, 0.05, 0.75, suitWhite, 0.58, 4.55, 0));
+      bodyG.add(sph(0.14, plasmaCyan, 0.58, 4.95, 0));
+      // Orbiting Planetary Ring!
+      const orbitRing = new THREE.Mesh(new THREE.TorusGeometry(1.75, 0.09, 8, 28), plasmaCyan);
+      orbitRing.rotation.x = Math.PI / 2.4;
+      orbitRing.position.set(0, 2.75, 0);
+      const miniMoon = sph(0.26, visorGold, 1.75, 0, 0);
+      orbitRing.add(miniMoon);
+      bodyG.add(orbitRing);
+      // Arms + Plasma Star-Lance
+      const la = box(0.46, 1.45, 0.46, suitWhite, -1.08, 2.15, 0.15);
+      const ra = box(0.46, 1.45, 0.46, suitWhite, 1.08, 2.15, 0.25);
+      const lance = cyl(0.11, 0.07, 2.8, plasmaCyan, 0, 0.35, 0.52);
+      lance.rotation.x = 0.4;
+      ra.add(lance);
+      const ll = box(0.52, 1.35, 0.54, spaceBlue, -0.42, 0.72, 0);
+      const rl = box(0.52, 1.35, 0.54, spaceBlue, 0.42, 0.72, 0);
+      bodyG.add(la, ra, ll, rl);
+      root.add(bodyG);
+      limbs.push(ll, rl, la, ra);
+      extras.push({ obj: bodyG, type: 'float' }, { obj: orbitRing, type: 'spin' });
+    }
+    else if (biomeId === 'limited') {
+      // 20. LIMITED PHANTOM (Midnight-Black & Rose-Gold Collector Titan with Holographic Diamond Crown & Twin Blades!)
+      const obsidian = matStd(0x18181b, { metalness: 0.75, roughness: 0.2, emissive: 0x3b0764, emissiveIntensity: 0.25 });
+      const roseGold = matStd(0xfda4af, { metalness: 0.9, roughness: 0.14, emissive: 0xbe123c, emissiveIntensity: 0.35 });
+      const vipGold = matStd(0xfacc15, { metalness: 0.9, roughness: 0.15, emissive: 0xb45309, emissiveIntensity: 0.35 });
+      const crimsonGem = new THREE.MeshBasicMaterial({ color: 0xf43f5e });
+
+      const bodyG = new THREE.Group();
+      bodyG.position.y = 0.6;
+      bodyG.add(box(1.55, 1.9, 1.02, obsidian, 0, 2.25, 0)); // sleek black collector armor
+      bodyG.add(box(1.64, 0.32, 1.08, roseGold, 0, 2.9, 0)); // rose-gold collar trim
+      bodyG.add(box(1.64, 0.32, 1.08, vipGold, 0, 1.5, 0)); // gold collector belt
+      const chestGem = new THREE.Mesh(new THREE.OctahedronGeometry(0.42, 0), crimsonGem);
+      chestGem.position.set(0, 2.35, 0.58);
+      bodyG.add(chestGem);
+      // Crystalline VIP Cape
+      bodyG.add(box(1.85, 2.65, 0.2, obsidian, 0, 1.95, -0.62));
+      bodyG.add(box(1.92, 0.26, 0.24, roseGold, 0, 0.68, -0.62));
+      // Masked Phantom Head + Glowing Eyes + Floating Diamond Crown
+      bodyG.add(box(0.95, 1.0, 0.95, obsidian, 0, 3.78, 0.04));
+      addEyes(bodyG, 3.86, 0.54, 0.24, 0.12, 0xf43f5e, true);
+      const crownGem = new THREE.Mesh(new THREE.OctahedronGeometry(0.46, 0), crimsonGem);
+      crownGem.position.set(0, 4.82, 0.04);
+      bodyG.add(crownGem);
+      // Twin Spinning Holographic Collector Rings
+      const ringA = new THREE.Mesh(new THREE.TorusGeometry(1.7, 0.1, 10, 28), vipGold);
+      ringA.position.set(0, 2.75, -0.78);
+      const ringB = new THREE.Mesh(new THREE.TorusGeometry(1.15, 0.08, 8, 24), crimsonGem);
+      ringB.rotation.x = Math.PI / 2;
+      ringB.position.set(0, 4.7, 0.04);
+      bodyG.add(ringA, ringB);
+      // Arms + Twin Rose-Gold Diamond Blades!
+      const la = box(0.48, 1.55, 0.48, obsidian, -1.12, 2.15, 0.2);
+      const ra = box(0.48, 1.55, 0.48, obsidian, 1.12, 2.15, 0.2);
+      const bladeL = box(0.22, 2.3, 0.1, crimsonGem, 0, 0.65, 0.48); bladeL.rotation.x = 0.5;
+      const bladeR = box(0.22, 2.3, 0.1, crimsonGem, 0, 0.65, 0.48); bladeR.rotation.x = 0.5;
+      la.add(bladeL); ra.add(bladeR);
+      const ll = box(0.52, 1.38, 0.52, obsidian, -0.42, 0.69, 0);
+      const rl = box(0.52, 1.38, 0.52, obsidian, 0.42, 0.69, 0);
+      bodyG.add(la, ra, ll, rl);
+      root.add(bodyG);
+      limbs.push(ll, rl, la, ra);
+      extras.push({ obj: bodyG, type: 'float' }, { obj: ringA, type: 'spin' }, { obj: ringB, type: 'spin' }, { obj: crownGem, type: 'spin' });
+    }
+    else if (biomeId === 'exotic') {
+      // 21. EXOTIC PHOENIX (Mythical Prismatic 4-Winged Rainbow Beast with Shimmering Crest & Prism Halo!)
+      const magenta = matStd(0xec4899, { metalness: 0.5, roughness: 0.2, emissive: 0xdb2777, emissiveIntensity: 0.55 });
+      const cyan = matStd(0x2dd4bf, { metalness: 0.5, roughness: 0.2, emissive: 0x0d9488, emissiveIntensity: 0.5 });
+      const sunGold = matStd(0xfacc15, { metalness: 0.85, roughness: 0.15, emissive: 0xd97706, emissiveIntensity: 0.5 });
+      const prismViolet = new THREE.MeshBasicMaterial({ color: 0xc084fc });
+      const prismCyan = new THREE.MeshBasicMaterial({ color: 0x22d3ee });
+
+      const bodyG = new THREE.Group();
+      bodyG.position.y = 0.85;
+      // Sleek Prismatic Phoenix Torso & Radiant Core
+      bodyG.add(sph(0.98, magenta, 0, 2.25, 0));
+      bodyG.add(cone(0.82, 1.85, cyan, 0, 1.1, 0));
+      bodyG.add(new THREE.Mesh(new THREE.OctahedronGeometry(0.45, 0), prismCyan));
+      bodyG.children[bodyG.children.length - 1].position.set(0, 2.3, 0.92);
+      // Crested Phoenix Head & Golden Beak
+      bodyG.add(sph(0.66, sunGold, 0, 3.65, 0.2));
+      const beak = cone(0.24, 0.72, magenta, 0, 3.58, 0.98);
+      beak.rotation.x = Math.PI / 2;
+      bodyG.add(beak);
+      addEyes(bodyG, 3.78, 0.74, 0.28, 0.12, 0x22d3ee, true);
+      // Triple Exotic Feather Crest!
+      bodyG.add(cone(0.16, 1.05, magenta, 0, 4.55, 0.12));
+      const crestL = cone(0.13, 0.85, cyan, -0.32, 4.4, 0.05); crestL.rotation.z = 0.35;
+      const crestR = cone(0.13, 0.85, cyan, 0.32, 4.4, 0.05); crestR.rotation.z = -0.35;
+      bodyG.add(crestL, crestR);
+      // 4 Giant Prismatic Wings!
+      const lw1 = box(3.0, 1.15, 0.16, magenta, -2.05, 2.85, -0.25);
+      const rw1 = box(3.0, 1.15, 0.16, magenta, 2.05, 2.85, -0.25);
+      const lw2 = box(2.4, 0.85, 0.14, cyan, -1.75, 1.75, -0.35);
+      const rw2 = box(2.4, 0.85, 0.14, cyan, 1.75, 1.75, -0.35);
+      bodyG.add(lw1, rw1, lw2, rw2);
+      // Exotic Flowing Rainbow Tail Plumes
+      const tailG = new THREE.Group();
+      tailG.position.set(0, 1.25, -0.85);
+      const t1 = cone(0.24, 2.4, sunGold, 0, -0.8, -0.4); t1.rotation.x = -0.65;
+      const t2 = cone(0.2, 2.1, magenta, -0.48, -0.7, -0.35); t2.rotation.x = -0.6; t2.rotation.z = -0.25;
+      const t3 = cone(0.2, 2.1, cyan, 0.48, -0.7, -0.35); t3.rotation.x = -0.6; t3.rotation.z = 0.25;
+      tailG.add(t1, t2, t3);
+      bodyG.add(tailG);
+      // Spinning Prismatic Rainbow Halo behind wings
+      const prismHalo = new THREE.Mesh(new THREE.TorusGeometry(1.95, 0.12, 10, 32), prismViolet);
+      prismHalo.position.set(0, 2.65, -0.65);
+      bodyG.add(prismHalo);
+
+      root.add(bodyG);
+      extras.push(
+        { obj: bodyG, type: 'float' },
+        { obj: prismHalo, type: 'spin' },
+        { obj: tailG, type: 'tail' },
+        { obj: lw1, type: 'wingL' },
+        { obj: rw1, type: 'wingR' },
+        { obj: lw2, type: 'wingL' },
+        { obj: rw2, type: 'wingR' }
+      );
+    }
 
     // Angry indicator sprite (hidden until chasing!)
     const angrySprite = createFloatingLabelSprite('💢 ANGRY!', 'CHASING YOU!', '#ef4444');
@@ -3105,7 +3273,7 @@
   addWall(-20, 0, 16, 2.4, 1.2, fenceMat);
   addWall(20, 0, 16, 2.4, 1.2, fenceMat);
 
-  const safeSignTex = createSignTexture('SAFE ZONE — MY ANIMAL BASE', '18 BIOMES STRAIGHT AHEAD ⬆', '#064e3b', '#34d399');
+  const safeSignTex = createSignTexture('SAFE ZONE — MY ANIMAL BASE', '21 BIOMES STRAIGHT AHEAD ⬆', '#064e3b', '#34d399');
   const safeBanner = new THREE.Mesh(
     new THREE.BoxGeometry(24, 4.2, 0.7),
     new THREE.MeshBasicMaterial({ map: safeSignTex })
@@ -3522,6 +3690,47 @@
         const gem = new THREE.Mesh(new THREE.OctahedronGeometry(1.4, 0), new THREE.MeshBasicMaterial({ color: 0x34d399 }));
         gem.position.set(px, 14.9, pz);
         group.add(tower, crownBase, gem);
+      } else if (id === 'space') {
+        // Alternate sleek space rockets & floating ringed mini-planets!
+        if (k % 2 === 0) {
+          const body = new THREE.Mesh(new THREE.CylinderGeometry(1.15, 1.35, 8.5, 12), matStd(0xe2e8f0, { metalness: 0.4, roughness: 0.25 }));
+          body.position.set(px, 5.2, pz);
+          const nose = new THREE.Mesh(new THREE.ConeGeometry(1.18, 3.2, 12), matStd(0xef4444, { roughness: 0.3 }));
+          nose.position.set(px, 11.0, pz);
+          const glow = new THREE.Mesh(new THREE.ConeGeometry(1.0, 2.4, 10), new THREE.MeshBasicMaterial({ color: 0x38bdf8 }));
+          glow.rotation.x = Math.PI;
+          glow.position.set(px, 0.9, pz);
+          group.add(body, nose, glow);
+        } else {
+          const planet = new THREE.Mesh(new THREE.SphereGeometry(2.1, 14, 12), matStd(0x3b82f6, { emissive: 0x1d4ed8, emissiveIntensity: 0.4 }));
+          planet.position.set(px, 7.2, pz);
+          const pRing = new THREE.Mesh(new THREE.TorusGeometry(3.3, 0.24, 8, 24), new THREE.MeshBasicMaterial({ color: 0x7dd3fc }));
+          pRing.rotation.x = Math.PI / 2.6;
+          pRing.position.set(px, 7.2, pz);
+          group.add(planet, pRing);
+        }
+      } else if (id === 'limited') {
+        // Exclusive VIP obsidian-and-gold vault pillars topped with glowing floating diamonds!
+        const plinth = new THREE.Mesh(new THREE.BoxGeometry(2.7, 8.5, 2.7), matStd(0x18181b, { metalness: 0.7, roughness: 0.2 }));
+        plinth.position.set(px, 4.25, pz);
+        const trim = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.7, 3.0), matStd(0xfacc15, { metalness: 0.9, roughness: 0.15 }));
+        trim.position.set(px, 8.6, pz);
+        const diamond = new THREE.Mesh(new THREE.OctahedronGeometry(1.7, 0), new THREE.MeshBasicMaterial({ color: 0xf43f5e }));
+        diamond.position.set(px, 11.6, pz);
+        const halo = new THREE.Mesh(new THREE.TorusGeometry(2.2, 0.14, 8, 20), new THREE.MeshBasicMaterial({ color: 0xfde047 }));
+        halo.rotation.x = Math.PI / 2;
+        halo.position.set(px, 11.6, pz);
+        group.add(plinth, trim, diamond, halo);
+      } else if (id === 'exotic') {
+        // Glowing neon prismatic crystal lotus towers!
+        const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 1.15, 9.5, 8), matStd(0x0d9488, { emissive: 0x14b8a6, emissiveIntensity: 0.45 }));
+        stem.position.set(px, 4.75, pz);
+        const blossom = new THREE.Mesh(new THREE.OctahedronGeometry(2.1, 0), new THREE.MeshBasicMaterial({ color: k % 2 === 0 ? 0xec4899 : 0x22d3ee }));
+        blossom.position.set(px, 10.9, pz);
+        const aura = new THREE.Mesh(new THREE.TorusGeometry(2.7, 0.18, 8, 22), new THREE.MeshBasicMaterial({ color: 0xfacc15 }));
+        aura.rotation.x = Math.PI / 2.4;
+        aura.position.set(px, 10.9, pz);
+        group.add(stem, blossom, aura);
       }
     }
 
@@ -3583,6 +3792,59 @@
       giantCrown.add(topGem);
       group.add(road, goldL, goldR, giantCrown);
     }
+    if (id === 'space') {
+      // Illuminated Starlight Launchpad Runway + Giant Ringed Planet overhead!
+      const runway = new THREE.Mesh(new THREE.BoxGeometry(10.5, 0.14, BIOME_LENGTH), matStd(0x1e293b, { metalness: 0.6, roughness: 0.3 }));
+      runway.position.set(0, 0.07, zMid);
+      const glowL = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.16, BIOME_LENGTH), new THREE.MeshBasicMaterial({ color: 0x38bdf8 }));
+      glowL.position.set(-5.4, 0.08, zMid);
+      const glowR = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.16, BIOME_LENGTH), new THREE.MeshBasicMaterial({ color: 0x38bdf8 }));
+      glowR.position.set(5.4, 0.08, zMid);
+      const giantPlanet = new THREE.Group();
+      giantPlanet.position.set(0, 23, zMid);
+      const sphere = new THREE.Mesh(new THREE.SphereGeometry(5.2, 18, 14), matStd(0x2563eb, { emissive: 0x1d4ed8, emissiveIntensity: 0.45 }));
+      const saturnRing = new THREE.Mesh(new THREE.TorusGeometry(9.2, 0.75, 10, 36), new THREE.MeshBasicMaterial({ color: 0x7dd3fc }));
+      saturnRing.rotation.x = Math.PI / 2.5;
+      giantPlanet.add(sphere, saturnRing);
+      group.add(runway, glowL, glowR, giantPlanet);
+    }
+    if (id === 'limited') {
+      // Exclusive VIP Rose-Gold Runway + Giant Floating Collector Diamond Emblem!
+      const vipRoad = new THREE.Mesh(new THREE.BoxGeometry(11.0, 0.14, BIOME_LENGTH), matStd(0x1f0b18, { metalness: 0.7, roughness: 0.25 }));
+      vipRoad.position.set(0, 0.07, zMid);
+      const trimL = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.16, BIOME_LENGTH), matStd(0xfacc15, { metalness: 0.9 }));
+      trimL.position.set(-5.7, 0.08, zMid);
+      const trimR = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.16, BIOME_LENGTH), matStd(0xfacc15, { metalness: 0.9 }));
+      trimR.position.set(5.7, 0.08, zMid);
+      const vaultCrest = new THREE.Group();
+      vaultCrest.position.set(0, 22, zMid);
+      const bigDiamond = new THREE.Mesh(new THREE.OctahedronGeometry(4.6, 0), new THREE.MeshBasicMaterial({ color: 0xf43f5e }));
+      const goldHalo = new THREE.Mesh(new THREE.TorusGeometry(8.5, 0.55, 10, 32), matStd(0xfacc15, { metalness: 0.9, emissive: 0xb45309, emissiveIntensity: 0.4 }));
+      const roseHalo = new THREE.Mesh(new THREE.TorusGeometry(6.4, 0.38, 10, 28), new THREE.MeshBasicMaterial({ color: 0xfda4af }));
+      roseHalo.rotation.y = Math.PI / 3;
+      vaultCrest.add(bigDiamond, goldHalo, roseHalo);
+      group.add(vipRoad, trimL, trimR, vaultCrest);
+    }
+    if (id === 'exotic') {
+      // Shimmering Rainbow Prism Road + Colossal Triple Rainbow Archway overhead!
+      const strip1 = new THREE.Mesh(new THREE.BoxGeometry(3.8, 0.15, BIOME_LENGTH), new THREE.MeshBasicMaterial({ color: 0xec4899 }));
+      strip1.position.set(-3.8, 0.08, zMid);
+      const strip2 = new THREE.Mesh(new THREE.BoxGeometry(3.8, 0.15, BIOME_LENGTH), new THREE.MeshBasicMaterial({ color: 0xfacc15 }));
+      strip2.position.set(0, 0.08, zMid);
+      const strip3 = new THREE.Mesh(new THREE.BoxGeometry(3.8, 0.15, BIOME_LENGTH), new THREE.MeshBasicMaterial({ color: 0x22d3ee }));
+      strip3.position.set(3.8, 0.08, zMid);
+      const archGroup = new THREE.Group();
+      archGroup.position.set(0, 1.5, zMid);
+      const archColors = [0xec4899, 0xfacc15, 0x22d3ee];
+      archColors.forEach((col, ci) => {
+        const arc = new THREE.Mesh(
+          new THREE.TorusGeometry(19 - ci * 1.4, 0.58, 10, 36, Math.PI),
+          new THREE.MeshBasicMaterial({ color: col })
+        );
+        archGroup.add(arc);
+      });
+      group.add(strip1, strip2, strip3, archGroup);
+    }
   }
 
   BIOMES.forEach((biome, idx) => {
@@ -3594,7 +3856,7 @@
     scene.add(bGroup);
 
     // Biome Ground Strip
-    const floorMat = biome.id === 'cosmic'
+    const floorMat = (biome.id === 'cosmic' || biome.id === 'space')
       ? new THREE.MeshStandardMaterial({ map: GALAXY_TEX, roughness: 0.8 })
       : matLambert(biome.groundColor);
     const floor = new THREE.Mesh(new THREE.BoxGeometry(ROAD_HALF_WIDTH * 2, 1, BIOME_LENGTH), floorMat);
@@ -3698,11 +3960,11 @@
     });
   });
 
-  // Back wall at the very end of Biome 18 (Henry Kingdom)
+  // Back wall at the very end of Biome 21 (Exotic)
   const endWallZ = -BIOMES.length * BIOME_LENGTH;
   const endWall = new THREE.Mesh(
     new THREE.BoxGeometry(ROAD_HALF_WIDTH * 2 + 5, 14, 2),
-    matStd(0x065f46, { emissive: 0x10b981, emissiveIntensity: 0.4 })
+    matStd(0x831843, { emissive: 0xec4899, emissiveIntensity: 0.45 })
   );
   endWall.position.set(0, 6, endWallZ - 1);
   scene.add(endWall);
@@ -3858,6 +4120,8 @@
       tryReturnToBase();
     } else if (code === 'KeyQ') {
       tryDash();
+    } else if (code === 'KeyC') {
+      toggleSlowMode();
     } else if (code === 'Space') {
       if (state.onTreadmill) {
         state.onTreadmill = false;
@@ -4409,10 +4673,15 @@
     const placedCount = state.pedestals.filter(v => v !== null).length;
     document.getElementById('base-slots-display').textContent = `Base: ${placedCount} / 16`;
     document.getElementById('shield-display').textContent = `🛡️ ${state.shieldsRemaining}`;
-    document.getElementById('speed-stat').textContent = Math.round(getPlayerSprintSpeed());
-    document.getElementById('trained-stat').textContent = (state.isOwner && state.ownerMaxSpeed)
-      ? '(👑 MAX)'
-      : `(+${state.trainedSpeed.toFixed(1)} gym)`;
+    const slowWalkSpeed = Math.min(14, getPlayerWalkSpeed() * 0.5);
+    document.getElementById('speed-stat').textContent = state.slowMode
+      ? Math.round(slowWalkSpeed * 1.4)
+      : Math.round(getPlayerSprintSpeed());
+    document.getElementById('trained-stat').textContent = state.slowMode
+      ? '(🐢 SLOW)'
+      : ((state.isOwner && state.ownerMaxSpeed)
+        ? '(👑 MAX)'
+        : `(+${state.trainedSpeed.toFixed(1)} gym)`);
 
     // Level & XP HUD (Max Level 20)
     const lvlEl = document.getElementById('level-display');
@@ -4444,6 +4713,13 @@
       ownerBtn.textContent = state.ownerMaxSpeed ? '👑 Max Speed: ON' : '👑 Max Speed: OFF';
     } else {
       ownerBtn.style.display = 'none';
+    }
+
+    // Slow Mode toggle button
+    const slowBtn = document.getElementById('slow-mode-btn');
+    if (slowBtn) {
+      slowBtn.textContent = state.slowMode ? '🐢 Slow Mode: ON' : '🐢 Slow Mode: OFF';
+      slowBtn.classList.toggle('active', state.slowMode);
     }
 
     updateHUDButtons();
@@ -4480,6 +4756,18 @@
     const nextIdx = (DIFF_ORDER.indexOf(state.difficulty) + 1) % DIFF_ORDER.length;
     setDifficulty(DIFF_ORDER[nextIdx]);
   });
+
+  function toggleSlowMode() {
+    state.slowMode = !state.slowMode;
+    updateHUD();
+    showToast(
+      state.slowMode
+        ? '🐢 Slow Mode ON — Moving slowly for easy control!'
+        : '⚡ Slow Mode OFF — Back to full speed!',
+      state.slowMode ? '#2dd4bf' : '#38bdf8'
+    );
+  }
+  document.getElementById('slow-mode-btn').addEventListener('click', toggleSlowMode);
 
   // Owner Max Speed button + secret Ctrl+Shift+K unlock
   document.getElementById('owner-speed-btn').addEventListener('click', () => {
@@ -4679,6 +4967,10 @@
 
         const wantsSprint = (keys['ShiftLeft'] || keys['ShiftRight']) && state.stamina > 1 && state.staminaExhaustedTimer <= 0;
         let speed = wantsSprint ? getPlayerSprintSpeed() : getPlayerWalkSpeed();
+        if (state.slowMode) {
+          const slowWalk = Math.min(14, getPlayerWalkSpeed() * 0.5);
+          speed = wantsSprint ? slowWalk * 1.4 : slowWalk;
+        }
         // Heavy egg penalty for normal players (rarer eggs are MUCH heavier!)
         if (state.carryingEgg && !(state.isOwner && state.ownerMaxSpeed)) {
           const et = EGG_TYPES[state.carryingEgg.eggTypeIdx] || EGG_TYPES[0];
@@ -4740,7 +5032,7 @@
     playerGroup.position.copy(player.pos);
 
     // Animate player limbs (extra fast sprint on treadmill!)
-    const walkFreq = onBeltRunning ? 22 : 14;
+    const walkFreq = onBeltRunning ? 22 : (state.slowMode ? 8 : 14);
     const walkAnim = moving ? Math.sin(elapsed * walkFreq) : 0;
     pLegL.rotation.x = walkAnim * 0.72;
     pLegR.rotation.x = -walkAnim * 0.72;
