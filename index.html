@@ -265,6 +265,7 @@
   .btn:disabled { opacity: 0.45; cursor: not-allowed; filter: grayscale(0.5); }
 
   .btn-shop   { background: linear-gradient(180deg, #f59e0b, #d97706); }
+  .btn-avatar { background: linear-gradient(180deg, #06b6d4, #0284c7); border-color: #bae6fd; }
   .btn-index  { background: linear-gradient(180deg, #8b5cf6, #6d28d9); }
   .btn-base   { background: linear-gradient(180deg, #10b981, #059669); }
   .btn-cam    { background: linear-gradient(180deg, #3b82f6, #2563eb); }
@@ -806,6 +807,48 @@
     cursor: pointer;
   }
 
+  /* Avatar Customizer Modal */
+  .avatar-section { margin-bottom: 14px; }
+  .avatar-section-title {
+    font-size: 14px; font-weight: 800; color: #93c5fd;
+    text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px;
+  }
+  .avatar-name-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .avatar-input {
+    flex: 1; min-width: 180px; background: rgba(255,255,255,0.09);
+    border: 2px solid rgba(56,189,248,0.5); border-radius: 12px;
+    padding: 9px 14px; color: #fff; font-family: inherit; font-size: 16px; font-weight: 700;
+    outline: none;
+  }
+  .avatar-input:focus { border-color: #facc15; background: rgba(255,255,255,0.14); }
+  .avatar-chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .avatar-chip {
+    background: rgba(255,255,255,0.08); border: 2px solid rgba(255,255,255,0.2);
+    border-radius: 12px; padding: 7px 12px; color: #f8fafc; font-family: inherit;
+    font-size: 13px; font-weight: 700; cursor: pointer; transition: transform 0.1s, border-color 0.15s;
+  }
+  .avatar-chip:hover { transform: translateY(-1px); background: rgba(255,255,255,0.16); }
+  .avatar-chip.selected {
+    border-color: #facc15; background: rgba(250,204,21,0.22);
+    box-shadow: 0 0 12px rgba(250,204,21,0.35);
+  }
+  .swatch-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .color-swatch {
+    width: 32px; height: 32px; border-radius: 10px;
+    border: 3px solid rgba(255,255,255,0.25); cursor: pointer;
+    box-shadow: inset 0 2px 0 rgba(255,255,255,0.35), 0 3px 0 rgba(0,0,0,0.4);
+    transition: transform 0.1s;
+  }
+  .color-swatch:hover { transform: scale(1.12); }
+  .color-swatch.selected { border-color: #fff; box-shadow: 0 0 0 3px #facc15; transform: scale(1.12); }
+  .color-picker-native {
+    width: 36px; height: 34px; border: 2px solid rgba(255,255,255,0.35);
+    border-radius: 10px; background: transparent; cursor: pointer; padding: 1px;
+  }
+  .avatar-color-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px;
+  }
+
   @media (max-width: 760px) {
     .controls-hint, .speed-box { display: none; }
     .start-steps { grid-template-columns: 1fr; }
@@ -860,6 +903,7 @@
       <button class="btn btn-diff" id="diff-btn" title="Switch Difficulty in Home Base">🔥 Hard</button>
       <button class="btn btn-owner" id="owner-speed-btn" style="display:none;">👑 Max Speed: OFF</button>
       <button class="btn btn-slow" id="slow-mode-btn" title="Toggle Slow Mode (C) — Move slowly for easy control">🐢 Slow Mode: OFF</button>
+      <button class="btn btn-avatar" id="open-avatar-btn" title="Customize Your Roblox Avatar (U)">👕 Avatar (U)</button>
       <button class="btn btn-shop" id="open-shop-btn">🛒 Shop (B)</button>
       <button class="btn btn-index" id="open-index-btn">📖 Index (I)</button>
       <button class="btn btn-base" id="return-base-btn">🏠 Base (R)</button>
@@ -988,6 +1032,24 @@
     <div class="modal-footer">
       <span id="index-summary">Collected 0 / 21 Monsters</span>
       <span>Place any stolen egg on a pedestal in your Base!</span>
+    </div>
+  </div>
+</div>
+
+<!-- Roblox Avatar Customizer Modal -->
+<div class="modal-backdrop" id="avatar-modal">
+  <div class="modal-box index-box">
+    <div class="modal-header">
+      <h2>👕 Roblox Avatar Customizer</h2>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <button class="btn btn-shop" id="avatar-random-btn" style="padding:6px 12px; font-size:13px;">🎲 Random</button>
+        <button class="close-btn" id="close-avatar-btn">✕</button>
+      </div>
+    </div>
+    <div class="modal-body" id="avatar-editor-body"></div>
+    <div class="modal-footer">
+      <span>Your avatar updates live in 3D and saves automatically!</span>
+      <button class="btn btn-base" id="avatar-done-btn" style="padding:7px 16px; font-size:14px;">✅ Done</button>
     </div>
   </div>
 </div>
@@ -1585,6 +1647,15 @@
     ownerMaxSpeed: false,
     slowMode: false,
     difficulty: 'hard',
+    avatar: {
+      name: '',
+      skin: '#facc15',
+      shirt: '#2563eb',
+      pants: '#22c55e',
+      face: 'smile',
+      hat: 'none',
+      back: 'none'
+    },
     upgrades: { speed: 1, treadmill: 1, stamina: 1, jump: 1, shield: 0, income: 1 },
     pedestals: new Array(16).fill(null), // stores { biomeIdx, eggTypeIdx } or null
     collected: {}, // biomeId -> true
@@ -1734,6 +1805,7 @@
         xp: Math.floor(state.xp),
         trainedSpeed: Math.round(state.trainedSpeed * 10) / 10,
         difficulty: state.difficulty,
+        avatar: state.avatar,
         upgrades: state.upgrades,
         pedestals: state.pedestals,
         collected: state.collected
@@ -1753,6 +1825,15 @@
       if (typeof data.trainedSpeed === 'number') state.trainedSpeed = Math.min(MAX_TRAINED_SPEED, Math.max(0, data.trainedSpeed));
       if (typeof data.difficulty === 'string' && DIFFICULTIES[data.difficulty]) {
         state.difficulty = data.difficulty;
+      }
+      if (data.avatar && typeof data.avatar === 'object') {
+        if (typeof data.avatar.name === 'string') state.avatar.name = data.avatar.name.slice(0, 16);
+        if (typeof data.avatar.skin === 'string') state.avatar.skin = data.avatar.skin;
+        if (typeof data.avatar.shirt === 'string') state.avatar.shirt = data.avatar.shirt;
+        if (typeof data.avatar.pants === 'string') state.avatar.pants = data.avatar.pants;
+        if (typeof data.avatar.face === 'string') state.avatar.face = data.avatar.face;
+        if (typeof data.avatar.hat === 'string') state.avatar.hat = data.avatar.hat;
+        if (typeof data.avatar.back === 'string') state.avatar.back = data.avatar.back;
       }
       if (data.upgrades) {
         for (const k of Object.keys(state.upgrades)) {
@@ -1888,28 +1969,91 @@
     return new THREE.MeshLambertMaterial(Object.assign({ color, map: tex }, extra));
   }
 
-  // Classic Iconic Roblox Smiley Face Texture (:D / :))
-  function createRobloxFaceTexture() {
+  // Classic Iconic Roblox Face Texture Generator (supports custom skin & 6 expressions!)
+  function createRobloxFaceTexture(skinHex = '#facc15', faceId = 'smile') {
     const c = document.createElement('canvas');
     c.width = 128; c.height = 128;
     const ctx = c.getContext('2d');
-    ctx.fillStyle = '#facc15';
+    ctx.fillStyle = skinHex || '#facc15';
     ctx.fillRect(0, 0, 128, 128);
-    // Classic vertical oval eyes
-    ctx.fillStyle = '#111827';
-    ctx.beginPath(); ctx.ellipse(44, 52, 7.5, 11.5, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(84, 52, 7.5, 11.5, 0, 0, Math.PI * 2); ctx.fill();
-    // Cute eye glints
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath(); ctx.arc(41.5, 47, 2.5, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(81.5, 47, 2.5, 0, Math.PI * 2); ctx.fill();
-    // Classic wide Roblox smile
-    ctx.strokeStyle = '#111827';
-    ctx.lineWidth = 6.5;
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.arc(64, 66, 26, 0.22 * Math.PI, 0.78 * Math.PI);
-    ctx.stroke();
+
+    if (faceId === 'cool') {
+      // Classic Roblox Cool Sunglasses!
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(16, 40, 42, 24);
+      ctx.fillRect(70, 40, 42, 24);
+      ctx.fillRect(56, 46, 16, 7);
+      ctx.fillStyle = 'rgba(255,255,255,0.45)';
+      ctx.fillRect(21, 44, 14, 6);
+      ctx.fillRect(75, 44, 14, 6);
+      ctx.strokeStyle = '#111827';
+      ctx.lineWidth = 6; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(46, 86); ctx.quadraticCurveTo(68, 94, 86, 80); ctx.stroke();
+    } else if (faceId === 'happy') {
+      // Big Open :D Smile
+      ctx.fillStyle = '#111827';
+      ctx.beginPath(); ctx.ellipse(44, 48, 8, 12, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(84, 48, 8, 12, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath(); ctx.arc(41.5, 43, 2.8, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(81.5, 43, 2.8, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#111827';
+      ctx.beginPath(); ctx.arc(64, 72, 26, 0, Math.PI); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#f43f5e';
+      ctx.beginPath(); ctx.arc(64, 92, 12, Math.PI, 0); ctx.fill();
+    } else if (faceId === 'fierce') {
+      // Fierce / Determined Pro Face >:)
+      ctx.fillStyle = '#111827';
+      ctx.beginPath(); ctx.ellipse(44, 54, 7.5, 10, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(84, 54, 7.5, 10, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#111827'; ctx.lineWidth = 7; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(28, 36); ctx.lineTo(54, 44); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(100, 36); ctx.lineTo(74, 44); ctx.stroke();
+      ctx.lineWidth = 6;
+      ctx.beginPath(); ctx.moveTo(42, 84); ctx.quadraticCurveTo(64, 96, 88, 78); ctx.stroke();
+    } else if (faceId === 'stars') {
+      // Glowing Star Eyes!
+      const drawStar = (cx, cy) => {
+        ctx.fillStyle = '#0ea5e9';
+        ctx.beginPath();
+        for (let i = 0; i < 10; i++) {
+          const r = i % 2 === 0 ? 15 : 6.5;
+          const a = (i * Math.PI) / 5 - Math.PI / 2;
+          if (i === 0) ctx.moveTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r);
+          else ctx.lineTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r);
+        }
+        ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = '#111827'; ctx.lineWidth = 2.5; ctx.stroke();
+      };
+      drawStar(42, 50); drawStar(86, 50);
+      ctx.strokeStyle = '#111827'; ctx.lineWidth = 6.5; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.arc(64, 68, 24, 0.2 * Math.PI, 0.8 * Math.PI); ctx.stroke();
+    } else if (faceId === 'blush') {
+      // Cute Blushing Face
+      ctx.fillStyle = 'rgba(244, 63, 94, 0.45)';
+      ctx.beginPath(); ctx.ellipse(29, 72, 12, 7, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(99, 72, 12, 7, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#111827';
+      ctx.beginPath(); ctx.ellipse(44, 52, 8.5, 11, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(84, 52, 8.5, 11, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath(); ctx.arc(41, 47, 3.2, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(81, 47, 3.2, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#111827'; ctx.lineWidth = 5.5; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.arc(57, 74, 8, 0.1 * Math.PI, 0.9 * Math.PI); ctx.stroke();
+      ctx.beginPath(); ctx.arc(71, 74, 8, 0.1 * Math.PI, 0.9 * Math.PI); ctx.stroke();
+    } else {
+      // Classic Roblox Smile :)
+      ctx.fillStyle = '#111827';
+      ctx.beginPath(); ctx.ellipse(44, 52, 7.5, 11.5, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(84, 52, 7.5, 11.5, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath(); ctx.arc(41.5, 47, 2.5, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(81.5, 47, 2.5, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#111827';
+      ctx.lineWidth = 6.5; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.arc(64, 66, 26, 0.22 * Math.PI, 0.78 * Math.PI); ctx.stroke();
+    }
     return new THREE.CanvasTexture(c);
   }
 
@@ -4112,16 +4256,150 @@
   const pLegR = new THREE.Mesh(new THREE.BoxGeometry(0.5, 1.0, 0.52), pPants);
   pLegR.position.set(0.27, 0.5, 0); pLegR.castShadow = true;
 
-  // Classic Roblox Overhead Username Billboard!
-  const playerNameTag = createFloatingLabelSprite(
-    state.isOwner ? '👑 Owner' : '🧱 Robloxian',
-    'STEAL AN EGG!',
-    state.isOwner ? '#facc15' : '#38bdf8'
-  );
-  playerNameTag.position.set(0, 3.55, 0);
-  playerNameTag.scale.set(2.4, 0.78, 1);
+  // Classic Roblox Overhead Username Billboard + Hat & Back Accessory Holders!
+  let playerNameTag = null;
+  const playerHatGroup = new THREE.Group();
+  playerHatGroup.position.set(0, 2.9, 0);
+  const playerBackGroup = new THREE.Group();
+  playerBackGroup.position.set(0, 1.58, -0.32);
 
-  playerBody.add(pTorso, pHead, pCap, pArmL, pArmR, pLegL, pLegR, playerNameTag);
+  playerBody.add(pTorso, pHead, pCap, pArmL, pArmR, pLegL, pLegR, playerHatGroup, playerBackGroup);
+
+  function applyAvatarToPlayer() {
+    const av = state.avatar;
+    pSkin.color.set(av.skin || '#facc15');
+    pShirt.color.set(av.shirt || '#2563eb');
+    pPants.color.set(av.pants || '#22c55e');
+
+    // Update Roblox Face texture on +Z front of head
+    if (pHeadMats[4].map) pHeadMats[4].map.dispose();
+    pHeadMats[4].map = createRobloxFaceTexture(av.skin, av.face);
+    pHeadMats[4].needsUpdate = true;
+
+    // Rebuild 3D Hat
+    while (playerHatGroup.children.length > 0) playerHatGroup.remove(playerHatGroup.children[0]);
+    pCap.visible = (av.hat === 'none' || av.hat === 'halo' || av.hat === 'headphones');
+    if (av.hat === 'crown') {
+      const gMat = matStd(0xfacc15, { metalness: 0.85, roughness: 0.18, emissive: 0xb45309, emissiveIntensity: 0.35 });
+      const band = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.42, 0.26, 8), gMat);
+      band.position.y = 0.14;
+      playerHatGroup.add(band);
+      for (let i = 0; i < 5; i++) {
+        const a = (i / 5) * Math.PI * 2;
+        const sp = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.32, 5), gMat);
+        sp.position.set(Math.cos(a) * 0.36, 0.4, Math.sin(a) * 0.36);
+        playerHatGroup.add(sp);
+      }
+      const gem = new THREE.Mesh(new THREE.OctahedronGeometry(0.11, 0), new THREE.MeshBasicMaterial({ color: 0xf43f5e }));
+      gem.position.set(0, 0.2, 0.43);
+      playerHatGroup.add(gem);
+    } else if (av.hat === 'cap') {
+      const capMat = matLambert(0xef4444);
+      const dome = new THREE.Mesh(new THREE.BoxGeometry(0.84, 0.28, 0.84), capMat);
+      dome.position.y = 0.14;
+      const brim = new THREE.Mesh(new THREE.BoxGeometry(0.82, 0.08, 0.52), matLambert(0xb91c1c));
+      brim.position.set(0, 0.04, 0.52);
+      playerHatGroup.add(dome, brim);
+    } else if (av.hat === 'tophat') {
+      const blk = matStd(0x18181b, { roughness: 0.4 });
+      const brim = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.62, 0.08, 14), blk);
+      brim.position.y = 0.05;
+      const cylTop = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.4, 0.68, 14), blk);
+      cylTop.position.y = 0.42;
+      const rib = new THREE.Mesh(new THREE.CylinderGeometry(0.425, 0.425, 0.12, 14), matLambert(0xef4444));
+      rib.position.y = 0.16;
+      playerHatGroup.add(brim, cylTop, rib);
+    } else if (av.hat === 'horns') {
+      const hMat = matStd(0xdc2626, { emissive: 0x7f1d1d, emissiveIntensity: 0.35 });
+      const lh = new THREE.Mesh(new THREE.ConeGeometry(0.13, 0.62, 7), hMat);
+      lh.position.set(-0.34, 0.28, 0.06); lh.rotation.z = 0.42;
+      const rh = new THREE.Mesh(new THREE.ConeGeometry(0.13, 0.62, 7), hMat);
+      rh.position.set(0.34, 0.28, 0.06); rh.rotation.z = -0.42;
+      playerHatGroup.add(lh, rh);
+    } else if (av.hat === 'halo') {
+      const halo = new THREE.Mesh(new THREE.TorusGeometry(0.46, 0.075, 10, 24), new THREE.MeshBasicMaterial({ color: 0xfde047 }));
+      halo.rotation.x = Math.PI / 2;
+      halo.position.y = 0.35;
+      playerHatGroup.add(halo);
+    } else if (av.hat === 'wizard') {
+      const wiz = matStd(0x4f46e5, { emissive: 0x312e81, emissiveIntensity: 0.3 });
+      const brim = new THREE.Mesh(new THREE.CylinderGeometry(0.76, 0.78, 0.08, 14), wiz);
+      brim.position.y = 0.06;
+      const coneHat = new THREE.Mesh(new THREE.ConeGeometry(0.46, 1.05, 12), wiz);
+      coneHat.position.set(0, 0.58, -0.05); coneHat.rotation.x = -0.14;
+      const band = new THREE.Mesh(new THREE.TorusGeometry(0.44, 0.06, 8, 18), new THREE.MeshBasicMaterial({ color: 0xfacc15 }));
+      band.rotation.x = Math.PI / 2; band.position.y = 0.12;
+      playerHatGroup.add(brim, coneHat, band);
+    } else if (av.hat === 'astro') {
+      const glass = new THREE.Mesh(
+        new THREE.SphereGeometry(0.62, 16, 14),
+        new THREE.MeshStandardMaterial({ color: 0xbae6fd, transparent: true, opacity: 0.42, metalness: 0.4, roughness: 0.1 })
+      );
+      glass.position.y = -0.35;
+      const ant = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.45, 6), matLambert(0xe2e8f0));
+      ant.position.set(0.42, 0.35, 0);
+      const tip = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), new THREE.MeshBasicMaterial({ color: 0x38bdf8 }));
+      tip.position.set(0.42, 0.58, 0);
+      playerHatGroup.add(glass, ant, tip);
+    } else if (av.hat === 'headphones') {
+      const hpMat = matStd(0x06b6d4, { emissive: 0x0891b2, emissiveIntensity: 0.35 });
+      const arc = new THREE.Mesh(new THREE.TorusGeometry(0.44, 0.06, 8, 18, Math.PI), matLambert(0x1e293b));
+      arc.position.y = -0.18;
+      const cupL = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.14, 10), hpMat);
+      cupL.rotation.z = Math.PI / 2; cupL.position.set(-0.44, -0.38, 0);
+      const cupR = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.14, 10), hpMat);
+      cupR.rotation.z = Math.PI / 2; cupR.position.set(0.44, -0.38, 0);
+      playerHatGroup.add(arc, cupL, cupR);
+    }
+
+    // Rebuild 3D Back Accessory
+    while (playerBackGroup.children.length > 0) playerBackGroup.remove(playerBackGroup.children[0]);
+    if (av.back === 'cape') {
+      const cape = new THREE.Mesh(new THREE.BoxGeometry(1.08, 1.48, 0.1), matLambert(0xdc2626));
+      cape.position.set(0, -0.25, -0.06); cape.rotation.x = 0.14;
+      const trim = new THREE.Mesh(new THREE.BoxGeometry(1.12, 0.14, 0.12), matStd(0xfacc15, { metalness: 0.8 }));
+      trim.position.set(0, -0.96, -0.16);
+      playerBackGroup.add(cape, trim);
+    } else if (av.back === 'wings') {
+      const wMat = new THREE.MeshBasicMaterial({ color: 0xe0f2fe, transparent: true, opacity: 0.88 });
+      const lw = new THREE.Mesh(new THREE.BoxGeometry(1.25, 0.62, 0.1), wMat);
+      lw.position.set(-0.78, 0.15, -0.1); lw.rotation.y = 0.35; lw.rotation.z = 0.2;
+      const rw = new THREE.Mesh(new THREE.BoxGeometry(1.25, 0.62, 0.1), wMat);
+      rw.position.set(0.78, 0.15, -0.1); rw.rotation.y = -0.35; rw.rotation.z = -0.2;
+      playerBackGroup.add(lw, rw);
+    } else if (av.back === 'jetpack') {
+      const jpMat = matStd(0x94a3b8, { metalness: 0.65, roughness: 0.25 });
+      const flMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
+      const tL = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.2, 0.88, 10), jpMat);
+      tL.position.set(-0.24, 0.05, -0.14);
+      const tR = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.2, 0.88, 10), jpMat);
+      tR.position.set(0.24, 0.05, -0.14);
+      const fL = new THREE.Mesh(new THREE.ConeGeometry(0.15, 0.52, 8), flMat);
+      fL.rotation.x = Math.PI; fL.position.set(-0.24, -0.62, -0.14);
+      const fR = new THREE.Mesh(new THREE.ConeGeometry(0.15, 0.52, 8), flMat);
+      fR.rotation.x = Math.PI; fR.position.set(0.24, -0.62, -0.14);
+      playerBackGroup.add(tL, tR, fL, fR);
+    }
+
+    // Update Floating Roblox Overhead Nametag!
+    if (playerNameTag) {
+      playerBody.remove(playerNameTag);
+      if (playerNameTag.material.map) playerNameTag.material.map.dispose();
+    }
+    const rawName = (av.name || '').trim();
+    const displayName = rawName
+      ? (state.isOwner ? `👑 ${rawName}` : rawName)
+      : (state.isOwner ? '👑 Owner' : '🧱 Robloxian');
+    playerNameTag = createFloatingLabelSprite(
+      displayName,
+      'STEAL AN EGG!',
+      state.isOwner ? '#facc15' : '#38bdf8'
+    );
+    playerNameTag.position.set(0, av.hat === 'none' ? 3.55 : 4.05, 0);
+    playerNameTag.scale.set(2.4, 0.78, 1);
+    playerBody.add(playerNameTag);
+  }
+  applyAvatarToPlayer();
 
   // Carried Egg Holder above player's head
   const carriedEggHolder = new THREE.Group();
@@ -4222,12 +4500,17 @@
 
   window.addEventListener('keydown', (e) => {
     const code = e.code;
+    if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) {
+      if (code === 'Escape') { document.activeElement.blur(); closeAllModals(); }
+      return;
+    }
     keys[code] = true;
 
     if (!state.started) return;
 
     if (code === 'KeyB') { toggleModal('shop'); return; }
     if (code === 'KeyI') { toggleModal('index'); return; }
+    if (code === 'KeyU') { toggleModal('avatar'); return; }
     if (code === 'Escape') {
       if (state.modalOpen) closeAllModals();
       return;
@@ -4769,7 +5052,159 @@
   function closeAllModals() {
     document.getElementById('shop-modal').classList.remove('open');
     document.getElementById('index-modal').classList.remove('open');
+    document.getElementById('avatar-modal').classList.remove('open');
     state.modalOpen = false;
+  }
+
+  const AVATAR_PRESETS = [
+    { label: '🧱 Classic Noob', skin: '#facc15', shirt: '#2563eb', pants: '#22c55e', face: 'smile', hat: 'none', back: 'none' },
+    { label: '🧢 Street Skater', skin: '#f5cba7', shirt: '#1e293b', pants: '#334155', face: 'cool', hat: 'cap', back: 'none' },
+    { label: '👑 Royal King', skin: '#fde68a', shirt: '#b91c1c', pants: '#facc15', face: 'fierce', hat: 'crown', back: 'cape' },
+    { label: '🥷 Cyber Pro', skin: '#e2e8f0', shirt: '#0f172a', pants: '#1e1b4b', face: 'cool', hat: 'headphones', back: 'wings' },
+    { label: '🚀 Astronaut', skin: '#fef08a', shirt: '#f8fafc', pants: '#1d4ed8', face: 'stars', hat: 'astro', back: 'jetpack' },
+    { label: '👼 Angel', skin: '#fff7ed', shirt: '#f8fafc', pants: '#38bdf8', face: 'blush', hat: 'halo', back: 'wings' },
+    { label: '😈 Demon Lord', skin: '#ef4444', shirt: '#18181b', pants: '#7f1d1d', face: 'fierce', hat: 'horns', back: 'cape' },
+    { label: '🧙 Archmage', skin: '#fdba74', shirt: '#4f46e5', pants: '#312e81', face: 'stars', hat: 'wizard', back: 'cape' }
+  ];
+  const AVATAR_SWATCHES = ['#facc15', '#fdba74', '#f5cba7', '#8d5524', '#ffffff', '#18181b', '#2563eb', '#22c55e', '#ef4444', '#ec4899', '#a855f7', '#06b6d4'];
+  const AVATAR_FACES = [
+    { id: 'smile', label: '🙂 Classic' },
+    { id: 'cool', label: '😎 Cool Shades' },
+    { id: 'happy', label: '😄 Super Happy' },
+    { id: 'fierce', label: '😈 Fierce' },
+    { id: 'stars', label: '🤩 Star Eyes' },
+    { id: 'blush', label: '😊 Blushing' }
+  ];
+  const AVATAR_HATS = [
+    { id: 'none', label: '❌ None' },
+    { id: 'crown', label: '👑 Crown' },
+    { id: 'cap', label: '🧢 Red Cap' },
+    { id: 'tophat', label: '🎩 Top Hat' },
+    { id: 'horns', label: '😈 Horns' },
+    { id: 'halo', label: '😇 Halo' },
+    { id: 'wizard', label: '🧙 Wizard Hat' },
+    { id: 'astro', label: '🚀 Space Helmet' },
+    { id: 'headphones', label: '🎧 Headphones' }
+  ];
+  const AVATAR_BACKS = [
+    { id: 'none', label: '❌ None' },
+    { id: 'cape', label: '🦸 Royal Cape' },
+    { id: 'wings', label: '🪽 Angel Wings' },
+    { id: 'jetpack', label: '🚀 Jetpack' }
+  ];
+
+  function renderAvatarEditor() {
+    const body = document.getElementById('avatar-editor-body');
+    const av = state.avatar;
+    const makeSwatchGroup = (key, title) => `
+      <div>
+        <div class="avatar-section-title">${title}</div>
+        <div class="swatch-row">
+          ${AVATAR_SWATCHES.map(hex => `
+            <button type="button" class="color-swatch ${av[key].toLowerCase() === hex ? 'selected' : ''}"
+              data-color-key="${key}" data-color-val="${hex}" style="background:${hex};" title="${hex}"></button>
+          `).join('')}
+          <input type="color" class="color-picker-native" data-color-picker="${key}" value="${av[key]}" title="Custom color">
+        </div>
+      </div>
+    `;
+    body.innerHTML = `
+      <div class="avatar-section">
+        <div class="avatar-section-title">🏷️ Display Name</div>
+        <div class="avatar-name-row">
+          <input type="text" id="avatar-name-input" class="avatar-input" maxlength="16"
+            placeholder="Enter your Roblox name..." value="${(av.name || '').replace(/"/g, '&quot;')}">
+        </div>
+      </div>
+      <div class="avatar-section">
+        <div class="avatar-section-title">⚡ Quick Roblox Presets</div>
+        <div class="avatar-chip-row">
+          ${AVATAR_PRESETS.map((p, idx) => `<button type="button" class="avatar-chip" data-preset="${idx}">${p.label}</button>`).join('')}
+        </div>
+      </div>
+      <div class="avatar-section avatar-color-grid">
+        ${makeSwatchGroup('skin', '🟨 Skin Color')}
+        ${makeSwatchGroup('shirt', '👕 Shirt Color')}
+        ${makeSwatchGroup('pants', '👖 Pants Color')}
+      </div>
+      <div class="avatar-section">
+        <div class="avatar-section-title">😀 Roblox Face</div>
+        <div class="avatar-chip-row">
+          ${AVATAR_FACES.map(f => `<button type="button" class="avatar-chip ${av.face === f.id ? 'selected' : ''}" data-face="${f.id}">${f.label}</button>`).join('')}
+        </div>
+      </div>
+      <div class="avatar-section">
+        <div class="avatar-section-title">🎩 Hat / Headwear</div>
+        <div class="avatar-chip-row">
+          ${AVATAR_HATS.map(h => `<button type="button" class="avatar-chip ${av.hat === h.id ? 'selected' : ''}" data-hat="${h.id}">${h.label}</button>`).join('')}
+        </div>
+      </div>
+      <div class="avatar-section">
+        <div class="avatar-section-title">🎒 Back Accessory</div>
+        <div class="avatar-chip-row">
+          ${AVATAR_BACKS.map(b => `<button type="button" class="avatar-chip ${av.back === b.id ? 'selected' : ''}" data-back="${b.id}">${b.label}</button>`).join('')}
+        </div>
+      </div>
+    `;
+
+    const nameInput = document.getElementById('avatar-name-input');
+    nameInput.addEventListener('input', () => {
+      state.avatar.name = nameInput.value.slice(0, 16);
+      applyAvatarToPlayer();
+      saveGame();
+    });
+    body.querySelectorAll('[data-preset]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const p = AVATAR_PRESETS[Number(btn.dataset.preset)];
+        Object.assign(state.avatar, { skin: p.skin, shirt: p.shirt, pants: p.pants, face: p.face, hat: p.hat, back: p.back });
+        SFX.buy();
+        applyAvatarToPlayer();
+        saveGame();
+        renderAvatarEditor();
+      });
+    });
+    body.querySelectorAll('[data-color-key]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        state.avatar[btn.dataset.colorKey] = btn.dataset.colorVal;
+        applyAvatarToPlayer();
+        saveGame();
+        renderAvatarEditor();
+      });
+    });
+    body.querySelectorAll('[data-color-picker]').forEach(inp => {
+      inp.addEventListener('input', () => {
+        state.avatar[inp.dataset.colorPicker] = inp.value;
+        applyAvatarToPlayer();
+        saveGame();
+      });
+    });
+    body.querySelectorAll('[data-face]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        state.avatar.face = btn.dataset.face;
+        SFX.buy();
+        applyAvatarToPlayer();
+        saveGame();
+        renderAvatarEditor();
+      });
+    });
+    body.querySelectorAll('[data-hat]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        state.avatar.hat = btn.dataset.hat;
+        SFX.buy();
+        applyAvatarToPlayer();
+        saveGame();
+        renderAvatarEditor();
+      });
+    });
+    body.querySelectorAll('[data-back]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        state.avatar.back = btn.dataset.back;
+        SFX.buy();
+        applyAvatarToPlayer();
+        saveGame();
+        renderAvatarEditor();
+      });
+    });
   }
 
   function toggleModal(which) {
@@ -4780,6 +5215,7 @@
       if (pointerLocked && document.exitPointerLock) document.exitPointerLock();
       if (which === 'shop') renderShop();
       if (which === 'index') renderIndex();
+      if (which === 'avatar') renderAvatarEditor();
       modal.classList.add('open');
       state.modalOpen = true;
     }
@@ -4924,6 +5360,22 @@
     state.started = true;
     updateHUD();
     showToast('🏃 Head straight through the green Safe Zone gate into Biome 1!', '#4ade80');
+  });
+  document.getElementById('open-avatar-btn').addEventListener('click', () => toggleModal('avatar'));
+  document.getElementById('close-avatar-btn').addEventListener('click', closeAllModals);
+  document.getElementById('avatar-done-btn').addEventListener('click', closeAllModals);
+  document.getElementById('avatar-random-btn').addEventListener('click', () => {
+    const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+    state.avatar.skin = pick(AVATAR_SWATCHES);
+    state.avatar.shirt = pick(AVATAR_SWATCHES);
+    state.avatar.pants = pick(AVATAR_SWATCHES);
+    state.avatar.face = pick(AVATAR_FACES).id;
+    state.avatar.hat = pick(AVATAR_HATS).id;
+    state.avatar.back = pick(AVATAR_BACKS).id;
+    SFX.hatch();
+    applyAvatarToPlayer();
+    saveGame();
+    renderAvatarEditor();
   });
   document.getElementById('open-shop-btn').addEventListener('click', () => toggleModal('shop'));
   document.getElementById('close-shop-btn').addEventListener('click', closeAllModals);
